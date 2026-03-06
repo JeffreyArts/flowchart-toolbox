@@ -57,7 +57,7 @@ interface Options {
     symbolText: string
 }
 
-export type SymbolType = "start" | "end" | "process" | "decision" | "input" | "output"
+export type SymbolType = "start" | "end" | "process" | "decision" 
 
 export default defineComponent ({ 
     components: {
@@ -69,7 +69,7 @@ export default defineComponent ({
     props: [],
     data() {
         return {
-            SymbolTypes: ["start", "end", "process", "decision", "input", "output"] as SymbolType[],
+            SymbolTypes: ["start", "end", "process", "decision"] as SymbolType[],
             options: {
                 symbolType: undefined as SymbolType | undefined,
                 symbolText: "", 
