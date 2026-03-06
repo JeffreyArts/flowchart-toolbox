@@ -10,6 +10,8 @@
                 <!-- {{ options.symbolType }} -->
                 <div class="canvas">
                     <processSymbol x="50%" y="50%" v-if="options.symbolType === 'process'"> {{ options.symbolText }}</processSymbol>
+                    <startSymbol x="50%" y="50%" v-if="options.symbolType === 'start'"> {{ options.symbolText }}</startSymbol>
+                    <endSymbol x="50%" y="50%" v-if="options.symbolType === 'end'"> {{ options.symbolText }}</endSymbol>
                     <decisionSymbol x="50%" y="50%" v-if="options.symbolType === 'decision'"> {{ options.symbolText }} </decisionSymbol>
                 </div>
             </div>
@@ -45,6 +47,8 @@
 <script lang="ts">
 import { defineComponent } from "vue"
 import _ from "lodash"
+import startSymbol from "@/components/symbols/start.vue"
+import endSymbol from "@/components/symbols/end.vue"
 import processSymbol from "@/components/symbols/process.vue"
 import decisionSymbol from "@/components/symbols/decision.vue"
 
@@ -58,6 +62,8 @@ export type SymbolType = "start" | "end" | "process" | "decision" | "input" | "o
 export default defineComponent ({ 
     components: {
         processSymbol,
+        startSymbol,
+        endSymbol,
         decisionSymbol,
     },
     props: [],
