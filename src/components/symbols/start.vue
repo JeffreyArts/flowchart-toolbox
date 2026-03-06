@@ -22,6 +22,7 @@ export default defineComponent({
     },
     data() {
         return {
+            id: crypto.randomUUID(),
             width: 0,
             height: 0,
             visible: false,

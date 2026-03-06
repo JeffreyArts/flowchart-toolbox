@@ -7,6 +7,7 @@
 <script lang="ts">
 import { defineComponent } from "vue"
 
+
 export default defineComponent({
     name: "ProcessSymbol",
     components: {},
@@ -22,6 +23,7 @@ export default defineComponent({
     },
     data() {
         return {
+            id: crypto.randomUUID(),
             width: 0,
             height: 0,
             visible: false,
