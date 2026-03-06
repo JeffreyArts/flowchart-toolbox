@@ -9,10 +9,8 @@
             <div class="viewport-content" ratio="1x1" >
                 <!-- {{ options.symbolType }} -->
                 <div class="canvas">
-                    <processSymbol x="50%" y="50%" :width="200" :height="100">
-                        {{ options.symbolText }}
-                    </processSymbol>
-
+                    <processSymbol x="50%" y="50%" v-if="options.symbolType === 'process'"> {{ options.symbolText }}</processSymbol>
+                    <decisionSymbol x="50%" y="50%" v-if="options.symbolType === 'decision'"> {{ options.symbolText }} </decisionSymbol>
                 </div>
             </div>
         </section>
@@ -48,6 +46,7 @@
 import { defineComponent } from "vue"
 import _ from "lodash"
 import processSymbol from "@/components/symbols/process.vue"
+import decisionSymbol from "@/components/symbols/decision.vue"
 
 interface Options {
     symbolType: SymbolType | undefined
@@ -59,6 +58,7 @@ export type SymbolType = "start" | "end" | "process" | "decision" | "input" | "o
 export default defineComponent ({ 
     components: {
         processSymbol,
+        decisionSymbol,
     },
     props: [],
     data() {
