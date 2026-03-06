@@ -1,6 +1,7 @@
+import { createWebHistory, createRouter } from "vue-router"
 import Home from "./home.vue"
 import OptionsOverview from "./options-overview.vue"
-import { createWebHistory, createRouter } from "vue-router"
+import TheSymbols from "./the-symbols.vue"
 
 const routes = [
     {
@@ -12,6 +13,11 @@ const routes = [
         path: "/options-overview",
         name: "Options overview",
         component: OptionsOverview
+    },
+    {
+        path: "/the-symbols",
+        name: "The symbols",
+        component: TheSymbols
     }
 ]
 
