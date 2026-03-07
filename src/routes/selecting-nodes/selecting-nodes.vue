@@ -59,12 +59,12 @@ import gsap from "gsap"
 import { Flowchart } from "./flowchart"
 import { StartNode } from "./flowchart/nodes/start"
 import { EndNode } from "./flowchart/nodes/end"
+import { DecisionNode } from "./flowchart/nodes/decision"
 import { ProcessNode } from "./flowchart/nodes/process"
 import SelectTool from "./flowchart/chart-tools/select"
 
 interface Options {
-    text: string
-    tool: string
+    none: undefined
 }
 
 export default defineComponent ({ 
@@ -73,14 +73,13 @@ export default defineComponent ({
     data() {
         return {
             options: {
-                text: "Test",
-                tool: "zoom",
+                none: undefined
             } as Partial<Options>,
             tools: ["pan", "zoom"],
-            node1: undefined as StartNode | undefined,
-            node2: undefined as ProcessNode | undefined,
+            node1: undefined as StartNode | ProcessNode | EndNode | DecisionNode | undefined,
+            node2: undefined as StartNode | ProcessNode | EndNode | DecisionNode | undefined,
             flowchart: undefined as Flowchart | undefined,
-            selectedNode: undefined as StartNode | ProcessNode | EndNode | undefined,
+            selectedNode: undefined as StartNode | ProcessNode | EndNode | DecisionNode | undefined,
             ignoreOptionsUpdate: true,
         }
     },
@@ -129,9 +128,9 @@ export default defineComponent ({
                 if (this.node2) {
                     this.node2.x = "80%"
                 }
-
-                this.setMouseEvents(this.node1)
-                this.setMouseEvents(this.node2)
+                
+                // this.setMouseEvents(this.node1)
+                // this.setMouseEvents(this.node2)
                 
                 
                 this.flowchart.selectTool("pan")
@@ -202,40 +201,30 @@ export default defineComponent ({
 
             if (this.selectedNode) {
                 this.selectedNode.x = target.x
-                this.setMouseEvents(this.selectedNode)
+                const selectTool = this.flowchart.getTool("select")
+
+                if (selectTool instanceof SelectTool && selectTool.onClick) {
+                    this.selectedNode.isHover = true
+                    selectTool.onClick(new MouseEvent("click"))
+                }
+                // this.setMouseEvents(this.selectedNode)
             }
 
         },
-        setMouseEvents(node: StartNode | ProcessNode | EndNode) {
-            node.onMouseEnter = () => {
-                const el = node.el
-                if (el) {
-                    // el.style.outline = "4px solid red"  
-                }
-            }    
-            node.onMouseLeave = () => {
-                const el = node.el
-                if (el) {
-                    // el.style.outline = ""  
-                }
-            }    
-        },
-        updateText() {
-            if (this.node1) {
-                this.node1.text = this.options.text || ""
-            }
-        },
-        updateTool() {
-            if (this.flowchart) {
-                this.flowchart.selectTool("pan")
-
-                if (this.options.tool == "zoom") {
-                    this.flowchart.selectTool(this.options.tool)
-                } else {
-                    this.flowchart.deselectTool("zoom")
-                }
-            }
-        },
+        // setMouseEvents(node: StartNode | ProcessNode | EndNode | DecisionNode) {
+        //     node.onMouseEnter = () => {
+        //         const el = node.el
+        //         if (el) {
+        //             // el.style.outline = "4px solid red"  
+        //         }
+        //     }    
+        //     node.onMouseLeave = () => {
+        //         const el = node.el
+        //         if (el) {
+        //             // el.style.outline = ""  
+        //         }
+        //     }    
+        // },
         resetPan(e:Event) {
             e.preventDefault()
             if (this.flowchart) {
@@ -267,8 +256,6 @@ export default defineComponent ({
         resetOptions(e:Event) {
             e.preventDefault()
             this.options = {
-                text: "Test",
-                tool: "pan",
             }
         },
     }

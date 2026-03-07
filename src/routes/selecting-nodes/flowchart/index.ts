@@ -91,9 +91,8 @@ export class Flowchart {
 
         if (node) {
             this.nodes.push(node)
+            return node
         }
-
-        return node
     }
 
     removeNode(node: StartNode | ProcessNode | string) {
@@ -166,6 +165,15 @@ export class Flowchart {
 
             this.el.removeAttribute("data-tool")
         }
+    }
+
+    getTool(toolName: string) {
+        const tool = this._tools.find(t => t.name === toolName)
+        if (!tool) {
+            return undefined
+        }
+
+        return tool.object
     }
 
     destroy() {

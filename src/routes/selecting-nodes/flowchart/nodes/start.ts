@@ -1,4 +1,4 @@
-import { type FlowchartType } from "@/routes/canvas-zoom/flowchart/types"
+import { type FlowchartType } from "./../../flowchart/types"
 import { FlowchartNode } from "."
 
 export class StartNode extends FlowchartNode {
