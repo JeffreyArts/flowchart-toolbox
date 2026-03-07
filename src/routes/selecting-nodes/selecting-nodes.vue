@@ -19,7 +19,15 @@
                     <div class="option">
                         <label for="option-tool">Selected node</label>
                         <span v-if="selectedNode">
-                            {{ selectedNode.id }}
+                            <strong>ID:</strong>
+                            {{ selectedNode.id }} <br><br>
+                            <strong>Type:</strong>
+                            {{ selectedNode.type }}<br>
+                            <select name="changeNode" id="" v-model="selectedNode.type" @change="changeSelectedNode">
+                                <option value="start">Start</option>
+                                <option value="process">Process</option>
+                                <option value="decision">Decision</option>
+                            </select>
                         </span>
                         <span v-if="!selectedNode" style="font-style: italic; color: #666; font-size: .8em;">
                             No node selected
@@ -50,6 +58,7 @@ import gsap from "gsap"
 import { Flowchart } from "./flowchart"
 import { StartNode } from "./flowchart/nodes/start"
 import { ProcessNode } from "./flowchart/nodes/process"
+import SelectTool from "./flowchart/chart-tools/select"
 
 interface Options {
     text: string
@@ -110,11 +119,11 @@ export default defineComponent ({
         if (this.$el && !this.flowchart) {
             setTimeout(() => {
                 this.flowchart = markRaw(new Flowchart("#selecting-nodes-canvas"))
-                this.node1 = this.flowchart.add("start", "Node 1")
+                this.node1 = this.flowchart.addNode("start", "Node 1")
                 if (this.node1) {
                     this.node1.x = "20%"
                 }
-                this.node2 = this.flowchart.add("process", "Node 2")
+                this.node2 = this.flowchart.addNode("process", "Node 2")
                 if (this.node2) {
                     this.node2.x = "80%"
                 }
@@ -122,7 +131,17 @@ export default defineComponent ({
                 console.print("Flowchart instance:", this.flowchart)
                 this.flowchart.selectTool("pan")
                 this.flowchart.selectTool("zoom")
-                
+                const selectTool = this.flowchart.selectTool("select")
+                if (selectTool && selectTool instanceof SelectTool) {
+                    selectTool.onClick = (e: MouseEvent) => {
+                        this.flowchart?.nodes.forEach(node => {
+                            const nodeEl = node.el
+                            if (node.isHover) {
+                                this.selectedNode = node    
+                            }
+                        })
+                    }
+                }
             })
         }
 
@@ -132,6 +151,50 @@ export default defineComponent ({
         this.flowchart?.destroy()
     },
     methods: {
+        changeSelectedNode() {
+            if (!this.selectedNode) return
+            if (!this.flowchart) return
+
+
+            let target = {
+                node: this.node1,
+                text: "Node 1",
+                x: "20%",
+                newType: ""
+            }
+            
+            console.log("Selected node:", this.node2?.id, this.selectedNode.id)
+            if (this.node2?.id == this.selectedNode.id) {
+                target = {
+                    node: this.node2,
+                    text: "Node 2",
+                    x: "80%",
+                    newType: ""
+                }
+            }
+            
+            this.flowchart.removeNode(this.selectedNode.id)
+
+            if (this.selectedNode.type == "start") {
+                target.newType = "start"
+            } else if (this.selectedNode.type == "process") {
+                target.newType = "process"
+            } else if (this.selectedNode.type == "decision") {
+                this.selectedNode.text = "Decision Node"
+            }
+
+            if (target.text == "Node 1") {
+                this.node1 = this.flowchart.addNode(target.newType, target.text)
+                this.selectedNode = this.node1
+            } else if (target.text == "Node 2") {
+                this.node2 = this.flowchart.addNode(target.newType, target.text)
+                this.selectedNode = this.node2
+            }
+
+            if (this.selectedNode) {
+                this.selectedNode.x = target.x
+            }
+        },
         updateText() {
             if (this.node1) {
                 this.node1.text = this.options.text || ""

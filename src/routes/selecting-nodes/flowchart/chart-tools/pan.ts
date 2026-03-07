@@ -60,3 +60,5 @@ export class PanTool extends Tool {
         }
     }
 }
+
+export default PanTool

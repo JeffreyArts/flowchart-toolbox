@@ -1,5 +1,7 @@
 import { PanTool } from "./chart-tools/pan"
 import { ZoomTool } from "./chart-tools/zoom"
+import { SelectTool } from "./chart-tools/select"
+
 import { StartNode } from "./nodes/start"
 import { ProcessNode } from "./nodes/process"
 
@@ -8,7 +10,7 @@ export class Flowchart {
     nodes = [] as Array<StartNode | ProcessNode>
     chart: HTMLDivElement
 
-    _tools = [] as Array<{ name: string, object: PanTool | ZoomTool | null }>
+    _tools = [] as Array<{ name: string, object: PanTool | ZoomTool | SelectTool| null }>
 
 
     _zoom = 1
@@ -69,7 +71,7 @@ export class Flowchart {
         return this._zoom
     }
 
-    add(type: string, text?: string | number) {
+    addNode(type: string, text?: string | number) {
         if (!this.el) return
         if (!text) text = ""
         if (typeof text === "number") text = text.toString()
@@ -88,6 +90,18 @@ export class Flowchart {
         return node
     }
 
+    removeNode(node: StartNode | ProcessNode | string) {
+        if (typeof node === "string") {
+            node = this.nodes.find(n => n.id === node) as StartNode | ProcessNode
+            if (!node) {
+                throw new Error(`Node with id "${node}" not found`)
+            }
+        }
+
+        this.nodes = this.nodes.filter(n => n.id !== node.id)
+        node.destroy()
+    }
+
     selectTool(tool: string) {
         // Check if tool already exists in _tools
         const existingTool = this._tools.find(t => t.name === tool)
@@ -96,11 +110,13 @@ export class Flowchart {
         }
 
         // Add new tool to _tools
-        let newTool: PanTool | ZoomTool | null = null
+        let newTool: PanTool | ZoomTool | SelectTool| null = null
         if (tool === "pan") {
             newTool = new PanTool(this)
         } else if (tool === "zoom") {
             newTool = new ZoomTool(this)
+        } else if (tool === "select") {
+            newTool = new SelectTool(this)
         }
         if (newTool) {
             this._tools.push({ name: tool, object: newTool })
@@ -112,11 +128,19 @@ export class Flowchart {
             const toolClasses = Array.from(this.el.classList).filter(c => c.startsWith("__tool"))
             toolClasses.forEach(c => this.el?.classList.remove(c))
 
+            let tools = this._tools.map(t => t.name).join(",")
+            this.el.setAttribute("data-tools", tools)
             // Add class for the current tool
-            this.el.classList.add(`__tool${tool.charAt(0).toUpperCase() + tool.slice(1)}`)
+            this._tools.forEach(t => {
+                if (!this.el) return
 
-            this.el.setAttribute("data-tool", tool)
+                if (t.object) {
+                    this.el.classList.add(`__tool${t.name.charAt(0).toUpperCase() + t.name.slice(1)}`)
+                }
+            })
         }
+
+        return newTool
     }
 
     deselectTool(toolName: string) {

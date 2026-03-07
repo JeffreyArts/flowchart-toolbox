@@ -63,3 +63,5 @@ export class ZoomTool extends Tool {
         super.destroy()
     }
 }
+
+export default ZoomTool
