@@ -5,7 +5,9 @@ import Tool from "./index"
 export class SelectTool extends Tool {
     name = "select"
     mouseStartPos = undefined as FlowchartPos | undefined
-    mouse = { x: 0, y: 0 } as FlowchartPos
+    // mouse = { x: 0, y: 0 } as FlowchartPos
+    startPan = { x: 0, y: 0 } as FlowchartPos
+
     onClick = undefined as ((e: MouseEvent) => void) | undefined
     
     constructor(flowchart: FlowchartType) {
@@ -22,8 +24,16 @@ export class SelectTool extends Tool {
         }
     }
 
+    onMouseDown: (e: MouseEvent) => void = (e) => {  
+        this.startPan = { ...this.flowchart?.pan } as FlowchartPos
+    }
 
     #onClick = (e: MouseEvent) => {
+        if (this.startPan.x !== this.flowchart?.pan.x || this.startPan.y !== this.flowchart?.pan.y) {
+            // If pan has changed since mouse down, don't trigger click event (prevents click when panning)
+            return
+        }
+
         if (this.onClick) {
             this.onClick(e)
         }

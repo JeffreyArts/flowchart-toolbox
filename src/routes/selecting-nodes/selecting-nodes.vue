@@ -141,10 +141,16 @@ export default defineComponent ({
                         this.selectedNode = undefined
                         this.flowchart?.nodes.forEach(node => {
                             if (!node.el) return
-                            node.el.classList.remove("__isSelected")    
                             if (node.isHover) {
+                                if (node.el.classList.contains("__isSelected")) {
+                                    node.el.classList.remove("__isSelected")    
+                                    return
+                                }
+                                
                                 this.selectedNode = node    
                                 node.el.classList.add("__isSelected")    
+                            } else {
+                                node.el.classList.remove("__isSelected")    
                             }
                         })
                     }
