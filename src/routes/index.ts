@@ -1,5 +1,5 @@
 import { createWebHistory, createRouter } from "vue-router"
-import CanvasPanning from "./canvas-panning.vue"
+import CanvasPanning from "./canvas-panning/canvas-panning.vue"
 import Home from "./home.vue"
 import OptionsOverview from "./options-overview.vue"
 import TheSymbols from "./the-symbols.vue"

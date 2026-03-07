@@ -6,8 +6,8 @@ export class Flowchart {
     nodes = [] as Array<StartNode>
     canvas: HTMLDivElement
 
-    pointerDown = false
     pointerStartPos = { x: 0, y: 0 }
+    _pointerDown = false
     
     pan = new Proxy({ x: 0, y: 0 }, {
         set: (target, prop, value) => {
@@ -52,6 +52,21 @@ export class Flowchart {
         this.el.addEventListener("pointerdown", this.#handlePointerDown)
         this.el.addEventListener("pointermove", this.#handlePointerMove)
         document.addEventListener("pointerup", this.#handlePointerUP)
+    }
+
+    set pointerDown(value: boolean) {
+        this._pointerDown = value
+        if (this.el) {
+            if (value) {
+                this.el.classList.add("__isPanning")
+            } else {
+                this.el.classList.remove("__isPanning")
+            }
+        }
+    }
+    
+    get pointerDown() {
+        return this._pointerDown
     }
 
     #handlePointerDown = (e: PointerEvent) => {

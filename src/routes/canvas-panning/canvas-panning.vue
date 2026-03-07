@@ -40,8 +40,8 @@
 import { defineComponent, markRaw } from "vue"
 import _ from "lodash"
 import gsap from "gsap"
-import { Flowchart } from "../flowchart"
-import { StartNode } from "../flowchart/start"
+import { Flowchart } from "./flowchart"
+import { StartNode } from "./flowchart/start"
 
 interface Options {
     text: string
@@ -153,6 +153,11 @@ export default defineComponent ({
     width: 100%;
     height: 100%;
     overflow: hidden;
+    cursor: grab;
+
+    &.__isPanning {
+        cursor: grabbing;
+    }
 }
 
 .flowchart-canvas {
