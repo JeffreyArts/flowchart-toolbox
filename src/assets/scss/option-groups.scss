@@ -269,6 +269,12 @@
         background: #EEEEEE;
     }
 
+    .row {
+        display: flex;
+        flex-flow: row wrap;
+        gap: 8px;
+    }
+
     .info-icon {
         opacity: .64;
         background-color: rgba(255,255,255,.24);

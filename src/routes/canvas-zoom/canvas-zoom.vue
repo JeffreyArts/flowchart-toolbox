@@ -1,7 +1,7 @@
 <template>
-    <div class="canvas-panning">
+    <div class="canvas-zoom">
         <header class="title">
-            <h1>Canvas panning</h1>
+            <h1>Canvas zoom</h1>
         </header>
 
         <hr>
@@ -20,11 +20,23 @@
                         <label for="options-text">Text</label>
                         <textarea id="options-text" v-model="options.text" @input="updateText()"></textarea>
                     </div>
+                    <div class="option">
+                        <label for="option-tool">Tool</label>
+
+                        <div class="row">
+                            <div v-for="(tool,k) in tools" :key="k" :value="tool">
+                                <input type="radio" :id="`tool-${k}`" :value="tool" v-model="options.tool" @change="updateTool()">
+                                <label :for="`tool-${k}`">
+                                    {{ tool }}
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
                     <form class="option" @submit="resetPan">
                         <label for="options-resetPan">Reset pan</label>
                         <button class="button" id="options-resetPan">Reset</button>
                     </form>
-
                     <form class="option" @submit="resetOptions">
                         <label for="options-reset">Reset options</label>
                         <button class="button" id="options-reset">Reset</button>
@@ -45,6 +57,7 @@ import { StartNode } from "./flowchart/start"
 
 interface Options {
     text: string
+    tool: string
 }
 
 export default defineComponent ({ 
@@ -53,8 +66,10 @@ export default defineComponent ({
     data() {
         return {
             options: {
-                text: "asdf",
+                text: "Test",
+                tool: "pan",
             } as Partial<Options>,
+            tools: ["pan", "zoom"],
             startNode: undefined as StartNode | undefined,
             flowchart: undefined as Flowchart | undefined,
             ignoreOptionsUpdate: true,
@@ -95,12 +110,18 @@ export default defineComponent ({
     },
     mounted() {
 
-        if (this.$el) {
+        if (this.$el && !this.flowchart) {
             setTimeout(() => {
                 this.flowchart = markRaw(new Flowchart("#canvas-panning"))
+                console.print("Flowchart instance:", this.flowchart)
                 this.startNode = this.flowchart.add("start", this.options.text)
+                
+                if (this.options.tool) {
+                    this.flowchart.selectTool(this.options.tool)
+                }
             })
         }
+
         this.loadOptions()
     },
     unmounted() {
@@ -110,6 +131,14 @@ export default defineComponent ({
         updateText() {
             if (this.startNode) {
                 this.startNode.text = this.options.text || ""
+            }
+        },
+        updateTool() {
+            if (this.flowchart) {
+                
+                if (this.options.tool) {
+                    this.flowchart.selectTool(this.options.tool)
+                }
             }
         },
         resetPan(e:Event) {
@@ -137,7 +166,8 @@ export default defineComponent ({
         resetOptions(e:Event) {
             e.preventDefault()
             this.options = {
-                text: "",
+                text: "Test",
+                tool: "pan",
             }
         },
     }
@@ -145,18 +175,22 @@ export default defineComponent ({
 </script>
 
 
-<style lang="scss"> 
-.canvas-panning {
+<style lang="scss">
+
+.canvas-zoom { 
     .flowchart {
         color: #333;
         position: relative;
         width: 100%;
         height: 100%;
         overflow: hidden;
-        cursor: grab;
 
-        &.__isPanning {
-            cursor: grabbing;
+        &.__toolPan {
+            cursor: grab;
+        
+            &.__isPanning {
+                cursor: grabbing;
+            }
         }
     }
 

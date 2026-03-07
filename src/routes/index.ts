@@ -1,5 +1,6 @@
 import { createWebHistory, createRouter } from "vue-router"
 import CanvasPanning from "./canvas-panning/canvas-panning.vue"
+import CanvasZoom from "./canvas-zoom/canvas-zoom.vue"
 import Home from "./home.vue"
 import OptionsOverview from "./options-overview.vue"
 import TheSymbols from "./the-symbols.vue"
@@ -11,19 +12,24 @@ const routes = [
         component: Home
     },
     {
-        path: "/the-symbols",
-        name: "The symbols",
-        component: TheSymbols
-    },
-    {
         path: "/canvas-panning",
         name: "Canvas panning",
         component: CanvasPanning
     },
     {
+        path: "/canvas-zoom",
+        name: "Canvas zoom",
+        component: CanvasZoom
+    },
+    {
         path: "/options-overview",
         name: "Options overview",
         component: OptionsOverview
+    },
+    {
+        path: "/the-symbols",
+        name: "The symbols",
+        component: TheSymbols
     }
 ]
 
