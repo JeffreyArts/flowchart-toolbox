@@ -13,30 +13,30 @@ const routes = [
         component: Home
     },
     {
+        path: "/the-symbols",
+        name: "1) The symbols",
+        component: TheSymbols
+    },
+    {
         path: "/canvas-panning",
-        name: "Canvas panning",
+        name: "2) Canvas panning",
         component: CanvasPanning
     },
     {
         path: "/canvas-zoom",
-        name: "Canvas zoom",
+        name: "3) Canvas zoom",
         component: CanvasZoom
+    },
+    {
+        path: "/selecting-nodes",
+        name: "4) Selecting nodes",
+        component: SelectingNodes
     },
     {
         path: "/options-overview",
         name: "Options overview",
         component: OptionsOverview
     },
-    {
-        path: "/selecting-nodes",
-        name: "Selecting nodes",
-        component: SelectingNodes
-    },
-    {
-        path: "/the-symbols",
-        name: "The symbols",
-        component: TheSymbols
-    }
 ]
 
 
