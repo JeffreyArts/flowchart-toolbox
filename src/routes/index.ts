@@ -4,6 +4,7 @@ import CanvasZoom from "./canvas-zoom/canvas-zoom.vue"
 import Home from "./home.vue"
 import OptionsOverview from "./options-overview.vue"
 import SelectingNodes from "./selecting-nodes/selecting-nodes.vue"
+import ConnectNodes from "./connect-nodes/connect-nodes.vue"
 import TheSymbols from "./the-symbols.vue"
 
 const routes = [
@@ -31,6 +32,11 @@ const routes = [
         path: "/selecting-nodes",
         name: "4) Selecting nodes",
         component: SelectingNodes
+    },
+    {
+        path: "/connect-nodes",
+        name: "5) Connect nodes",
+        component: ConnectNodes
     },
     {
         path: "/options-overview",
