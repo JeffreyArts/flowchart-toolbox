@@ -31,16 +31,25 @@
                                 </label>
                             </div>
                         </div>
-
                     </div>
-                    <form class="option" @submit="resetPan">
-                        <label for="options-resetPan">Reset pan</label>
-                        <button class="button" id="options-resetPan">Reset</button>
-                    </form>
+
                     <form class="option" @submit="resetOptions">
                         <label for="options-reset">Reset options</label>
                         <button class="button" id="options-reset">Reset</button>
                     </form>
+                </div>
+
+
+                <div class="option-group" name="Actions" >
+                    <div class="option">
+                        <label for="options-resetPan">Reset</label>
+                        <div class="row">
+                            <button class="button __isSmall" id="options-resetPan" @click="resetPan">pan</button>
+                            <button class="button __isSmall" id="options-resetZoom" @click="resetZoom">zoom</button>
+                            <button class="button __isSmall" id="options-resetBoth" @click="resetZoom($event); resetPan($event)">both</button>
+
+                        </div>
+                    </div>
                 </div>
             </div>
         </aside>
@@ -67,7 +76,7 @@ export default defineComponent ({
         return {
             options: {
                 text: "Test",
-                tool: "pan",
+                tool: "zoom",
             } as Partial<Options>,
             tools: ["pan", "zoom"],
             startNode: undefined as StartNode | undefined,
@@ -109,13 +118,13 @@ export default defineComponent ({
         },
     },
     mounted() {
-
         if (this.$el && !this.flowchart) {
             setTimeout(() => {
                 this.flowchart = markRaw(new Flowchart("#canvas-panning"))
                 console.print("Flowchart instance:", this.flowchart)
                 this.startNode = this.flowchart.add("start", this.options.text)
                 
+                this.flowchart.selectTool("pan")
                 if (this.options.tool) {
                     this.flowchart.selectTool(this.options.tool)
                 }
@@ -125,7 +134,7 @@ export default defineComponent ({
         this.loadOptions()
     },
     unmounted() {
-        //
+        this.flowchart?.destroy()
     },
     methods: {
         updateText() {
@@ -135,9 +144,12 @@ export default defineComponent ({
         },
         updateTool() {
             if (this.flowchart) {
-                
-                if (this.options.tool) {
+                this.flowchart.selectTool("pan")
+
+                if (this.options.tool == "zoom") {
                     this.flowchart.selectTool(this.options.tool)
+                } else {
+                    this.flowchart.deselectTool("zoom")
                 }
             }
         },
@@ -145,6 +157,12 @@ export default defineComponent ({
             e.preventDefault()
             if (this.flowchart) {
                 gsap.to(this.flowchart.pan, { x: 0, y: 0, duration: 0.5 })
+            }
+        },
+        resetZoom(e:Event) {
+            e.preventDefault()
+            if (this.flowchart) {
+                gsap.to(this.flowchart, { zoom: 1, duration: 0.5 })
             }
         },
         loadOptions() {
@@ -194,12 +212,13 @@ export default defineComponent ({
         }
     }
 
-    .flowchart-canvas {
+    .flowchart-chart {
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
+        outline: 10px solid orange;
     }
 
     .flowchart-node {
@@ -208,6 +227,11 @@ export default defineComponent ({
         box-sizing: border-box;
         text-align: center;
         min-width: 5em;
+
+        // Make text unselectable
+        -webkit-user-select: none; /* Safari */
+        -ms-user-select: none; /* IE 10 and IE 11 */
+        user-select: none; /* Standard syntax */
 
         &.start-node {
             border: 4px solid #ffccff;

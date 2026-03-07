@@ -3,8 +3,8 @@ import Tool from "./index"
 
 export class PanTool extends Tool {
     name = "pan"
-    mouseDown = false
     mouseStartPos = undefined as FlowchartPos | undefined
+    mouse = { x: 0, y: 0 } as FlowchartPos
     
     constructor(flowchart: FlowchartType) {
         super(flowchart)
@@ -15,29 +15,37 @@ export class PanTool extends Tool {
             }
         }
     }
-    
 
-    onMouseDown = (pos: FlowchartPos) => {  
-        this.mouseDown = true
-        this.mouseStartPos = { x: pos.x, y: pos.y }
+    #setMouse = (e: MouseEvent) => {
+        if (!this.flowchart?.chart) return
+
+        const x = e.clientX - this.flowchart.chart.getBoundingClientRect().left
+        const y = e.clientY - this.flowchart.chart.getBoundingClientRect().top
+        this.mouse = { x, y }
+    }
+
+    onMouseDown = (e: MouseEvent) => {  
+        this.#setMouse(e)
+        this.mouseStartPos = { ...this.mouse }
     }
     
-    onMouseMove = (pos: FlowchartPos) => {  
+    onMouseMove = (e: MouseEvent) => {  
+        this.#setMouse(e)
         if (!this.mouseDown) return
         if (!this.flowchart) return
         if (!this.mouseStartPos) return
 
-        const deltaX = pos.x - this.mouseStartPos.x
-        const deltaY = pos.y - this.mouseStartPos.y
-        
+        const deltaX = this.mouse.x - this.mouseStartPos.x
+        const deltaY = this.mouse.y - this.mouseStartPos.y
+
         if (this.flowchart) {
             this.flowchart.pan.x += deltaX
             this.flowchart.pan.y += deltaY
         }
     }
 
-    onMouseUp = () => {
-        this.mouseDown = false
+    onMouseUp = (e: MouseEvent) => {  
+        this.#setMouse(e)
         this.mouseStartPos = undefined
     }   
 

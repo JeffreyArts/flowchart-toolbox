@@ -1,4 +1,5 @@
 import { PanTool } from "./chart-tools/pan"
+import { ZoomTool } from "./chart-tools/zoom"
 import { StartNode } from "./start"
 
 export class Flowchart {
@@ -6,15 +7,15 @@ export class Flowchart {
     nodes = [] as Array<StartNode>
     chart: HTMLDivElement
 
-    _tool = {
-        name: "none",
-        object: null as PanTool | null
-    } 
+    _tools = [] as Array<{ name: string, object: PanTool | ZoomTool | null }>
+
+
+    _zoom = 1
     
     pan = new Proxy({ x: 0, y: 0 }, {
         set: (target, prop, value) => {
             target[prop as "x" | "y"] = value
-            this.chart.style.translate = `${target.x}px ${target.y}px`
+            this.chart.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.zoom})`
             return true
         }
     })
@@ -50,30 +51,21 @@ export class Flowchart {
         this.el.appendChild(this.chart)
     }
 
-    set tool(value: string) {
-
-        if (this._tool.object) {
-            this._tool.object.destroy()
-        }
-
-        this._tool.name = value
-        
-
-        if (value == "pan") {
-            this._tool.object = new PanTool(this)
-        }
-
-        if (this.el) {
-            this.el.setAttribute("data-tool", value)
-        }
-    }
-
     get width() {
         return this.el?.clientWidth || 0
     }
 
     get height() {
         return this.el?.clientHeight || 0
+    }
+
+    set zoom(value: number) {
+        this._zoom = value
+        this.chart.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.zoom})`
+    }
+
+    get zoom() {
+        return this._zoom
     }
 
     add(type: string, text?: string | number) {
@@ -94,16 +86,60 @@ export class Flowchart {
     }
 
     selectTool(tool: string) {
-        if (this._tool.name === tool) {
+        // Check if tool already exists in _tools
+        const existingTool = this._tools.find(t => t.name === tool)
+        if (existingTool) {
             return
-        } 
-        
-        this.tool = tool
+        }
+
+        // Add new tool to _tools
+        let newTool: PanTool | ZoomTool | null = null
+        if (tool === "pan") {
+            newTool = new PanTool(this)
+        } else if (tool === "zoom") {
+            newTool = new ZoomTool(this)
+        }
+        if (newTool) {
+            this._tools.push({ name: tool, object: newTool })
+        }
+
+        if (this.el) {
+
+            // if this.el.classList has a class that starts with "__tool", remove it
+            const toolClasses = Array.from(this.el.classList).filter(c => c.startsWith("__tool"))
+            toolClasses.forEach(c => this.el?.classList.remove(c))
+
+            // Add class for the current tool
+            this.el.classList.add(`__tool${tool.charAt(0).toUpperCase() + tool.slice(1)}`)
+
+            this.el.setAttribute("data-tool", tool)
+        }
+    }
+
+    deselectTool(toolName: string) {
+        // Remove tool from _tools
+        const tool = this._tools.find(t => t.name === toolName)
+        if (tool) {
+            if (tool.object) {
+                tool.object.destroy()
+            }
+            this._tools = this._tools.filter(t => t.name !== toolName)
+        }
+
+        if (this.el) {
+
+            // Remove class for the current tool
+            this.el.classList.remove(`__tool${toolName.charAt(0).toUpperCase() + toolName.slice(1)}`)
+
+            this.el.removeAttribute("data-tool")
+        }
     }
 
     destroy() {
         this.nodes = []
         this.chart.remove()
+
+        this._tools.forEach(t => t.object?.destroy())
 
         this.el = null
     }

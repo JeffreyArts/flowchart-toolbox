@@ -145,6 +145,11 @@ src: url("/src/assets/fonts/fixed-sys.otf");
     &:active {
         scale: .9;
     }
+
+    &.__isSmall {
+        padding: 4px 12px;
+        font-size: 0.8em;
+    }
 }
 
 

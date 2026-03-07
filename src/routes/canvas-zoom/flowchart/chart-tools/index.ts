@@ -1,56 +1,80 @@
-import type { FlowchartType, FlowchartPos } from "../types"
+import type { FlowchartType } from "../types"
 
 export class Tool {
     name = "unknown-tool"
+    mouseDown = false
     flowchart = null as FlowchartType | null
+    isWithinChart = false
 
     constructor(flowchart: FlowchartType) {
         this.flowchart = flowchart
 
+        if (this.flowchart.el) {
+            this.flowchart.el.addEventListener("wheel", this.#onWheel, { passive: false })
+        }
         document.addEventListener("mousedown", this.#onMouseDown)
         document.addEventListener("mousemove", this.#onMouseMove)
         document.addEventListener("mouseup", this.#onMouseUp)
     }
 
+    #setWithinChart = (e: MouseEvent) => {
+        if (!this.flowchart?.el) return false
+
+        const rect = this.flowchart.el.getBoundingClientRect()
+        this.isWithinChart =  (
+            e.clientX >= rect.left &&
+            e.clientX <= rect.right &&
+            e.clientY >= rect.top &&
+            e.clientY <= rect.bottom
+        )
+        return this.isWithinChart
+    }
+
     #onMouseDown = (e: MouseEvent) => {
-        // Get x / y relative to this.flowchart.chart element
-        const x = e.clientX - (this.flowchart?.chart.getBoundingClientRect().left || 0)
-        const y = e.clientY - (this.flowchart?.chart.getBoundingClientRect().top || 0)
-        
+
+        this.mouseDown = true
+
         if (this.onMouseDown) {
-            this.onMouseDown({ x, y })
+            this.onMouseDown(e)
         }
     }
 
     #onMouseMove = (e: MouseEvent) => {
-        // Get x / y relative to this.flowchart.chart element
-        const x = e.clientX - (this.flowchart?.chart.getBoundingClientRect().left || 0)
-        const y = e.clientY - (this.flowchart?.chart.getBoundingClientRect().top || 0)
+        this.#setWithinChart(e)
         
         if (this.onMouseMove) {
-            this.onMouseMove({ x, y })
+            this.onMouseMove(e)
         }
     }
 
     #onMouseUp = (e: MouseEvent) => {
         // Get x / y relative to this.flowchart.chart element
-        const x = e.clientX - (this.flowchart?.chart.getBoundingClientRect().left || 0)
-        const y = e.clientY - (this.flowchart?.chart.getBoundingClientRect().top || 0)
+        this.mouseDown = false
         
         if (this.onMouseUp) {
-            this.onMouseUp({ x, y })
+            this.onMouseUp(e)
         }
     }
 
+    #onWheel = (e: WheelEvent) => {
+        // Check if within chart bounds
+        this.#setWithinChart(e)
+
+        if (this.onWheel) {
+            this.onWheel(e)
+        }
+    }
     
-    onMouseDown = (pos: FlowchartPos) => {}
-    onMouseUp = (pos: FlowchartPos) => {}
-    onMouseMove = (pos: FlowchartPos) => {}
+    onMouseDown = (e: MouseEvent) => {}
+    onMouseUp = (e: MouseEvent) => {}
+    onMouseMove = (e: MouseEvent) => {}
+    onWheel = (e: WheelEvent) => {}
 
     destroy() {
         document.removeEventListener("mousedown", this.#onMouseDown)
         document.removeEventListener("mousemove", this.#onMouseMove)
         document.removeEventListener("mouseup", this.#onMouseUp)
+        document.removeEventListener("wheel", this.#onWheel)
     }
 }
 
