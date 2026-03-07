@@ -3,6 +3,7 @@ import CanvasPanning from "./canvas-panning/canvas-panning.vue"
 import CanvasZoom from "./canvas-zoom/canvas-zoom.vue"
 import Home from "./home.vue"
 import OptionsOverview from "./options-overview.vue"
+import SelectingNodes from "./selecting-nodes/selecting-nodes.vue"
 import TheSymbols from "./the-symbols.vue"
 
 const routes = [
@@ -25,6 +26,11 @@ const routes = [
         path: "/options-overview",
         name: "Options overview",
         component: OptionsOverview
+    },
+    {
+        path: "/selecting-nodes",
+        name: "Selecting nodes",
+        component: SelectingNodes
     },
     {
         path: "/the-symbols",
