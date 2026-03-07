@@ -38,9 +38,7 @@ export class FlowchartNode {
         this.updatePosition()
         this.#init()
 
-        if (this.flowchart.el) {
-            this.flowchart.el.addEventListener("mousemove", this.setIsHover)
-        }
+        document.addEventListener("mousemove", this.setIsHover)
     }
 
     #init() {
@@ -146,13 +144,6 @@ export class FlowchartNode {
     onMouseEnter() {}
     onMouseLeave() {}
 
-    destroy() {
-        if (this.flowchart?.el) {
-            this.flowchart.el.removeEventListener("mousemove", this.setIsHover)
-        }
-        this.el.remove()
-    }
-
     setIsHover = (e: MouseEvent) => {
         if (!this.flowchart?.el) return
 
@@ -172,17 +163,31 @@ export class FlowchartNode {
 
             this.isHover = (distToLeftCenter <= radius || distToRightCenter <= radius) || (mouseX >= centerLeftX && mouseX <= centerRightX && mouseY >= rect.top && mouseY <= rect.bottom)
         } else if (this.type === "decision") {
-            const centerX = rect.left + rect.width / 2
-            const centerY = rect.top + rect.height / 2
+            // Calculate width based on ::before element which is the diamond shape
+            const after = window.getComputedStyle(this.el, "::before")
+            const afterWidth = parseFloat(after.width)
+            const paddingLeft = parseFloat(after.paddingLeft)
+            const paddingRight = parseFloat(after.paddingRight)
+            const borderWidth = parseFloat(after.borderWidth) * 2 || 0
+            const width = afterWidth + paddingLeft + paddingRight + borderWidth
+
+            // Calculate radius of the circumscribed circle around the diamond
+            const radius = Math.sqrt(width ** 2 + width ** 2) / 2
+            const centerX = rect.x + rect.width / 2
+            const centerY = rect.y + rect.height / 2
+
             const dx = Math.abs(mouseX - centerX)
             const dy = Math.abs(mouseY - centerY)
-            const thresholdX = rect.width / 2 * Math.SQRT1_2
-            const thresholdY = rect.height / 2 * Math.SQRT1_2
-            this.isHover = dx + dy <= thresholdX && dx + dy <= thresholdY
-        }
-        // this.isHover = mouseX >= rect.left && mouseX <= rect.right && mouseY >= rect.top && mouseY <= rect.bottom
 
+            this.isHover = (dx + dy) <= radius
+        }
     }
+
+    destroy() {
+        document.removeEventListener("mousemove", this.setIsHover)  
+        this.el.remove()
+    }
+
 }
 
 export default FlowchartNode

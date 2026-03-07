@@ -3,7 +3,9 @@ import { ZoomTool } from "./chart-tools/zoom"
 import { SelectTool } from "./chart-tools/select"
 
 import { StartNode } from "./nodes/start"
+import { EndNode } from "./nodes/end"
 import { ProcessNode } from "./nodes/process"
+import { DecisionNode } from "./nodes/decision"
 
 export class Flowchart {
     el = null as HTMLElement | null
@@ -79,8 +81,12 @@ export class Flowchart {
         let node
         if (type === "start") {
             node = new StartNode(this, text)
+        } else if (type === "end") {
+            node = new EndNode(this, text)
         } else if (type === "process") {
             node = new ProcessNode(this, text)
+        } else if (type === "decision") {
+            node = new DecisionNode(this, text)
         }
 
         if (node) {

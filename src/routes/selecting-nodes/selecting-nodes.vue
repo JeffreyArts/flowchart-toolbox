@@ -25,6 +25,7 @@
                             {{ selectedNode.type }}<br>
                             <select name="changeNode" id="" v-model="selectedNode.type" @change="changeSelectedNode">
                                 <option value="start">Start</option>
+                                <option value="end">End</option>
                                 <option value="process">Process</option>
                                 <option value="decision">Decision</option>
                             </select>
@@ -57,6 +58,7 @@ import _ from "lodash"
 import gsap from "gsap"
 import { Flowchart } from "./flowchart"
 import { StartNode } from "./flowchart/nodes/start"
+import { EndNode } from "./flowchart/nodes/end"
 import { ProcessNode } from "./flowchart/nodes/process"
 import SelectTool from "./flowchart/chart-tools/select"
 
@@ -78,7 +80,7 @@ export default defineComponent ({
             node1: undefined as StartNode | undefined,
             node2: undefined as ProcessNode | undefined,
             flowchart: undefined as Flowchart | undefined,
-            selectedNode: undefined as StartNode | undefined,
+            selectedNode: undefined as StartNode | ProcessNode | EndNode | undefined,
             ignoreOptionsUpdate: true,
         }
     },
@@ -127,15 +129,17 @@ export default defineComponent ({
                 if (this.node2) {
                     this.node2.x = "80%"
                 }
+
+                this.setMouseEvents(this.node1)
+                this.setMouseEvents(this.node2)
                 
-                console.print("Flowchart instance:", this.flowchart)
+                
                 this.flowchart.selectTool("pan")
                 this.flowchart.selectTool("zoom")
                 const selectTool = this.flowchart.selectTool("select")
                 if (selectTool && selectTool instanceof SelectTool) {
                     selectTool.onClick = (e: MouseEvent) => {
                         this.flowchart?.nodes.forEach(node => {
-                            const nodeEl = node.el
                             if (node.isHover) {
                                 this.selectedNode = node    
                             }
@@ -163,7 +167,6 @@ export default defineComponent ({
                 newType: ""
             }
             
-            console.log("Selected node:", this.node2?.id, this.selectedNode.id)
             if (this.node2?.id == this.selectedNode.id) {
                 target = {
                     node: this.node2,
@@ -179,8 +182,10 @@ export default defineComponent ({
                 target.newType = "start"
             } else if (this.selectedNode.type == "process") {
                 target.newType = "process"
+            } else if (this.selectedNode.type == "end") {
+                target.newType = "end"
             } else if (this.selectedNode.type == "decision") {
-                this.selectedNode.text = "Decision Node"
+                target.newType = "decision"
             }
 
             if (target.text == "Node 1") {
@@ -193,7 +198,23 @@ export default defineComponent ({
 
             if (this.selectedNode) {
                 this.selectedNode.x = target.x
+                this.setMouseEvents(this.selectedNode)
             }
+
+        },
+        setMouseEvents(node: StartNode | ProcessNode | EndNode) {
+            node.onMouseEnter = () => {
+                const el = node.el
+                if (el) {
+                    el.style.outline = "4px solid red"  
+                }
+            }    
+            node.onMouseLeave = () => {
+                const el = node.el
+                if (el) {
+                    el.style.outline = ""  
+                }
+            }    
         },
         updateText() {
             if (this.node1) {
@@ -295,10 +316,33 @@ export default defineComponent ({
             padding: 20px;
             border-radius: 50px;
         }
+        
+        &.end-node {
+            border: 4px solid #444;
+            padding: 20px;
+            border-radius: 50px;
+        }
 
         &.process-node {
             border: 4px solid #b2e0f9;
             padding: 20px;
+        }
+        &.decision-node {
+            padding: 20px;
+            
+            &:before {
+                content: "";
+                transform: translate(-50%, -50%) rotate(45deg);
+                border: 4px solid #fffa88;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: absolute;
+                width: calc(100% - 20px);
+                aspect-ratio: 1;
+                top: 50%;
+                left: 50%;
+            }
         }
     }
 }
