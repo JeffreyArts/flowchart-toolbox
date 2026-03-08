@@ -170,7 +170,7 @@ export default defineComponent ({
             const optionsString = localStorage.getItem("options")
             if (optionsString) {
                 const localOptions = JSON.parse(optionsString)
-                _.forOwn(this.options, (value,key) => {
+                _.forOwn(this.options, (_value,key) => {
                     const typedKey = key as keyof Options
                     if (localOptions[typedKey]) {
                         this.options[typedKey] = localOptions[key]

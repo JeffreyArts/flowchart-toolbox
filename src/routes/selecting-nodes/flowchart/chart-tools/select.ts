@@ -1,4 +1,3 @@
-import { flow } from "lodash"
 import type { FlowchartType, FlowchartPos } from "../types"
 import Tool from "./index"
 
@@ -24,7 +23,7 @@ export class SelectTool extends Tool {
         }
     }
 
-    onMouseDown: (e: MouseEvent) => void = (e) => {  
+    onMouseDown: (e: MouseEvent) => void = (_e) => {  
         this.startPan = { ...this.flowchart?.pan } as FlowchartPos
     }
 

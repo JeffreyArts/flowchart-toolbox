@@ -13,7 +13,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, PropType} from "vue"
+import { defineComponent, type PropType } from "vue"
 import _ from "lodash"
 import gsap from "gsap"
 
@@ -104,8 +104,8 @@ export default defineComponent ({
         return {
             originalIcon: [] as Array<Array<any>>,
             icon: [] as Array<Array<any>>,
-            originalGrid: [] as Array<{x:number, y:number, color: string}>,
-            displayGrid: [] as Array<{x:number, y:number, color: string}>,
+            originalGrid: [] as Array<{ x:number, y:number, color: string }>,
+            displayGrid: [] as Array<{ x:number, y:number, color: string }>,
             transitions: [] as Array<gsap.core.Tween>,
         }
     },
@@ -120,24 +120,27 @@ export default defineComponent ({
             if (this.icon.length <= 0) {
                 return 0
             }
+            if (!this.icon[0]) {
+                return 0
+            }
             return this.icon[0].length * 10
         },
     },
     watch:{
         "size":{
-            handler: function (val) {
+            handler: function (_val) {
                 this.updateIcon()
             },
             immediate: true
         },
         "name":{
-            handler: function (val) {
+            handler: function (_val) {
                 this.updateIcon()
             },
             immediate: true
         },
         "custom":{
-            handler: function (val) {
+            handler: function (_val) {
                 if (this.custom && this.custom.length > 0) {
                     this.originalGrid = []
                     const activeColor = this.activeColor ? this.activeColor : "#333"
@@ -150,7 +153,7 @@ export default defineComponent ({
                         }
                         this.originalGrid.push(data)
                     })
-                    this.transit({duration: 0, delay: 0})
+                    this.transit({ duration: 0, delay: 0 })
                 }
             },
             deep: true,
@@ -164,54 +167,54 @@ export default defineComponent ({
         //
     },
     methods: {
-        updateIcon(custom?: boolean) {
+        updateIcon() {
             if (this.size === "small") {
                 switch (this.name) {
-                case "eye": 
-                case "eyes":        this.icon = smallEye; break
-                case "cross":       this.icon = smallCross; break
-                case "terminal":    this.icon = smallTerminal; break
-                case "smiley":
-                case "smiley-face": 
-                case "smileyFace":      this.icon = smallSmileyFace; break
-                case "expand":          this.icon = smallExpand; break
-                case "expand-outline":  
-                case "expand-border":   this.icon = smallExpandWithBorder; break
-                case "circle":          this.icon = smallCircle; break
-                case "christmas":       
-                case "christmas-tree":  this.icon = smallChristmasTree; break
-                case "checkbox":  
-                case "checkbox-empty":  this.icon = smallCheckboxEmpty; break
-                case "checkbox-checked":this.icon = smallCheckboxCheck; break
-                case "checkbox-cross":  this.icon = smallCheckboxCross; break
-                case "heart":           this.icon = smallHeart; break
-                case "heart-outline":   this.icon = smallHeartOutline; break
-                case "on":              this.icon = smallOn; break
-                case "off":             this.icon = smallOff; break
+                    case "eye": 
+                    case "eyes":        this.icon = smallEye; break
+                    case "cross":       this.icon = smallCross; break
+                    case "terminal":    this.icon = smallTerminal; break
+                    case "smiley":
+                    case "smiley-face": 
+                    case "smileyFace":      this.icon = smallSmileyFace; break
+                    case "expand":          this.icon = smallExpand; break
+                    case "expand-outline":  
+                    case "expand-border":   this.icon = smallExpandWithBorder; break
+                    case "circle":          this.icon = smallCircle; break
+                    case "christmas":       
+                    case "christmas-tree":  this.icon = smallChristmasTree; break
+                    case "checkbox":  
+                    case "checkbox-empty":  this.icon = smallCheckboxEmpty; break
+                    case "checkbox-checked":this.icon = smallCheckboxCheck; break
+                    case "checkbox-cross":  this.icon = smallCheckboxCross; break
+                    case "heart":           this.icon = smallHeart; break
+                    case "heart-outline":   this.icon = smallHeartOutline; break
+                    case "on":              this.icon = smallOn; break
+                    case "off":             this.icon = smallOff; break
         
-                default: this.icon = []; break
+                    default: this.icon = []; break
                 }
             } else if (this.size === "medium") {
                 switch (this.name) {
-                case "leave": 
-                case "exit":            this.icon = mediumLeave; break
-                case "empty":           this.icon = mediumEmpty; break
-                case "hamburger":       this.icon = mediumHamburger; break
-                case "speech-bubble":   this.icon = mediumSpeechBubble; break
-                case "settings":        
-                case "wrench":          this.icon = mediumWrench; break
-                case "close":           
-                case "cross":           this.icon = mediumCross; break
-                case "circle":          this.icon = mediumCircle; break
+                    case "leave": 
+                    case "exit":            this.icon = mediumLeave; break
+                    case "empty":           this.icon = mediumEmpty; break
+                    case "hamburger":       this.icon = mediumHamburger; break
+                    case "speech-bubble":   this.icon = mediumSpeechBubble; break
+                    case "settings":        
+                    case "wrench":          this.icon = mediumWrench; break
+                    case "close":           
+                    case "cross":           this.icon = mediumCross; break
+                    case "circle":          this.icon = mediumCircle; break
                 
-                default: this.icon = []; break
+                    default: this.icon = []; break
                 }
             } else if (this.size === "large") {
                 switch (this.name) {
-                case "cross":           this.icon = largeCross; break
-                case "empty":           this.icon = largeEmpty; break
+                    case "cross":           this.icon = largeCross; break
+                    case "empty":           this.icon = largeEmpty; break
         
-                default: this.icon = []; break
+                    default: this.icon = []; break
                 }
             }
                 
@@ -238,8 +241,8 @@ export default defineComponent ({
 
             if (this.displayGrid.length !== this.originalGrid.length) {
                 this.displayGrid = []
-                this.originalGrid.forEach((grid, index) => {
-                    this.displayGrid.push({x:grid.x,y:grid.y,color: grid.color})
+                this.originalGrid.forEach((grid) => {
+                    this.displayGrid.push({ x:grid.x,y:grid.y,color: grid.color })
                 })
             }
                     
@@ -251,7 +254,7 @@ export default defineComponent ({
                 return []
             }
 
-            const sortedArray = _.sortBy(this.custom, ["y", "x"]);
+            const sortedArray = _.sortBy(this.custom, ["y", "x"])
 
             sortedArray.forEach(point => {
                 if (!this.icon[point.y]) {
@@ -291,7 +294,7 @@ export default defineComponent ({
             } 
 
             collection.forEach((grid, index) => {
-                const cell = _.find(this.displayGrid, {x:grid.x, y:grid.y})
+                const cell = _.find(this.displayGrid, { x:grid.x, y:grid.y })
                 if (cell) {
                     this.transitions.push(gsap.to(cell, {
                         color: grid.color,

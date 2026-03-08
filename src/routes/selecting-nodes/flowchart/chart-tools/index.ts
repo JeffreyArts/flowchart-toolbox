@@ -65,10 +65,10 @@ export class Tool {
         }
     }
     
-    onMouseDown = (e: MouseEvent) => {}
-    onMouseUp = (e: MouseEvent) => {}
-    onMouseMove = (e: MouseEvent) => {}
-    onWheel = (e: WheelEvent) => {}
+    onMouseDown = (_e: MouseEvent) => {}
+    onMouseUp = (_e: MouseEvent) => {}
+    onMouseMove = (_e: MouseEvent) => {}
+    onWheel = (_e: WheelEvent) => {}
 
     destroy() {
         document.removeEventListener("mousedown", this.#onMouseDown)

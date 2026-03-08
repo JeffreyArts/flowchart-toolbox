@@ -1,4 +1,4 @@
-// import { type FlowchartType } from "./types"
+import { type FlowchartType } from "./types"
 
 export class StartNode {
     x: number | string

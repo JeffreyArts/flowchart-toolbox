@@ -21,14 +21,14 @@
 </template>
 
 <script lang="ts">
-import { RouteRecord, RouteComponent } from "vue-router"
-import {defineComponent} from "vue"
+import type { RouteRecord, RouteComponent } from "vue-router"
+import { defineComponent } from "vue"
 import siteIcon from "./site-icon/site-icon.vue"
 import gsap from "gsap"
 
 export default defineComponent ({
     name: "SiteMenu", 
-    components: {siteIcon},
+    components: { siteIcon },
     props: [],
     data() {
         return {
@@ -155,7 +155,7 @@ export default defineComponent ({
             
         },
         goTo(path: string) {
-            this.$router.push({path})
+            this.$router.push({ path })
             if (window.innerWidth <=640) {
                 this.toggleMenu()
             }

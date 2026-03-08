@@ -17,7 +17,7 @@ export class Flowchart {
         }
     })
 
-    constructor(el?: HTMLElement | string, options?: {}) {
+    constructor(el?: HTMLElement | string) {
         
         if (!el) {
             this.el = document.createElement("div")
@@ -74,7 +74,7 @@ export class Flowchart {
         this.pointerStartPos = { x: e.clientX, y: e.clientY }
     }
 
-    #handlePointerUP = (e: PointerEvent) => {
+    #handlePointerUP = (_e: PointerEvent) => {
         this.pointerDown = false
         this.pointerStartPos = { x: 0, y: 0 }
     }

@@ -137,7 +137,7 @@ export default defineComponent ({
                 this.flowchart.selectTool("zoom")
                 const selectTool = this.flowchart.selectTool("select")
                 if (selectTool && selectTool instanceof SelectTool) {
-                    selectTool.onClick = (e: MouseEvent) => {
+                    selectTool.onClick = () => {
                         this.selectedNode = undefined
                         this.flowchart?.nodes.forEach(node => {
                             if (!node.el) return
@@ -248,7 +248,7 @@ export default defineComponent ({
             const optionsString = localStorage.getItem("options")
             if (optionsString) {
                 const localOptions = JSON.parse(optionsString)
-                _.forOwn(this.options, (value,key) => {
+                _.forOwn(this.options, (_value,key) => {
                     const typedKey = key as keyof Options
                     if (localOptions[typedKey]) {
                         this.options[typedKey] = localOptions[key]

@@ -21,7 +21,7 @@ export class Flowchart {
         }
     })
 
-    constructor(el?: HTMLElement | string, options?: {}) { 
+    constructor(el?: HTMLElement | string) { 
         if (!el) {
             this.el = document.createElement("div")
             this.el.classList.add("flowchart")

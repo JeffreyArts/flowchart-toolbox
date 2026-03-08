@@ -63,7 +63,7 @@ import { DecisionNode } from "./flowchart/nodes/decision"
 import { ProcessNode } from "./flowchart/nodes/process"
 import type { FlowchartNodeOptions } from "./flowchart/nodes"
 import SelectTool from "./flowchart/chart-tools/select"
-import type { FlowchartTool, FlowchartNode, } from "./flowchart/types"
+import type { FlowchartNode, } from "./flowchart/types"
 
 interface Options {
     none: undefined
@@ -127,7 +127,7 @@ export default defineComponent ({
                 
                 const selectTool = this.flowchart.getTool("select")
                 if (selectTool && selectTool instanceof SelectTool) {
-                    selectTool.onClick = (e: MouseEvent) => {
+                    selectTool.onClick = (_e: MouseEvent) => {
                         this.selectedNode = undefined
                         this.flowchart?.nodes.forEach(node => {
                             if (!node.el) return
@@ -224,7 +224,7 @@ export default defineComponent ({
             const optionsString = localStorage.getItem("options")
             if (optionsString) {
                 const localOptions = JSON.parse(optionsString)
-                _.forOwn(this.options, (value,key) => {
+                _.forOwn(this.options, (_value,key) => {
                     const typedKey = key as keyof Options
                     if (localOptions[typedKey]) {
                         this.options[typedKey] = localOptions[key]

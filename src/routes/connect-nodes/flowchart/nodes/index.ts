@@ -45,7 +45,9 @@ export class FlowchartNode {
             }
 
             if (options.parent) {
-                this.addOutput(options.parent)
+                this.addInput(options.parent)
+                options.parent.addOutput(this)
+                // options.parent.addInput(this)
             }
             
             if (options.text) {
@@ -234,9 +236,24 @@ export class FlowchartNode {
         
         if (!this.flowchart && node.flowchart) {
             this.flowchart = node.flowchart
+            this.flowchart.addNode(this)
         }
 
         this.outputs.push(node)
+    }
+
+    addInput(node: FlowchartNode) {
+        if (this.input && this.input.id === node.id) {
+            console.warn(`Node with id "${node.id}" is already an input of node with id "${this.id}", skipping connection`)
+            return
+        }
+
+        if (!this.flowchart && node.flowchart) {
+            this.flowchart = node.flowchart
+            this.flowchart.addNode(this, node)
+        }
+
+        this.input = node
     }
 
     /** Lifecycle Hooks **/
