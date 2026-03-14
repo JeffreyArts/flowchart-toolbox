@@ -82,18 +82,29 @@ export class MoveNodeTool extends Tool {
         this.#setMouse(e)
         this.mouseStartPos = undefined
 
-        if (this.selectedNode) {
-            this.selectedNode.isSelected = false
-            this.selectedNode = null
-        }
-
 
         if (this.panTool) {
             this.panTool.activate()
         }
 
         if (this.selectTool) {
-            this.selectTool.activate()
+            if (this.selectedNodeStartPos?.x == this.selectedNode?.x && this.selectedNodeStartPos?.y == this.selectedNode?.y) {
+                this.selectTool.activate()
+                this.selectTool = undefined
+            } else {
+                setTimeout(() => {
+                    if (this.selectTool) {
+                        this.selectTool.activate()
+                    }
+                    this.selectTool = undefined
+                })
+            }
+        }
+
+        if (this.selectedNode) {
+            this.selectedNode.isSelected = false
+            this.selectedNode = null
+            this.selectedNodeStartPos = undefined
         }
     } 
 

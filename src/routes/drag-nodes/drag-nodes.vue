@@ -63,7 +63,7 @@ import { DecisionNode } from "./flowchart/nodes/decision"
 import { ProcessNode } from "./flowchart/nodes/process"
 import type { FlowchartNodeOptions } from "./flowchart/nodes"
 import SelectTool from "./flowchart/chart-tools/select"
-import type { FlowchartNode, } from "./flowchart/types"
+import type { FlowchartNode } from "./flowchart/types"
 
 interface Options {
     none: undefined
@@ -128,6 +128,7 @@ export default defineComponent ({
                 if (selectTool && selectTool instanceof SelectTool) {
                     selectTool.onClick = (_e: MouseEvent) => {
                         this.selectedNode = undefined
+
                         this.flowchart?.nodes.forEach(node => {
                             if (!node.el) return
                             if (node.isHover) {

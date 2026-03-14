@@ -14,7 +14,7 @@ import type Node from "./nodes/index"
 
 
 export type FlowchartTool = Tool | PanTool | MoveNodeTool | ZoomTool | SelectTool
-export type FlowchartNode = Node
+export type FlowchartNode = Node | StartNode | ProcessNode | EndNode | DecisionNode
 
 export type FlowchartType = Flowchart
 export type StartNodeType = StartNode

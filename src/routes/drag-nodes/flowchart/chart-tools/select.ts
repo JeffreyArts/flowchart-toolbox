@@ -27,6 +27,8 @@ export class SelectTool extends Tool {
     }
 
     #onClick = (e: MouseEvent) => {
+        if (!this.isActive) return
+
         if (this.startPan.x !== this.flowchart.pan.x || this.startPan.y !== this.flowchart.pan.y) {
             // If pan has changed since mouse down, don't trigger click event (prevents click when panning)
             return

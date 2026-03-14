@@ -112,8 +112,12 @@ export class Flowchart {
         }
 
         if (node) {
-            this.nodes.push(node)
+            const existingNode = this.nodes.find(n => n.id === node.id) as FlowchartNode
+            if (!existingNode) {
+                this.nodes.push(node)
+            }
             node.connectWithChart(this)
+            node.updatePosition()
             return node
         }
     }
