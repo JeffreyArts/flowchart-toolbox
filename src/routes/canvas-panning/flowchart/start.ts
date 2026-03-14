@@ -1,4 +1,4 @@
-import { type FlowchartType } from "./types"
+import { type Flowchart } from "./index.ts" 
 
 export class StartNode {
     x: number | string
@@ -8,14 +8,14 @@ export class StartNode {
 
     id: string = crypto.randomUUID()
     el: HTMLElement
-    chart: FlowchartType | null = null
+    chart: Flowchart | null = null
     pos = { x: "", y: "" }
     
     isVisible: boolean = false
     
     // private contentEl: HTMLElement
 
-    constructor(chart: FlowchartType, text: string) {
+    constructor(chart: Flowchart, text: string) {
         this.x = "50%"
         this.y = "50%"
         
