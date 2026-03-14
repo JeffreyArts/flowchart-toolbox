@@ -5,6 +5,7 @@ import Home from "./home.vue"
 import OptionsOverview from "./options-overview.vue"
 import SelectingNodes from "./selecting-nodes/selecting-nodes.vue"
 import ConnectNodes from "./connect-nodes/connect-nodes.vue"
+import DragNodes from "./drag-nodes/drag-nodes.vue"
 import TheSymbols from "./the-symbols.vue"
 
 const routes = [
@@ -37,6 +38,11 @@ const routes = [
         path: "/connect-nodes",
         name: "5) Connect nodes",
         component: ConnectNodes
+    },
+    {
+        path: "/drag-nodes",
+        name: "6) Drag nodes",
+        component: DragNodes
     },
     {
         path: "/options-overview",
