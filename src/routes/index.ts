@@ -7,6 +7,7 @@ import SelectingNodes from "./selecting-nodes/selecting-nodes.vue"
 import ConnectNodes from "./connect-nodes/connect-nodes.vue"
 import DragNodes from "./drag-nodes/drag-nodes.vue"
 import TheSymbols from "./the-symbols.vue"
+import JointJS from "./joint-js.vue"
 
 const routes = [
     {
@@ -43,6 +44,11 @@ const routes = [
         path: "/drag-nodes",
         name: "6) Drag nodes",
         component: DragNodes
+    },
+    {
+        path: "/joint-js",
+        name: "7) JointJS",
+        component: JointJS
     },
     {
         path: "/options-overview",
