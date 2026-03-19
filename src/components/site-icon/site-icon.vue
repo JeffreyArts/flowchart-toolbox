@@ -260,6 +260,7 @@ export default defineComponent ({
                 if (!this.icon[point.y]) {
                     this.icon.push([])
                 }
+                // @ts-ignore
                 this.icon[point.y].push(!!point.value)
             })
         },

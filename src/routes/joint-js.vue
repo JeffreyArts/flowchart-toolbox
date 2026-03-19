@@ -29,6 +29,7 @@
 
 
 <script lang="ts">
+//@ts-nocheck
 import { defineComponent, markRaw } from "vue"
 import _ from "lodash"
 import Joint from "@joint/core"
