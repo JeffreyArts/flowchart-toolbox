@@ -8,6 +8,7 @@ import ConnectNodes from "./connect-nodes/connect-nodes.vue"
 import DragNodes from "./drag-nodes/drag-nodes.vue"
 import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
+import Cytoscape from "./cytoscape.vue"
 
 const routes = [
     {
@@ -49,6 +50,11 @@ const routes = [
         path: "/joint-js",
         name: "7) JointJS",
         component: JointJS
+    },
+    {
+        path: "/cytoscape",
+        name: "8) Cytoscape",
+        component: Cytoscape
     },
     {
         path: "/options-overview",
