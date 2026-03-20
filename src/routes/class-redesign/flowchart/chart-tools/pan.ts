@@ -4,7 +4,6 @@ import Tool from "./index"
 export class PanTool extends Tool {
     name = "pan"
     mouseStartPos = undefined as FlowchartPos | undefined
-    mouse = { x: 0, y: 0 } as FlowchartPos
     
     constructor(flowchart: FlowchartType) {
         super(flowchart)
@@ -16,29 +15,19 @@ export class PanTool extends Tool {
         }
     }
 
-    #setMouse = (e: MouseEvent) => {
-        if (!this.flowchart?.chart) return
-
-        const x = e.clientX - this.flowchart.chart.getBoundingClientRect().left
-        const y = e.clientY - this.flowchart.chart.getBoundingClientRect().top
-        this.mouse = { x, y }
-    }
-
     onMouseDown = (e: MouseEvent) => {  
-        this.#setMouse(e)
         if (!this.isWithinChart) return
 
-        this.mouseStartPos = { ...this.mouse }
+        this.mouseStartPos = { ...this.globalMousePos }
     }
     
     onMouseMove = (e: MouseEvent) => {  
-        this.#setMouse(e)
         if (!this.mouseDown) return
         if (!this.flowchart) return
         if (!this.mouseStartPos) return
 
-        const deltaX = this.mouse.x - this.mouseStartPos.x
-        const deltaY = this.mouse.y - this.mouseStartPos.y
+        const deltaX = this.globalMousePos.x - this.mouseStartPos.x
+        const deltaY = this.globalMousePos.y - this.mouseStartPos.y
 
         if (this.flowchart) {
             this.flowchart.pan.x += deltaX
@@ -47,7 +36,6 @@ export class PanTool extends Tool {
     }
 
     onMouseUp = (e: MouseEvent) => {  
-        this.#setMouse(e)
         this.mouseStartPos = undefined
     }   
 

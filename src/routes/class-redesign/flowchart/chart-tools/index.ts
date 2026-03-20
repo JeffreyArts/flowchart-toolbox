@@ -6,6 +6,8 @@ export class Tool {
     flowchart: Flowchart
     isWithinChart = false
     isActive = true
+    mousePos = { x: 0, y: 0 }
+    globalMousePos = { x: 0, y: 0 }
 
     constructor(flowchart: Flowchart) {
         this.flowchart = flowchart
@@ -31,9 +33,25 @@ export class Tool {
         return this.isWithinChart
     }
 
+    #setMousePos = (e: MouseEvent) => {
+        if (!this.flowchart?.chart) return
+
+        const rect = this.flowchart.chart.getBoundingClientRect()
+
+        const globalX = e.clientX - rect.left
+        const globalY = e.clientY - rect.top
+        this.globalMousePos = { x: globalX, y: globalY }
+
+
+        const x = (e.clientX - rect.left - this.flowchart.pan.x) / this.flowchart.zoom
+        const y = (e.clientY - rect.top  - this.flowchart.pan.y) / this.flowchart.zoom
+        this.mousePos = { x, y }
+    }
+
     #onMouseDown = (e: MouseEvent) => {
         if (!this.isActive) return
-
+        this.#setMousePos(e)
+        
         this.mouseDown = true
 
         if (this.onMouseDown) {
@@ -44,6 +62,7 @@ export class Tool {
     #onMouseMove = (e: MouseEvent) => {
         if (!this.isActive) return
 
+        this.#setMousePos(e)
         this.#setWithinChart(e)
         
         if (this.onMouseMove) {
@@ -53,6 +72,7 @@ export class Tool {
 
     #onMouseUp = (e: MouseEvent) => {
         if (!this.isActive) return
+        this.#setMousePos(e)
 
         // Get x / y relative to this.flowchart.chart element
         this.mouseDown = false
