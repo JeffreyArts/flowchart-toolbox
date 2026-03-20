@@ -6,6 +6,7 @@ import OptionsOverview from "./options-overview.vue"
 import SelectingNodes from "./selecting-nodes/selecting-nodes.vue"
 import ConnectNodes from "./connect-nodes/connect-nodes.vue"
 import DragNodes from "./drag-nodes/drag-nodes.vue"
+import ClassRedesign from "./class-redesign/class-redesign.vue"
 import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
 import Cytoscape from "./cytoscape.vue"
@@ -55,6 +56,11 @@ const routes = [
         path: "/cytoscape",
         name: "8) Cytoscape",
         component: Cytoscape
+    },
+    {
+        path: "/class-redesign",
+        name: "9) Class redesign",
+        component: ClassRedesign
     },
     {
         path: "/options-overview",
