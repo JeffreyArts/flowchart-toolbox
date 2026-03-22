@@ -263,16 +263,18 @@ export default defineComponent ({
         height: 100%;
         outline: 10px solid orange;
         foreignObject {
+            pointer-events: none;
             overflow: visible;
         }
     }
 
     .flowchart-node {
-        position: absolute;
         border: 4px solid transparent;
         box-sizing: border-box;
         text-align: center;
+        display: inline-block;
         min-width: 5em;
+        background-color: #fff;
         transition-duration: .8s;
         transition-property: scale, box-shadow;
         transition-timing-function: linear(0, 0.002 0.5%, 0.008 1.1%, 0.019 1.7%, 0.034 2.3%, 0.052 2.9%, 0.073 3.5%, 0.102 4.2%, 0.134 4.9%, 0.191 6%, 0.264 7.3%, 0.556 12.1%, 0.683 14.3%, 0.742 15.4%, 0.797 16.5%, 0.848 17.6%, 0.89 18.6%, 0.932 19.7%, 0.967 20.7%, 0.997 21.7%, 1.027 22.8%, 1.052 23.9%, 1.073 25%, 1.09 26.1%, 1.104 27.3%, 1.117 28.9%, 1.123 30.6%, 1.124 32.4%, 1.119 34.3%, 1.112 35.9%, 1.101 37.7%, 1.043 45.5%, 1.018 49.5%, 1.007 51.7%, 0.998 54%, 0.992 56.3%, 0.988 58.6%, 0.985 61.7%, 0.985 65.2%, 1 84.5%, 1.002 91.4%, 1);
