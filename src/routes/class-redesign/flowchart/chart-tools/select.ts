@@ -11,14 +11,14 @@ export class SelectTool extends Tool {
     constructor(flowchart: FlowchartType) {
         super(flowchart)
 
-        if (flowchart.el) {
-            if (!flowchart.el.classList.contains("__toolSelect")) {
-                flowchart.el.classList.add("__toolSelect")
+        if (flowchart.parentElement) {
+            if (!flowchart.parentElement.classList.contains("__toolSelect")) {
+                flowchart.parentElement.classList.add("__toolSelect")
             }
         }
 
-        if (flowchart.el) {
-            flowchart.el.addEventListener("click", this.#onClick)
+        if (flowchart.parentElement) {
+            flowchart.parentElement.addEventListener("click", this.#onClick)
         }
     }
 
@@ -42,9 +42,9 @@ export class SelectTool extends Tool {
     destroy() {
         super.destroy()
 
-        if (this.flowchart?.el) {
-            this.flowchart.el.classList.remove("__toolSelect")
-            this.flowchart.el.removeEventListener("click", this.#onClick)
+        if (this.flowchart?.parentElement) {
+            this.flowchart.parentElement.classList.remove("__toolSelect")
+            this.flowchart.parentElement.removeEventListener("click", this.#onClick)
         }
     }
 }

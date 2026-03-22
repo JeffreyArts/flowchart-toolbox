@@ -9,21 +9,12 @@ export type FlowchartNodeOptions = {
     y?: number | string
 }
 
-const typeShapes = {
-    "process": "rectangle",
-    "decision": "diamond",
-    "start": "rounded-rectangle",
-    "end": "rounded-rectangle"
-}
-
 export class FlowchartNode {
     type: string = "unknown"
-    width: number = 0
-    height: number = 0
     
-    shape = "rectangle" as "rectangle" | "diamond" | "rounded-rectangle" | string
-    _x = "0"
-    _y = "0"
+    foreignObject: SVGForeignObjectElement | null = null
+    private _x = "0"
+    private _y = "0"
 
     offsetPadding = 40
 
@@ -45,14 +36,23 @@ export class FlowchartNode {
     constructor(options: Partial<FlowchartNodeOptions>) {
         this.#init()
         
-        this.el = document.createElement("div")
-        this.el.classList.add("flowchart-node")
+
+        this.foreignObject = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject")
+    
+        // Geef het een initiële grootte (vereist door browsers)
+        this.foreignObject.setAttribute("width", "1000")
+        this.foreignObject.setAttribute("height", "1000")
+        this.foreignObject.setAttribute("id", this.id)
+        this.foreignObject.setAttribute("x", "0")
+        this.foreignObject.setAttribute("y", "0")
+        this.el = this.#createEl()
+        this.foreignObject.appendChild(this.el)
         
 
         if (options) {
+
             if (options.flowchart) {
-                this.connectWithChart(options.flowchart)
-                
+                this.flowchart = options.flowchart
             }
 
             if (options.parent) {
@@ -63,25 +63,25 @@ export class FlowchartNode {
                 this.text = options.text
             }
 
-            if (options.x) {
-                this.x = options.x
-            }
-
-            if (options.y) {
-                this.y = options.y
-            }
-
             if (options.type) {
                 this.type = options.type
-                this.shape = typeShapes[options.type] || "rectangle"
             }
+            setTimeout(() => {
+                if (options.x) {
+                    this.setX(options.x)
+                }
+
+                if (options.y) {
+                    this.setY(options.y)
+                }
+            })
         }
 
         if (this.flowchart) {
             this.flowchart.addNode(this)
+            this.updatePosition()
         }
-
-
+        
     }
     
     #init() {
@@ -96,14 +96,19 @@ export class FlowchartNode {
         }, 0)
     }
 
-    connectWithChart(flowchart: Flowchart) {
-        
-        this.flowchart = flowchart
-        this.flowchart.chart.appendChild(this.el)
-
-        this.updatePosition()
+    #createEl() {
+        this.el = document.createElement("div")
+        this.el.classList.add("flowchart-node")
+        return this.el
     }
-    
+
+    get width() {
+        return this.el.clientWidth
+    }
+
+    get height() {
+        return this.el.clientHeight
+    }
 
     /** Text **/
 
@@ -166,7 +171,7 @@ export class FlowchartNode {
     }
 
     setIsHover = (e: MouseEvent) => {
-        if (!this.flowchart?.el) return
+        if (!this.flowchart?.parentElement) return
         if (!this.el) return
 
         const rect = this.el.getBoundingClientRect()
@@ -182,46 +187,60 @@ export class FlowchartNode {
     updatePosition(first = true) {
         if (!this.el) return
 
-        const rect = this.el.getBoundingClientRect()
-        this.width = rect.width
-        this.height = rect.height
-
-        setTimeout(() => {
-            if (first) {
+        if (first) {
+            return setTimeout(() => {
                 this.updatePosition(false)
-
-                // setTimeout(() => {
-                //     this.setPosX()
-                //     this.setPosY()
-                // }, 0)
                 this.isVisible = true
-            }
-        }, 0)
-    }
-
-    set x (value: number | string) {
-        if (!this.flowchart) return
-        if (!this.el) return
-        let res = ""
-
-        if (typeof value === "number") {
-            res = value + "px"
-        } else if (value.includes("%")) {
-            res = this.flowchart.width * parseFloat(value) / 100 - this.width / 2 + "px"
-        } else {
-            res = value
+            }, 0)
         }
-        this._x = res
-        this.el.style.translate = `${this.x}px ${this.y}px`
+
+
+        if (!this.foreignObject)  return
+
+        this.foreignObject.setAttribute("x", this.x.toString())
+        this.foreignObject.setAttribute("y", this.y.toString())
+    
+
     }
 
     get x() {
         return parseFloat(this._x)
     }
 
-    set y (value: number | string) {
+    set x (value: number | string) {
+        this.setX(value)
+    }
+    
+    setX(value: number | string) {
+        console.log("Setting x to", value, this.flowchart, this.foreignObject)
         if (!this.flowchart) return
-        if (!this.el) return
+        if (!this.foreignObject) return
+        let res = ""
+        
+        if (typeof value === "number") {
+            res = value + "px"
+        } else if (value.includes("%")) {
+            console.log(this.width)
+            res = this.flowchart.width * parseFloat(value) / 100 - this.width / 2 + "px"
+        } else {
+            res = value
+        }
+        console.log("Setting x to", res)
+        this._x = res
+        this.updatePosition(false)
+    }
+
+    get y() {
+        return parseFloat(this._y)
+    }
+
+    set y (value: number | string) {
+        this.setY(value)
+    }
+
+    setY(value: number | string) {
+        if (!this.flowchart) return
+        if (!this.foreignObject) return
         let res = ""
 
         if (typeof value === "number") {
@@ -233,11 +252,7 @@ export class FlowchartNode {
         }
 
         this._y = res
-        this.el.style.translate = `${this.x}px ${this.y}px`
-    }
-
-    get y() {
-        return parseFloat(this._y)
+        this.updatePosition(false)
     }
 
     /** Parents */
@@ -312,11 +327,16 @@ export class FlowchartNode {
 
     /** Lifecycle Hooks **/
 
-    onMouseEnter() {}
-    onMouseLeave() {}
+    onMouseEnter() {
+        this.el.classList.add("__isHover")
+    }
+    onMouseLeave() {
+        this.el.classList.remove("__isHover")
+    }
 
     destroy() {
         document.removeEventListener("mousemove", this.setIsHover)  
+        if (this.foreignObject) { this.foreignObject.remove()}
         if (this.el) { this.el.remove() }
     }
 

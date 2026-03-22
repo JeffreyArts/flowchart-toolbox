@@ -7,9 +7,10 @@ import type { FlowchartTool } from "./types"
 import { MoveNodeTool } from "./chart-tools/move-node"
 
 export class Flowchart {
-    el = null as HTMLElement | null
+    parentElement = null as HTMLElement | null
     nodes = [] as Array<FlowchartNode>
-    chart: HTMLDivElement
+    // @ts-ignore This happens in the #addChart method that is being triggered in the constructor.
+    chart: SVGElement 
 
     _tools = [] as Array<{ name: string, object: FlowchartTool }>
     _zoom = 1
@@ -17,41 +18,39 @@ export class Flowchart {
     pan = new Proxy({ x: 0, y: 0 }, {
         set: (target, prop, value) => {
             target[prop as "x" | "y"] = value
-            this.chart.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.zoom})`
+            this.#updateViewBox()
             return true
         }
     })
 
     constructor(el?: HTMLElement | string) { 
         if (!el) {
-            this.el = document.createElement("div")
-            this.el.classList.add("flowchart")
+            this.parentElement = document.createElement("div")
+            this.parentElement.classList.add("flowchart")
         } else if (typeof el === "string") {
-            this.el = document.querySelector(el)
-            if (!this.el) {
+            this.parentElement = document.querySelector(el)
+            if (!this.parentElement) {
                 throw new Error(`Failed to initialize flowchart: No element found with selector "${el}"`)
             }
         } else if (el instanceof HTMLElement) {
-            this.el = el
+            this.parentElement = el
         }
 
-        if (!this.el) {
+        if (!this.parentElement) {
             throw new Error("Failed to initialize flowchart: Invalid element")
         }
 
-        if (!this.el.classList.contains("flowchart")) {
-            this.el?.classList.add("flowchart")
+        if (!this.parentElement.classList.contains("flowchart")) {
+            this.parentElement?.classList.add("flowchart")
         }
 
-        const oldChart = this.el.querySelector(".flowchart-chart")
+        const oldChart = this.parentElement.querySelector(".flowchart-chart")
         if (oldChart) {
-            this.el.removeChild(oldChart)
+            this.parentElement.removeChild(oldChart)
         }
 
-        this.chart = document.createElement("div")
-        this.chart.className = "flowchart-chart"
-        this.el.appendChild(this.chart)
-
+        this.#addChart()
+        
         // Default tools
         this.addTool({ name: "pan", object: new PanTool(this) })
         this.addTool({ name: "zoom", object: new ZoomTool(this) })
@@ -59,21 +58,50 @@ export class Flowchart {
         this.addTool({ name: "move-node", object: new MoveNodeTool(this) })
     }
 
+    #addChart() {
+        if (!this.parentElement) return
+        this.chart = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+        this.chart.setAttribute("width", "100%")
+        this.chart.setAttribute("height", "100%")   
+        this.chart.classList.add("flowchart-chart")
+        this.parentElement.appendChild(this.chart)
+        setTimeout(() => {
+            this.updateChartSize()
+        })
+        return this.chart
+    }
+
+    #updateViewBox() {
+        const width = this.chart.clientWidth
+        const height = this.chart.clientHeight
+
+        const x = -this.pan.x / this.zoom
+        const y = -this.pan.y / this.zoom
+        const w = width / this.zoom
+        const h = height / this.zoom
+
+        this.chart.setAttribute("viewBox", `${x} ${y} ${w} ${h}`)
+    }
+
+    updateChartSize() {
+        if (!this.chart) return
+        this.chart.setAttribute( "viewBox", `0 0 ${this.chart.clientWidth} ${this.chart.clientHeight}`)
+    }
+
     /** Dimensions **/
 
     get width() {
-        return this.el?.clientWidth || 0
+        return this.parentElement?.clientWidth || 0
     }
 
     get height() {
-        return this.el?.clientHeight || 0
+        return this.parentElement?.clientHeight || 0
     }
 
     /** Zoom **/
 
     set zoom(value: number) {
         this._zoom = value
-        this.chart.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.zoom})`
     }
 
     get zoom() {
@@ -86,7 +114,7 @@ export class Flowchart {
     // ▐▌  ▐▌▝▚▄▞▘▐▙▄▄▀▐▙▄▄▖▗▄▄▞▘
 
     addNode(node: FlowchartNode, parent?: FlowchartNode | string) {
-        if (!this.el) return
+        if (!this.parentElement) return
         if (parent) {
             if (typeof parent === "string") {
                 parent = this.nodes.find(n => n.id === parent) as FlowchartNode
@@ -116,7 +144,12 @@ export class Flowchart {
             if (!existingNode) {
                 this.nodes.push(node)
             }
-            node.connectWithChart(this)
+
+            if (!node.foreignObject) {
+                throw new Error(`Node with id "${node.id}" does not have a foreignObject, cannot add to flowchart`)
+            }
+            
+            this.chart.appendChild(node.foreignObject)
             node.updatePosition()
             return node
         }
@@ -141,10 +174,6 @@ export class Flowchart {
             if (!oldNode) {
                 throw new Error(`Old node with id "${oldNode}" not found`)
             }
-        }
-        
-        if (!newNode.flowchart) {
-            newNode.connectWithChart(this)
         }
 
         // Connect new node with old node's input and outputs
@@ -185,19 +214,19 @@ export class Flowchart {
         }
         this._tools.push(tool)
         
-        if (this.el) {
-            // if this.el.classList has a class that starts with "__tool", remove it
-            const toolClasses = Array.from(this.el.classList).filter(c => c.startsWith("__tool"))
-            toolClasses.forEach(c => this.el?.classList.remove(c))
+        if (this.parentElement) {
+            // if this.parentElement.classList has a class that starts with "__tool", remove it
+            const toolClasses = Array.from(this.parentElement.classList).filter(c => c.startsWith("__tool"))
+            toolClasses.forEach(c => this.parentElement?.classList.remove(c))
 
             let tools = this._tools.map(t => t.name).join(",")
-            this.el.setAttribute("data-tools", tools)
+            this.parentElement.setAttribute("data-tools", tools)
             // Add class for the current tool
             this._tools.forEach(t => {
-                if (!this.el) return
+                if (!this.parentElement) return
 
                 if (t.object) {
-                    this.el.classList.add(`__tool${t.name.charAt(0).toUpperCase() + t.name.slice(1)}`)
+                    this.parentElement.classList.add(`__tool${t.name.charAt(0).toUpperCase() + t.name.slice(1)}`)
                 }
             })
         }
@@ -215,12 +244,12 @@ export class Flowchart {
             this._tools = this._tools.filter(t => t.name !== toolName)
         }
 
-        if (this.el) {
+        if (this.parentElement) {
 
             // Remove class for the current tool
-            this.el.classList.remove(`__tool${toolName.charAt(0).toUpperCase() + toolName.slice(1)}`)
+            this.parentElement.classList.remove(`__tool${toolName.charAt(0).toUpperCase() + toolName.slice(1)}`)
 
-            this.el.removeAttribute("data-tool")
+            this.parentElement.removeAttribute("data-tool")
         }
     }
 
@@ -255,7 +284,7 @@ export class Flowchart {
 
         this._tools.forEach(t => t.object?.destroy())
 
-        this.el = null
+        this.parentElement = null
     }
 }
 

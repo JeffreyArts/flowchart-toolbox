@@ -12,8 +12,8 @@ export class Tool {
     constructor(flowchart: Flowchart) {
         this.flowchart = flowchart
 
-        if (this.flowchart.el) {
-            this.flowchart.el.addEventListener("wheel", this.#onWheel, { passive: false })
+        if (this.flowchart.parentElement) {
+            this.flowchart.parentElement.addEventListener("wheel", this.#onWheel, { passive: false })
         }
         document.addEventListener("mousedown", this.#onMouseDown)
         document.addEventListener("mousemove", this.#onMouseMove)
@@ -21,9 +21,9 @@ export class Tool {
     }
 
     #setWithinChart = (e: MouseEvent) => {
-        if (!this.flowchart?.el) return false
+        if (!this.flowchart?.parentElement) return false
 
-        const rect = this.flowchart.el.getBoundingClientRect()
+        const rect = this.flowchart.parentElement.getBoundingClientRect()
         this.isWithinChart =  (
             e.clientX >= rect.left &&
             e.clientX <= rect.right &&

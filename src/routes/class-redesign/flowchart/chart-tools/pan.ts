@@ -8,9 +8,9 @@ export class PanTool extends Tool {
     constructor(flowchart: FlowchartType) {
         super(flowchart)
 
-        if (flowchart.el) {
-            if (!flowchart.el.classList.contains("__toolPan")) {
-                flowchart.el.classList.add("__toolPan")
+        if (flowchart.parentElement) {
+            if (!flowchart.parentElement.classList.contains("__toolPan")) {
+                flowchart.parentElement.classList.add("__toolPan")
             }
         }
     }
@@ -29,10 +29,10 @@ export class PanTool extends Tool {
         const deltaX = this.globalMousePos.x - this.mouseStartPos.x
         const deltaY = this.globalMousePos.y - this.mouseStartPos.y
 
-        if (this.flowchart) {
-            this.flowchart.pan.x += deltaX
-            this.flowchart.pan.y += deltaY
-        }
+        this.flowchart.pan.x += deltaX
+        this.flowchart.pan.y += deltaY
+
+        this.mouseStartPos = { ...this.globalMousePos }
     }
 
     onMouseUp = (e: MouseEvent) => {  
@@ -47,9 +47,9 @@ export class PanTool extends Tool {
     destroy() {
         super.destroy()
 
-        if (this.flowchart?.el) {
-            this.flowchart.el.classList.remove("__toolPan")
-            this.flowchart.el.classList.remove("__isPanning")
+        if (this.flowchart?.parentElement) {
+            this.flowchart.parentElement.classList.remove("__toolPan")
+            this.flowchart.parentElement.classList.remove("__isPanning")
         }
     }
 }

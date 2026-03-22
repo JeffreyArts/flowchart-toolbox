@@ -16,9 +16,9 @@ export class MoveNodeTool extends Tool {
     constructor(flowchart: Flowchart) {
         super(flowchart)
 
-        if (flowchart.el) {
-            if (!flowchart.el.classList.contains("__toolMoveNode")) {
-                flowchart.el.classList.add("__toolMoveNode")
+        if (flowchart.parentElement) {
+            if (!flowchart.parentElement.classList.contains("__toolMoveNode")) {
+                flowchart.parentElement.classList.add("__toolMoveNode")
             }
         }
     }
@@ -100,8 +100,8 @@ export class MoveNodeTool extends Tool {
     destroy() {
         super.destroy()
 
-        if (this.flowchart?.el) {
-            this.flowchart.el.classList.remove("__toolMoveNode")
+        if (this.flowchart?.parentElement) {
+            this.flowchart.parentElement.classList.remove("__toolMoveNode")
         }
     }
 }

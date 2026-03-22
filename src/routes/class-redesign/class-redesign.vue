@@ -262,6 +262,9 @@ export default defineComponent ({
         width: 100%;
         height: 100%;
         outline: 10px solid orange;
+        foreignObject {
+            overflow: visible;
+        }
     }
 
     .flowchart-node {
