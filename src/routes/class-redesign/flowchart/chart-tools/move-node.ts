@@ -41,7 +41,7 @@ export class MoveNodeTool extends Tool {
         })
         
         if (this.selectedNode) {
-            this.mouseStartPos = { ...this.mousePos }
+            this.mouseStartPos = { ...this.globalMousePos }
             this.selectedNodeStartPos = { x: Number(this.selectedNode.x), y: Number(this.selectedNode.y) }
             this.selectedNode.isSelected = true
             if (this.panTool) {
@@ -59,8 +59,8 @@ export class MoveNodeTool extends Tool {
         if (!this.selectedNode || !this.selectedNodeStartPos) return
         if (!this.mouseStartPos) return
 
-        const deltaX = (this.mousePos.x - this.mouseStartPos.x)// * this.flowchart.zoom
-        const deltaY = (this.mousePos.y - this.mouseStartPos.y)// * this.flowchart.zoom
+        const deltaX = (this.globalMousePos.x - this.mouseStartPos.x) / this.flowchart.zoom
+        const deltaY = (this.globalMousePos.y - this.mouseStartPos.y) / this.flowchart.zoom
 
         if (this.selectedNode) {
             this.selectedNode.x = Number(this.selectedNodeStartPos.x) + deltaX
