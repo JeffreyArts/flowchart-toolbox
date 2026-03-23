@@ -7,6 +7,7 @@ import SelectingNodes from "./selecting-nodes/selecting-nodes.vue"
 import ConnectNodes from "./connect-nodes/connect-nodes.vue"
 import DragNodes from "./drag-nodes/drag-nodes.vue"
 import ClassRedesign from "./class-redesign/class-redesign.vue"
+import StraightEdges from "./straight-edges/straight-edges.vue"
 import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
 import Cytoscape from "./cytoscape.vue"
@@ -61,6 +62,11 @@ const routes = [
         path: "/class-redesign",
         name: "9) Class redesign",
         component: ClassRedesign
+    },
+    {
+        path: "/straight-edges",
+        name: "10) Straight edges",
+        component: StraightEdges
     },
     {
         path: "/options-overview",
