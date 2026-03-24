@@ -3,14 +3,19 @@ import { ZoomTool } from "./chart-tools/zoom"
 import { SelectTool } from "./chart-tools/select"
 
 import FlowchartNode from "./nodes/index"
+import FlowchartEdge from "../../straight-edges/flowchart/edge"
 import type { FlowchartTool } from "./types"
 import { MoveNodeTool } from "./chart-tools/move-node"
 
 export class Flowchart {
     parentElement = null as HTMLElement | null
     nodes = [] as Array<FlowchartNode>
+    edges = [] as Array<FlowchartEdge>
+
     // @ts-ignore This happens in the #addChart method that is being triggered in the constructor.
     chart: SVGElement 
+    nodesGroup = null as SVGGElement | null
+    edgesGroup = null as SVGGElement | null
 
     _tools = [] as Array<{ name: string, object: FlowchartTool }>
     _zoom = 1
@@ -64,7 +69,18 @@ export class Flowchart {
         this.chart.setAttribute("width", "100%")
         this.chart.setAttribute("height", "100%")   
         this.chart.classList.add("flowchart-chart")
+
+        this.nodesGroup = document.createElementNS("http://www.w3.org/2000/svg", "g")
+        this.nodesGroup.classList.add("flowchart-nodes")
+        
+        this.edgesGroup = document.createElementNS("http://www.w3.org/2000/svg", "g")
+        this.edgesGroup.classList.add("flowchart-edges")
+        
+
+        this.chart.appendChild(this.edgesGroup)
+        this.chart.appendChild(this.nodesGroup)
         this.parentElement.appendChild(this.chart)
+        
         setTimeout(() => {
             this.updateChartSize()
         })
@@ -139,7 +155,7 @@ export class Flowchart {
             parent.addChild(node)
         }
 
-        if (node) {
+        if (node && this.nodesGroup) {
             const existingNode = this.nodes.find(n => n.id === node.id) as FlowchartNode
             if (!existingNode) {
                 this.nodes.push(node)
@@ -149,7 +165,7 @@ export class Flowchart {
                 throw new Error(`Node with id "${node.id}" does not have a foreignObject, cannot add to flowchart`)
             }
             
-            this.chart.appendChild(node.foreignObject)
+            this.nodesGroup.appendChild(node.foreignObject)
             node.updatePosition()
             return node
         }
@@ -199,6 +215,38 @@ export class Flowchart {
         // // Remove old node and add new node to flowchart
         this.removeNode(oldNode)
         this.addNode(newNode)
+    }
+
+    // ▗▄▄▄▖▗▄▄▄  ▗▄▄▖▗▄▄▄▖ ▗▄▄▖
+    // ▐▌   ▐▌  █▐▌   ▐▌   ▐▌   
+    // ▐▛▀▀▘▐▌  █▐▌▝▜▌▐▛▀▀▘ ▝▀▚▖
+    // ▐▙▄▄▖▐▙▄▄▀▝▚▄▞▘▐▙▄▄▖▗▄▄▞▘
+                            
+    addEdge(edge: FlowchartEdge) {
+        console.log("ADD EDGE")
+        if (!this.parentElement) return
+        if (!edge) return
+
+        const startNode = edge.startNode
+        const endNode = edge.endNode
+
+        const existingEdge = this.edges.find(edge => {
+            return edge.startNode.id === startNode.id && edge.endNode.id === endNode.id
+        })
+
+        if (existingEdge) return
+        if (!this.edgesGroup) return
+        
+        this.edges.push(edge)
+        
+        edge.updatePosition()
+        this.edgesGroup.appendChild(edge.pathEl)
+    }
+
+    removeEdge(edge: FlowchartEdge) {
+        if (!edge) return
+        this.edges = this.edges.filter(e => e !== edge)
+        edge.destroy()
     }
 
     // ▗▄▄▄▖▗▄▖  ▗▄▖ ▗▖    ▗▄▄▖

@@ -337,5 +337,12 @@ export default defineComponent ({
             }
         }
     }
+
+    .flowchart-edge {
+        stroke: #333;
+        stroke-width: 2px;
+        position: relative;
+        z-index: -1;
+    }
 }
 </style>

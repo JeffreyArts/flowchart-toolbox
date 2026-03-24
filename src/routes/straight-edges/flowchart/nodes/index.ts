@@ -1,4 +1,5 @@
 import { type Flowchart } from "../index"
+import FlowchartEdge from "../../../straight-edges/flowchart/edge"
 
 export type FlowchartNodeOptions = {
     type?: "end" | "process" | "decision" | "start"
@@ -27,6 +28,7 @@ export class FlowchartNode {
 
     isSelected: boolean = false
     
+    eventListeners: Array<{ name: string, callback: () => void }> = []
     private _isHover: boolean = false
     private _isVisible: boolean = false
     private _text: string = ""
@@ -102,11 +104,11 @@ export class FlowchartNode {
         return this.el
     }
 
-    get width() {
+    get width(): number {
         return this.el.clientWidth
     }
 
-    get height() {
+    get height(): number {
         return this.el.clientHeight
     }
 
@@ -182,6 +184,27 @@ export class FlowchartNode {
         this.isHover = mouseX >= rect.left && mouseX <= rect.right && mouseY >= rect.top && mouseY <= rect.bottom
     }
 
+    /** Event listeners */
+    addEventListener(eventName: string, callback: () => void) {
+        this.eventListeners.push({ name: eventName, callback })
+    }
+
+    removeEventListener(eventName: string, callback: () => void) {
+        this.eventListeners = this.eventListeners.filter(e => e.name !== eventName || e.callback !== callback)
+    }
+
+    removeAllEventListeners(eventName: string) {
+        this.eventListeners = this.eventListeners.filter(e => e.name !== eventName)
+    }
+
+    #triggerEvent(eventName: string) {
+        this.eventListeners.forEach(e => {
+            if (e.name === eventName) {
+                e.callback()
+            }
+        })
+    }
+
     /** Position **/
 
     updatePosition(first = true) {
@@ -199,11 +222,12 @@ export class FlowchartNode {
 
         this.foreignObject.setAttribute("x", this.x.toString())
         this.foreignObject.setAttribute("y", this.y.toString())
-    
 
+        // notify listeners
+        this.#triggerEvent("updatePosition")
     }
 
-    get x() {
+    get x(): number {
         return parseFloat(this._x)
     }
 
@@ -212,7 +236,6 @@ export class FlowchartNode {
     }
     
     setX(value: number | string) {
-        console.log("Setting x to", value, this.flowchart, this.foreignObject)
         if (!this.flowchart) return
         if (!this.foreignObject) return
         let res = ""
@@ -225,12 +248,12 @@ export class FlowchartNode {
         } else {
             res = value
         }
-        console.log("Setting x to", res)
+
         this._x = res
         this.updatePosition(false)
     }
 
-    get y() {
+    get y(): number {
         return parseFloat(this._y)
     }
 
@@ -273,6 +296,11 @@ export class FlowchartNode {
         }
 
         this.parents.push(node)
+        // Create edge if both nodes are in the same flowchart
+        if (this.flowchart && node.flowchart && this.flowchart === node.flowchart) {
+            const edge = new FlowchartEdge( node, this )
+            this.flowchart.addEdge(edge)   
+        }
     }
 
     removeParent(node: FlowchartNode | string) {
@@ -305,6 +333,10 @@ export class FlowchartNode {
         if (!this.flowchart && node.flowchart) {
             this.flowchart = node.flowchart
             this.flowchart.addNode(this, node)
+
+            const edge = new FlowchartEdge( node, this )
+            console.log("Adding edge", edge)
+            this.flowchart.addEdge(edge)
         }
 
         this.children.push(node)
