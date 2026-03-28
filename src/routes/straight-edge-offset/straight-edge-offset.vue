@@ -127,7 +127,7 @@ export default defineComponent ({
         if (this.$el && !this.flowchart) {
             setTimeout(() => {
                 this.flowchart = markRaw(new Flowchart("#straight-edge-offset-canvas"))
-                const mainNode = new StartNode({ text: "Node 1", flowchart: this.flowchart, x: "50%", y: "90%" })
+                const mainNode = new StartNode({ text: "Node 1", flowchart: this.flowchart, x: "50%", y: "90%", segments: 0 })
                 for (let i = 0; i < 4; i++) {
                     const processNode = new ProcessNode({ text: `Node ${i+1}`, parent: mainNode, x: `${i * 25 + 25/2}%`, y: "10%" })
                 }

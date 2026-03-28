@@ -12,6 +12,7 @@ export class FlowchartEdge {
     id: string = crypto.randomUUID()
     pathEl: SVGPathElement = this.#createPathEl()
     
+    private updatePositionDelay = undefined as ReturnType<typeof setTimeout> | undefined
     private _isVisible: boolean = false
     private _showArrow: boolean = true
 
@@ -31,8 +32,12 @@ export class FlowchartEdge {
         
         this.updatePosition()
         // Create watcher for startNode.x, startNode.y, endNode.x, endNode.y
-        this.startNode.addEventListener("updatePosition", this.updatePosition.bind(this))
-        this.endNode.addEventListener("updatePosition", this.updatePosition.bind(this))
+        this.startNode.addEventListener("positionChange", this.updatePosition.bind(this))
+        this.endNode.addEventListener("positionChange", this.updatePosition.bind(this))
+        
+        // Create watcher for startNode.segments & endNode.segments
+        this.startNode.addEventListener("segmentsChange", this.updatePosition.bind(this))
+        this.endNode.addEventListener("segmentsChange", this.updatePosition.bind(this))
     }
     
     #init() {
@@ -136,11 +141,18 @@ export class FlowchartEdge {
             return
         }
 
-        const start = this.startNode.calculateEdgeStart(this.startNode, this.endNode)
-        const end = this.endNode.calculateEdgeStart(this.endNode, this.startNode)
-        
-        const pathData = `M${start.x} ${start.y} L${end.x} ${end.y}`
-        this.pathEl.setAttribute("d", pathData)
+        // Debounce position updates to avoid excessive calculations when multiple properties change at once
+        if (this.updatePositionDelay) {
+            clearTimeout(this.updatePositionDelay)
+        }
+
+        this.updatePositionDelay = setTimeout(() => {
+            const start = this.startNode.calculateEdgeStart(this.startNode, this.endNode)
+            const end = this.endNode.calculateEdgeStart(this.endNode, this.startNode)
+            
+            const pathData = `M${start.x} ${start.y} L${end.x} ${end.y}`
+            this.pathEl.setAttribute("d", pathData)
+        }, 0)
     }
 
 

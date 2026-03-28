@@ -1,6 +1,8 @@
 import { type Flowchart } from "../index"
 import FlowchartEdge from "./../edge"
 
+export type FlowchartNodeEvent = "positionChange" | "segmentsChange"
+
 export type FlowchartNodeOptions = {
     type?: "end" | "process" | "decision" | "start"
     parent?: FlowchartNode
@@ -8,6 +10,7 @@ export type FlowchartNodeOptions = {
     flowchart?: Flowchart
     x?: number | string
     y?: number | string
+    segments?: number
 }
 
 export abstract class FlowchartNode {
@@ -18,6 +21,7 @@ export abstract class FlowchartNode {
     abstract containsPoint(px: number, py: number): boolean
     
     offsetPadding = 8
+    
     
     id: string = crypto.randomUUID()
     el: HTMLElement
@@ -32,6 +36,7 @@ export abstract class FlowchartNode {
 
     private _x = "0"
     private _y = "0"
+    private _segments = 0
     private _isHover: boolean = false
     private _isVisible: boolean = false
     private _text: string = ""
@@ -71,6 +76,13 @@ export abstract class FlowchartNode {
             if (options.type) {
                 this.type = options.type
             }
+
+            if (options.segments) {
+                this._segments = options.segments
+            } else {
+                this._segments = 0
+            }
+
             setTimeout(() => {
                 if (options.x) {
                     this.setX(options.x)
@@ -184,19 +196,19 @@ export abstract class FlowchartNode {
     }
 
     /** Event listeners */
-    addEventListener(eventName: string, callback: () => void) {
+    addEventListener(eventName: FlowchartNodeEvent, callback: () => void) {
         this.eventListeners.push({ name: eventName, callback })
     }
 
-    removeEventListener(eventName: string, callback: () => void) {
+    removeEventListener(eventName: FlowchartNodeEvent, callback: () => void) {
         this.eventListeners = this.eventListeners.filter(e => e.name !== eventName || e.callback !== callback)
     }
 
-    removeAllEventListeners(eventName: string) {
+    removeAllEventListeners(eventName: FlowchartNodeEvent) {
         this.eventListeners = this.eventListeners.filter(e => e.name !== eventName)
     }
 
-    #triggerEvent(eventName: string) {
+    #triggerEvent(eventName: FlowchartNodeEvent) {
         this.eventListeners.forEach(e => {
             if (e.name === eventName) {
                 e.callback()
@@ -204,8 +216,17 @@ export abstract class FlowchartNode {
         })
     }
 
-    /** Position **/
+    /** Segments **/
+    get segments() {
+        return this._segments
+    }
+    
+    set segments(value: number) {   
+        this._segments = value
+        this.#triggerEvent("segmentsChange")
+    }
 
+    /** Position **/
     updatePosition(first = true) {
         if (!this.el) return
 
@@ -226,7 +247,7 @@ export abstract class FlowchartNode {
         this.foreignObject.setAttribute("y", centerY.toString())
 
         // notify listeners
-        this.#triggerEvent("updatePosition")
+        this.#triggerEvent("positionChange")
     }
 
     get x(): number {
@@ -297,7 +318,15 @@ export abstract class FlowchartNode {
     boundSetIsHover = this.setIsHover.bind(this)
 
     calculateEdgeStart(startNode: FlowchartNode, endNode: FlowchartNode) {
-        const degrees = Math.atan2(endNode.y - startNode.y, endNode.x - startNode.x) * (180 / Math.PI) + 90
+        let degrees = Math.atan2(endNode.y - startNode.y, endNode.x - startNode.x) * (180 / Math.PI) + 90
+
+        if (startNode.segments > 0) {
+            const anglePerSegment = 360 / startNode.segments
+            degrees = Math.round(degrees / anglePerSegment) * anglePerSegment
+            console.log("closestSegment", degrees, startNode.type)
+            
+        }
+
         const rad = (degrees - 90) * (Math.PI / 180)
         const dist = this.getBorderDistance(endNode) + startNode.offsetPadding
         return {
