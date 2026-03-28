@@ -78,8 +78,7 @@ export default defineComponent ({
             options: {
                 none: undefined
             } as Partial<Options>,
-            node1: undefined as FlowchartNode | undefined,
-            node2: undefined as FlowchartNode | undefined,
+            nodes: [] as Array<FlowchartNode>,
             flowchart: undefined as Flowchart | undefined,
             selectedNode: undefined as FlowchartNode | undefined,
             ignoreOptionsUpdate: true,
@@ -122,8 +121,10 @@ export default defineComponent ({
         if (this.$el && !this.flowchart) {
             setTimeout(() => {
                 this.flowchart = markRaw(new Flowchart("#straight-edges-canvas"))
-                this.node1 = new StartNode({ text: "Node 1", flowchart: this.flowchart, x: "50%", y: "50%" })
-                this.node2 = new ProcessNode({ text: "Node 2", parent: this.node1 })
+                const mainNode = new StartNode({ text: "Node 1", flowchart: this.flowchart, x: "50%", y: "50%" })
+                for (let i = 0; i < 5; i++) {
+                    const processNode = new ProcessNode({ text: `Node ${i+1}`, parent: mainNode, x: `${i * 20 + 10}%`, y: "10%" })
+                }
                 
                 const selectTool = this.flowchart.getTool("select")
                 if (selectTool && selectTool instanceof SelectTool) {

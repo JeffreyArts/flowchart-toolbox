@@ -368,6 +368,7 @@ export class FlowchartNode {
 
     destroy() {
         document.removeEventListener("mousemove", this.setIsHover)  
+        // if (this.flowchart)
         if (this.foreignObject) { this.foreignObject.remove()}
         if (this.el) { this.el.remove() }
     }

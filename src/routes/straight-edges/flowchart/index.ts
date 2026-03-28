@@ -179,6 +179,11 @@ export class Flowchart {
             }
         }
 
+        // Remove connected edges
+        const connectedEdges = this.edges.filter(e => e.startNode.id === node.id || e.endNode.id === node.id)
+        connectedEdges.forEach(e => this.removeEdge(e))
+
+        // Remove node from flowchart
         this.nodes = this.nodes.filter(n => n.id !== node.id)
         node.destroy()
     }
