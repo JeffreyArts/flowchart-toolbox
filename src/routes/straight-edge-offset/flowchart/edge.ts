@@ -136,15 +136,9 @@ export class FlowchartEdge {
             return
         }
 
-        // calculate angle between start and end node centers
-        const startDegrees = Math.atan2(this.endNode.y - this.startNode.y, this.endNode.x - this.startNode.x) * (180 / Math.PI) + 90
-        const endDegrees = startDegrees + 180
-
         const start = this.startNode.calculateEdgeStart(this.startNode, this.endNode)
         const end = this.endNode.calculateEdgeStart(this.endNode, this.startNode)
-        // const end = this.endNode.calculateEdgeStart(endDegrees, this.endNode.offsetPadding)
         
-        // const pathData = "M0 0  L500 500"
         const pathData = `M${start.x} ${start.y} L${end.x} ${end.y}`
         this.pathEl.setAttribute("d", pathData)
     }

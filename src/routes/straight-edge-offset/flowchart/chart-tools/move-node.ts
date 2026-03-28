@@ -25,7 +25,7 @@ export class MoveNodeTool extends Tool {
 
     
 
-    onMouseDown = (e: MouseEvent) => {  
+    onMouseDown = () => {  
         this.mouseStartPos = undefined
         
         // Check is flowchart has pan tool

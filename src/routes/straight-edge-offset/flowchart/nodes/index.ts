@@ -108,11 +108,19 @@ export abstract class FlowchartNode {
     }
 
     get width(): number {
-        return this.el.getBoundingClientRect().width
+        let w = this.el.getBoundingClientRect().width
+        if (this.flowchart) {
+            w = w / this.flowchart.zoom
+        }
+        return w
     }
 
     get height(): number {
-        return this.el.getBoundingClientRect().height
+        let h = this.el.getBoundingClientRect().height
+        if (this.flowchart) {
+            h = h / this.flowchart.zoom
+        }
+        return  h
     }
 
     /** Text **/
@@ -242,9 +250,6 @@ export abstract class FlowchartNode {
             res = value
         }
 
-        if (this.type=="start") {
-            console.log("Setting x to", res, this.flowchart.width,this.width)
-        }
         this._x = res
         this.updatePosition(false)
     }

@@ -51,10 +51,6 @@
                        <h3>Decision node</h3>
                         <p>Deze node verspringt naar heel groot, dat moet niet</p>
                     </div>
-                    <div class="option">
-                       <h3>Positionering zoom</h3>
-                        <p>De X/Y posities worden niet correct geüpdatet bij zoomen, dit wordt kenbaar bij hover en offset van de edges</p>
-                    </div>
                 </div>
             </div>
         </aside>
