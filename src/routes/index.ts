@@ -8,6 +8,7 @@ import ConnectNodes from "./connect-nodes/connect-nodes.vue"
 import DragNodes from "./drag-nodes/drag-nodes.vue"
 import ClassRedesign from "./class-redesign/class-redesign.vue"
 import StraightEdges from "./straight-edges/straight-edges.vue"
+import StraightEdgeOffset from "./straight-edge-offset/straight-edge-offset.vue"
 import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
 import Cytoscape from "./cytoscape.vue"
@@ -67,6 +68,11 @@ const routes = [
         path: "/straight-edges",
         name: "10) Straight edges",
         component: StraightEdges
+    },
+    {
+        path: "/straight-edge-offset",
+        name: "11) Straight edge offset",
+        component: StraightEdgeOffset
     },
     {
         path: "/options-overview",
