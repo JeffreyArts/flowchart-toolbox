@@ -3,7 +3,7 @@ import { ZoomTool } from "./chart-tools/zoom"
 import { SelectTool } from "./chart-tools/select"
 
 import FlowchartNode from "./nodes/index"
-import FlowchartEdge from "../../straight-edges/flowchart/edge"
+import FlowchartEdge from "./edge"
 import type { FlowchartTool } from "./types"
 import { MoveNodeTool } from "./chart-tools/move-node"
 
@@ -228,7 +228,6 @@ export class Flowchart {
     // ▐▙▄▄▖▐▙▄▄▀▝▚▄▞▘▐▙▄▄▖▗▄▄▞▘
                             
     addEdge(edge: FlowchartEdge) {
-        console.log("ADD EDGE")
         if (!this.parentElement) return
         if (!edge) return
 

@@ -9,10 +9,11 @@ export type FlowchartEdgeOptions = {
 export class FlowchartEdge {
     startNode: FlowchartNode
     endNode: FlowchartNode
-    showArrow: boolean = true
+    id: string = crypto.randomUUID()
     pathEl: SVGPathElement = this.#createPathEl()
     
     private _isVisible: boolean = false
+    private _showArrow: boolean = true
 
     init?(): void
 
@@ -47,7 +48,30 @@ export class FlowchartEdge {
         this.pathEl.classList.add("flowchart-edge")
         return this.pathEl
     }
+    
+    #createArrowHeadEl() {
+        const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker")
+        marker.setAttribute("id", `arrowhead-${this.id}`)
+        marker.setAttribute("markerWidth", "10")
+        marker.setAttribute("markerHeight", "7")
+        marker.setAttribute("refX", "0")
+        marker.setAttribute("refY", "3.5")
+        marker.setAttribute("orient", "auto")
 
+
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path")
+        path.setAttribute("d", "M0,0 L0,7 L5,3.5 z")
+        path.setAttribute("fill", "#333")
+
+        marker.appendChild(path)
+
+        const flowchart = this.endNode.flowchart
+        if (!flowchart || !flowchart.edgesGroup) {
+            console.warn("End node is not attached to a flowchart, cannot create arrow head")
+            return
+        }
+        flowchart.edgesGroup.appendChild(marker)
+    }
 
     /** Visible **/
 
@@ -65,6 +89,35 @@ export class FlowchartEdge {
 
     get isVisible() {
         return this._isVisible
+    }
+
+    /** Show Arrow **/
+
+    set showArrow(value: boolean) {
+        this._showArrow = value
+
+        // Add/remove arrow head marker from SVG
+        if (value) {
+            this.#createArrowHeadEl()
+            this.pathEl.setAttribute("marker-end", `url(#arrowhead-${this.id})`)
+        } else {
+            const flowchart = this.endNode.flowchart
+            if (!flowchart || !flowchart.edgesGroup) {
+                console.warn("End node is not attached to a flowchart, cannot remove arrow head")
+                return
+            }
+
+            // Remove marker  element
+            const marker = flowchart.edgesGroup.querySelector(`#arrowhead-${this.id}`)
+            if (marker) {
+                marker.remove()
+            }
+            this.pathEl.removeAttribute("marker-end")
+        }
+    }
+
+    get showArrow() {
+        return this._showArrow
     }
 
     /** Position **/

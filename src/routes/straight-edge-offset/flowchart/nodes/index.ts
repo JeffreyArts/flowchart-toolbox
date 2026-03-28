@@ -1,5 +1,5 @@
 import { type Flowchart } from "../index"
-import FlowchartEdge from "../../../straight-edges/flowchart/edge"
+import FlowchartEdge from "./../edge"
 
 export type FlowchartNodeOptions = {
     type?: "end" | "process" | "decision" | "start"
@@ -243,7 +243,6 @@ export class FlowchartNode {
         if (typeof value === "number") {
             res = value + "px"
         } else if (value.includes("%")) {
-            console.log(this.width)
             res = this.flowchart.width * parseFloat(value) / 100 - this.width / 2 + "px"
         } else {
             res = value
@@ -298,7 +297,7 @@ export class FlowchartNode {
         this.parents.push(node)
         // Create edge if both nodes are in the same flowchart
         if (this.flowchart && node.flowchart && this.flowchart === node.flowchart) {
-            const edge = new FlowchartEdge( node, this )
+            const edge = new FlowchartEdge( node, this, { showArrow: true } )
             this.flowchart.addEdge(edge)   
         }
     }
@@ -334,8 +333,7 @@ export class FlowchartNode {
             this.flowchart = node.flowchart
             this.flowchart.addNode(this, node)
 
-            const edge = new FlowchartEdge( node, this )
-            console.log("Adding edge", edge)
+            const edge = new FlowchartEdge( node, this, { showArrow: true } )
             this.flowchart.addEdge(edge)
         }
 
