@@ -54,7 +54,7 @@ export class FlowchartEdge {
         marker.setAttribute("id", `arrowhead-${this.id}`)
         marker.setAttribute("markerWidth", "10")
         marker.setAttribute("markerHeight", "7")
-        marker.setAttribute("refX", "0")
+        marker.setAttribute("refX", "3.5")
         marker.setAttribute("refY", "3.5")
         marker.setAttribute("orient", "auto")
 
@@ -132,14 +132,20 @@ export class FlowchartEdge {
             console.warn("End node element not found for edge, cannot update position")
             return
         }
+        if (!this.startNode.flowchart) {
+            return
+        }
 
-        const startX = this.startNode.x + this.startNode.width / 2
-        const startY =this.startNode.y + this.startNode.height / 2
-        const endX = this.endNode.x + this.endNode.width / 2 
-        const endY = this.endNode.y + this.endNode.height / 2 
+        // calculate angle between start and end node centers
+        const startDegrees = Math.atan2(this.endNode.y - this.startNode.y, this.endNode.x - this.startNode.x) * (180 / Math.PI) + 90
+        const endDegrees = startDegrees + 180
 
+        const start = this.startNode.calculateEdgeStart(this.startNode, this.endNode)
+        const end = this.endNode.calculateEdgeStart(this.endNode, this.startNode)
+        // const end = this.endNode.calculateEdgeStart(endDegrees, this.endNode.offsetPadding)
+        
         // const pathData = "M0 0  L500 500"
-        const pathData = `M${startX} ${startY} L${endX} ${endY}`
+        const pathData = `M${start.x} ${start.y} L${end.x} ${end.y}`
         this.pathEl.setAttribute("d", pathData)
     }
 

@@ -11,27 +11,11 @@ export class DecisionNode extends FlowchartNode {
     }
 
     
-    setIsHover = (e: MouseEvent) => {
-        const rect = this.el.getBoundingClientRect()
-        const mouseX = e.clientX
-        const mouseY = e.clientY
-
-        const after = window.getComputedStyle(this.el, "::before")
-        const afterWidth = parseFloat(after.width)
-        const paddingLeft = parseFloat(after.paddingLeft)
-        const paddingRight = parseFloat(after.paddingRight)
-        const borderWidth = parseFloat(after.borderWidth) * 2 || 0
-        const width = afterWidth + paddingLeft + paddingRight + borderWidth
-
-        // Calculate radius of the circumscribed circle around the diamond
-        const radius = Math.sqrt(width ** 2 + width ** 2) / 2
-        const centerX = rect.x + rect.width / 2
-        const centerY = rect.y + rect.height / 2
-
-        const dx = Math.abs(mouseX - centerX)
-        const dy = Math.abs(mouseY - centerY)
-
-        this.isHover = (dx + dy) <= radius
+    containsPoint(px: number, py: number) {
+        return (
+            Math.abs(px - this.x) / (this.width ) +
+            Math.abs(py - this.y) / (this.height) <= 1
+        )
     }
 }
 

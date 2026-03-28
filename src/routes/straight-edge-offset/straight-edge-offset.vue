@@ -46,6 +46,16 @@
                         </div>
                     </div>
                 </div>
+                <div class="option-group" name="Known bugs" >
+                    <div class="option">
+                       <h3>Decision node</h3>
+                        <p>Deze node verspringt naar heel groot, dat moet niet</p>
+                    </div>
+                    <div class="option">
+                       <h3>Positionering zoom</h3>
+                        <p>De X/Y posities worden niet correct geüpdatet bij zoomen, dit wordt kenbaar bij hover en offset van de edges</p>
+                    </div>
+                </div>
             </div>
         </aside>
     </div>
@@ -121,9 +131,9 @@ export default defineComponent ({
         if (this.$el && !this.flowchart) {
             setTimeout(() => {
                 this.flowchart = markRaw(new Flowchart("#straight-edge-offset-canvas"))
-                const mainNode = new StartNode({ text: "Node 1", flowchart: this.flowchart, x: "50%", y: "50%" })
-                for (let i = 0; i < 5; i++) {
-                    const processNode = new ProcessNode({ text: `Node ${i+1}`, parent: mainNode, x: `${i * 20 + 10}%`, y: "10%" })
+                const mainNode = new StartNode({ text: "Node 1", flowchart: this.flowchart, x: "50%", y: "90%" })
+                for (let i = 0; i < 4; i++) {
+                    const processNode = new ProcessNode({ text: `Node ${i+1}`, parent: mainNode, x: `${i * 25 + 25/2}%`, y: "10%" })
                 }
                 
                 const selectTool = this.flowchart.getTool("select")
@@ -194,20 +204,6 @@ export default defineComponent ({
             }
 
         },
-        // setMouseEvents(node: StartNode | ProcessNode | EndNode | DecisionNode) {
-        //     node.onMouseEnter = () => {
-        //         const el = node.el
-        //         if (el) {
-        //             // el.style.outline = "4px solid red"  
-        //         }
-        //     }    
-        //     node.onMouseLeave = () => {
-        //         const el = node.el
-        //         if (el) {
-        //             // el.style.outline = ""  
-        //         }
-        //     }    
-        // },
         resetPan(e:Event) {
             e.preventDefault()
             if (this.flowchart) {
@@ -336,6 +332,9 @@ export default defineComponent ({
                     box-shadow: 0 3px 8px rgba(0, 0, 0, .1);
                 }
             }
+        }
+        &.__isHover {
+            outline: 4px solid #88ff88;
         }
     }
 

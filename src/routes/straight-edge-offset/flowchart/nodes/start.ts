@@ -10,19 +10,17 @@ export class StartNode extends FlowchartNode {
     init() {
     }
 
-    setIsHover = (e: MouseEvent) => {
-        const rect = this.el.getBoundingClientRect()
-        const mouseX = e.clientX
-        const mouseY = e.clientY
+    private get r()  { return this.height / 2 }
+    private get lx() { return this.x - this.width / 2 + this.r }  // middelpunt linker cirkel
+    private get rx() { return this.x + this.width / 2 - this.r }  // middelpunt rechter cirkel
 
-        const radius = rect.height / 2
-        const centerLeftX = rect.left + radius
-        const centerRightX = rect.right - radius
-        const centerY = rect.top + radius
-        const distToLeftCenter = Math.sqrt((mouseX - centerLeftX) ** 2 + (mouseY - centerY) ** 2)
-        const distToRightCenter = Math.sqrt((mouseX - centerRightX) ** 2 + (mouseY - centerY) ** 2)
+    containsPoint(mouseX: number, mouseY: number) {
+        const { r, lx, rx, y } = this
 
-        this.isHover = (distToLeftCenter <= radius || distToRightCenter <= radius) || (mouseX >= centerLeftX && mouseX <= centerRightX && mouseY >= rect.top && mouseY <= rect.bottom)
+        // Get distance between mouse and each circle center
+        const distToRx = Math.hypot(mouseX - rx, mouseY - y)
+        const distToLx = Math.hypot(mouseX - lx, mouseY - y)
+        return ( distToRx <= r || distToLx <= r || (mouseX >= lx && mouseX <= rx && Math.abs(mouseY - y) <= r))
     }
 }
 

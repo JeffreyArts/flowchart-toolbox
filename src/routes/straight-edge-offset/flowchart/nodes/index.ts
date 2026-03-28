@@ -10,25 +10,28 @@ export type FlowchartNodeOptions = {
     y?: number | string
 }
 
-export class FlowchartNode {
+export abstract class FlowchartNode {
     type: string = "unknown"
     
     foreignObject: SVGForeignObjectElement | null = null
-    private _x = "0"
-    private _y = "0"
 
-    offsetPadding = 40
-
+    abstract containsPoint(px: number, py: number): boolean
+    
+    offsetPadding = 8
+    
     id: string = crypto.randomUUID()
     el: HTMLElement
     flowchart: Flowchart | null = null
-
+    
     children: FlowchartNode[] = []
     parents: FlowchartNode[] = []
-
+    
     isSelected: boolean = false
     
     eventListeners: Array<{ name: string, callback: () => void }> = []
+
+    private _x = "0"
+    private _y = "0"
     private _isHover: boolean = false
     private _isVisible: boolean = false
     private _text: string = ""
@@ -89,7 +92,7 @@ export class FlowchartNode {
     #init() {
         setTimeout(() => {
             // Need to add event Listener in setTimeout to ensure child classes have the proper binding in setIsHover
-            document.addEventListener("mousemove", this.setIsHover)
+            document.addEventListener("mousemove", this.boundSetIsHover)
 
             this.el.classList.add(`${this.type}-node`)
             if (this.init) {
@@ -105,11 +108,11 @@ export class FlowchartNode {
     }
 
     get width(): number {
-        return this.el.clientWidth
+        return this.el.getBoundingClientRect().width
     }
 
     get height(): number {
-        return this.el.clientHeight
+        return this.el.getBoundingClientRect().height
     }
 
     /** Text **/
@@ -172,18 +175,6 @@ export class FlowchartNode {
         return this._isHover
     }
 
-    setIsHover = (e: MouseEvent) => {
-        if (!this.flowchart?.parentElement) return
-        if (!this.el) return
-
-        const rect = this.el.getBoundingClientRect()
-        const mouseX = e.clientX
-        const mouseY = e.clientY
-
-        // if this.type === "process"
-        this.isHover = mouseX >= rect.left && mouseX <= rect.right && mouseY >= rect.top && mouseY <= rect.bottom
-    }
-
     /** Event listeners */
     addEventListener(eventName: string, callback: () => void) {
         this.eventListeners.push({ name: eventName, callback })
@@ -220,8 +211,11 @@ export class FlowchartNode {
 
         if (!this.foreignObject)  return
 
-        this.foreignObject.setAttribute("x", this.x.toString())
-        this.foreignObject.setAttribute("y", this.y.toString())
+        const centerX = this.x - this.width / 2
+        const centerY = this.y - this.height / 2
+
+        this.foreignObject.setAttribute("x", centerX.toString())
+        this.foreignObject.setAttribute("y", centerY.toString())
 
         // notify listeners
         this.#triggerEvent("updatePosition")
@@ -243,11 +237,14 @@ export class FlowchartNode {
         if (typeof value === "number") {
             res = value + "px"
         } else if (value.includes("%")) {
-            res = this.flowchart.width * parseFloat(value) / 100 - this.width / 2 + "px"
+            res = this.flowchart.width * parseFloat(value) / 100 + "px"
         } else {
             res = value
         }
 
+        if (this.type=="start") {
+            console.log("Setting x to", res, this.flowchart.width,this.width)
+        }
         this._x = res
         this.updatePosition(false)
     }
@@ -268,13 +265,63 @@ export class FlowchartNode {
         if (typeof value === "number") {
             res = value + "px"
         } else if (value.includes("%")) {
-            res = this.flowchart.height * parseFloat(value) / 100 - this.height / 2 + "px"
+            res = this.flowchart.height * parseFloat(value) / 100 + "px"
         } else {
             res = value
         }
 
         this._y = res
         this.updatePosition(false)
+    }
+
+    /** Shape */
+    setIsHover(e: MouseEvent) {
+
+        const flowchart = this.flowchart
+        if (!flowchart || !flowchart.chart) {
+            return
+        }
+        const rect = flowchart.chart.getBoundingClientRect()
+
+        const x = (e.clientX - rect.left - flowchart.pan.x) / flowchart.zoom
+        const y = (e.clientY - rect.top  - flowchart.pan.y) / flowchart.zoom
+
+        this.isHover = this.containsPoint(x, y)
+    }
+
+    boundSetIsHover = this.setIsHover.bind(this)
+
+    calculateEdgeStart(startNode: FlowchartNode, endNode: FlowchartNode) {
+        const degrees = Math.atan2(endNode.y - startNode.y, endNode.x - startNode.x) * (180 / Math.PI) + 90
+        const rad = (degrees - 90) * (Math.PI / 180)
+        const dist = this.getBorderDistance(endNode) + startNode.offsetPadding
+        return {
+            x: this.x + Math.cos(rad) * dist,
+            y: this.y + Math.sin(rad) * dist,
+        }
+    }
+
+
+    getBorderDistance(targetNode: FlowchartNode): number {
+        const dx = targetNode.x - this.x
+        const dy = targetNode.y - this.y
+        const len = Math.hypot(dx, dy)
+        const nx = dx / len  // genormaliseerde richting
+        const ny = dy / len
+
+        let lo = 0
+        let hi = Math.max(this.width, this.height)
+
+        for (let i = 0; i < 16; i++) {
+            const mid = (lo + hi) / 2
+            if (this.containsPoint(this.x + nx * mid, this.y + ny * mid)) {
+                lo = mid
+            } else {
+                hi = mid
+            }
+        }
+
+        return (lo + hi) / 2
     }
 
     /** Parents */
@@ -360,12 +407,13 @@ export class FlowchartNode {
     onMouseEnter() {
         this.el.classList.add("__isHover")
     }
+
     onMouseLeave() {
         this.el.classList.remove("__isHover")
     }
 
     destroy() {
-        document.removeEventListener("mousemove", this.setIsHover)  
+        document.removeEventListener("mousemove", this.boundSetIsHover)
         // if (this.flowchart)
         if (this.foreignObject) { this.foreignObject.remove()}
         if (this.el) { this.el.remove() }
