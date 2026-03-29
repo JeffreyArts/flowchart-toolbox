@@ -59,18 +59,21 @@ export class FlowchartEdge {
     }
     
     #createArrowHeadEl() {
+        const arrowWidth = 8
+        const arrowHeight = 7
         this.markerEl = document.createElementNS("http://www.w3.org/2000/svg", "marker")
         this.markerEl.setAttribute("id", `arrowhead-${this.id}`)
-        this.markerEl.setAttribute("markerWidth", "10")
-        this.markerEl.setAttribute("markerHeight", "7")
-        this.markerEl.setAttribute("refX", "3.5")
-        this.markerEl.setAttribute("refY", "3.5")
+        this.markerEl.setAttribute("markerWidth", `${arrowWidth}`)
+        this.markerEl.setAttribute("markerHeight", `${arrowHeight}`)
+        this.markerEl.setAttribute("refX", `${arrowWidth/2}`)
+        this.markerEl.setAttribute("refY", `${arrowHeight/2}`)
         this.markerEl.setAttribute("orient", "auto")
 
 
         const path = document.createElementNS("http://www.w3.org/2000/svg", "path")
-        path.setAttribute("d", "M0,0 L0,7 L5,3.5 z")
+        path.setAttribute("d", `M0,0 L0,${arrowHeight} L${arrowWidth/2 + .5},${arrowHeight/2} z`)
         path.setAttribute("fill", "#333")
+        path.setAttribute("stroke", "none")
 
         this.markerEl.appendChild(path)
 
@@ -152,8 +155,8 @@ export class FlowchartEdge {
         }
 
         this.updatePositionDelay = setTimeout(() => {
-            const start = this.startNode.calculateEdgeStart(this.startNode, this.endNode)
-            const end = this.endNode.calculateEdgeStart(this.endNode, this.startNode)
+            const start = this.startNode.calculateEdgeStart(this.endNode)
+            const end = this.endNode.calculateEdgeStart(this.startNode)
             
             const pathData = `M${start.x} ${start.y} L${end.x} ${end.y}`
             this.pathEl.setAttribute("d", pathData)

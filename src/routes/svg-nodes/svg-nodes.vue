@@ -56,11 +56,6 @@
                 </div>
                 <div class="option-group" name="Known bugs" >
                     <div class="option">
-                       <h3>Edge</h3>
-                        <p>De edge loopt te ver door</p>
-                        <p>De edge wordt verkeerd berekend/getekend wanneer je uitgezoomd snel met een node beweegt</p>
-                    </div>
-                    <div class="option">
                        <h3>Shapes</h3>
                         <p>Op dit moment is er alleen nog support voor rechthoek</p>
                     </div>
@@ -145,9 +140,9 @@ export default defineComponent ({
             setTimeout(() => {
                 this.flowchart = markRaw(new Flowchart("#svg-nodes-canvas"))
                 const mainNode = new ProcessNode({ text: "Node 1", flowchart: this.flowchart, x: "50%", y: "90%", segments: 0 })
-                const nodes = 1
+                const nodes = 3
                 for (let i = 0; i < nodes; i++) {
-                    const processNode = new ProcessNode({ text: `Node ${i+1} asdkjd askjnadskj nasdkj nasdjk nasd`, parent: mainNode, x: `${i * 100/nodes + 100/nodes/2}%`, y: "10%", maxWidth: 200 })
+                    const processNode = new ProcessNode({ text: `Node ${i+1}`, parent: mainNode, x: `${i * 100/nodes + 100/nodes/2}%`, y: "10%", maxWidth: 200 })
                 }
                 
                 const selectTool = this.flowchart.getTool("select")

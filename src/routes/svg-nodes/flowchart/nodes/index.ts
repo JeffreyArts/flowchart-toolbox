@@ -123,7 +123,6 @@ export abstract class FlowchartNode {
     }
 
     set text(value: string) {
-        console.log("Set text", this)
         this.#triggerEvent("beforeTextChange")
         this._text = value
         const textHelperOptions = {
@@ -294,14 +293,16 @@ export abstract class FlowchartNode {
     }
 
 
-    calculateEdgeStart(startNode: FlowchartNode, endNode: FlowchartNode) {
+    calculateEdgeStart(targetNode: FlowchartNode) {
 
         if (!this.shape) {
             throw new Error("Cannot calculate edge start position without a shape defined for the node.")
         }
+        const startNode = this
+        const endNode = targetNode
+        // console.log("degrees before snapping:", degrees)
 
         let degrees = Math.atan2(endNode.y - startNode.y, endNode.x - startNode.x) * (180 / Math.PI) + 90
-
         if (startNode.segments > 0) {
             const anglePerSegment = 360 / startNode.segments
             degrees = Math.round(degrees / anglePerSegment) * anglePerSegment            

@@ -27,7 +27,7 @@ export abstract class FlowchartShape {
         this.node = node
         this.#init()
 
-        document.addEventListener("mousemove", this.boundSetIsHover)
+        document.addEventListener("mousemove", this.boundSetMouseOver)
         node.addEventListener("positionChange", this.boundUpdatePosition)
     }
     
@@ -56,20 +56,6 @@ export abstract class FlowchartShape {
         return this._isVisible
     }
 
-    /** Hover **/
-    
-    set isHover(value: boolean) {
-        if (value) {
-            this.onMouseEnter()
-        } else {
-            this.onMouseLeave()
-        }
-        this._isHover = value
-    }
-    
-    get isHover() {
-        return this._isHover
-    }
 
     /** Position **/
     // #updatePosition() {
@@ -82,7 +68,7 @@ export abstract class FlowchartShape {
 
 
     /** Shape */
-    setIsHover(e: MouseEvent) {
+    setMouseOver(e: MouseEvent) {
 
         const flowchart = this.flowchart
         if (!flowchart || !flowchart.chart) {
@@ -97,11 +83,10 @@ export abstract class FlowchartShape {
             throw new Error("Shape is not defined for this node")
         }
 
-        this.isHover = this.node.shape.containsPoint(x, y)
-        this.node.mouseOver = this.isHover
+        this.node.mouseOver = this.node.shape.containsPoint(x, y)
     }
 
-    boundSetIsHover = this.setIsHover.bind(this)
+    boundSetMouseOver = this.setMouseOver.bind(this)
 
 
     getBorderDistance(targetNode: FlowchartNode): number {
@@ -113,12 +98,10 @@ export abstract class FlowchartShape {
 
         let low = 0
         let high = Math.max(this.node.width, this.node.height)
-        if (!targetNode.shape) {
-            throw new Error("Target node has no shape")
-        }
+        
         for (let i = 0; i < 16; i++) {
             const mid = (low + high) / 2
-            if (targetNode.shape.containsPoint(this.node.x + nx * mid, this.node.y + ny * mid)) {
+            if (this.containsPoint(this.node.x + nx * mid, this.node.y + ny * mid)) {
                 low = mid
             } else {
                 high = mid
@@ -126,16 +109,6 @@ export abstract class FlowchartShape {
         }
 
         return (low + high) / 2
-    }
-
-    /** Lifecycle Hooks **/
-
-    onMouseEnter() {
-        this.svgEl.classList.add("__isHover")
-    }
-
-    onMouseLeave() {
-        this.svgEl.classList.remove("__isHover")
     }
 
     destroy() {
