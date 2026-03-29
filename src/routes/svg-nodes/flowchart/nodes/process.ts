@@ -7,12 +7,19 @@ export class ProcessNode extends FlowchartNode {
 
     constructor(options: Partial<FlowchartNodeOptions>) {
         super(options)
-        this.svgGroup.classList.add("process-node")
     }
 
     init() {
         setTimeout(() => {
-            this.shape = new RectangleShape(this, { maxWidth: 200 })
+            this.shape = new RectangleShape(this, { 
+                class: "process-node",
+                // style: {
+                //     maxWidth: "200px",
+                //     fill: "white",
+                //     stroke: "#b2e0f9",
+                //     strokeWidth: "4"
+                // }
+            })
         }, 0)
     }
 }

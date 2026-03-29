@@ -1,17 +1,19 @@
 import { FlowchartShape, type FlowchartShapeOptions } from "."
 import { type FlowchartNode } from "../nodes"
 
-export interface RectangleShapeOptions extends FlowchartShapeOptions {
+interface FlowchartPillShapeOptions extends FlowchartShapeOptions {
+    
 }
 
-export class RectangleShape extends FlowchartShape {
-    name = "rectangle"
+
+export class PillShape extends FlowchartShape {
+    name = "pill"
     svgEl: SVGElement
     textEl = undefined as SVGTextElement | undefined
-    
-    constructor(node: FlowchartNode, options?: Partial<RectangleShapeOptions>) {
-        super( node, options )
 
+    constructor(node: FlowchartNode, options?: Partial<FlowchartPillShapeOptions>) {
+        super( node, options )
+        
         this.processOptions(options)
 
         const svgEl = this.createSvgEl()
@@ -20,7 +22,7 @@ export class RectangleShape extends FlowchartShape {
         if (svgEl) {
             this.svgEl = svgEl
         } else {
-            throw new Error("Failed to create SVG element for RectangleShape.")
+            throw new Error("Failed to create SVG element for PillShape.")
         }
         
         this.updateStyle()
@@ -32,40 +34,40 @@ export class RectangleShape extends FlowchartShape {
     boundUpdateText = this.updateText.bind(this)
     
 
-    get width() {
-        return this.node.textBox.width 
-    }
-    
-    get height() {
-        return this.node.textBox.height 
-    }
+    get width() { return this.node.textBox.width  }    
+    get height() { return this.node.textBox.height  }
+
+    private get r()  { return this.height / 2 }
+    private get lx() { return this.node.x - this.width / 2 + this.r }  // middelpunt linker cirkel
+    private get rx() { return this.node.x + this.width / 2 - this.r }  // middelpunt rechter cirkel
+
     
 
-    processOptions(options?: Partial<RectangleShapeOptions>) {
+    processOptions(options?: Partial<FlowchartPillShapeOptions>) {
         if (!options) return
         super.processOptions(options)
     }
 
-    containsPoint(px: number, py: number): boolean {
+    containsPoint(mouseX: number, mouseY: number) {
+        const { r, lx, rx } = this
+        const y = this.node.y
 
-        const x1 = this.node.x - this.width / 2
-        const y1 = this.node.y - this.height / 2
-        const x2 = this.node.x + this.width / 2
-        const y2 = this.node.y + this.height / 2
-        
-        return px >= x1 && px <= x2 && py >= y1 && py <= y2
+        // Get distance between mouse and each circle center
+        const distToRx = Math.hypot(mouseX - rx, mouseY - y)
+        const distToLx = Math.hypot(mouseX - lx, mouseY - y)
+        return ( distToRx <= r || distToLx <= r || (mouseX >= lx && mouseX <= rx && Math.abs(mouseY - y) <= r))
     }
-    
+
     // Create 
     createSvgEl() {
         const rectangle = document.createElementNS("http://www.w3.org/2000/svg", "rect")
         rectangle.classList.add("flowchart-shape")
-        rectangle.classList.add("__isRectangle")
+        rectangle.classList.add("__isPill")
 
         if (this.className) {
             rectangle.classList.add(...this.className.split(" "))
         }
-        
+
         if (!this.node.flowchart?.nodesGroup) {
             console.warn("Node is not attached to a flowchart yet. Cannot add shape to SVG.")
             return
@@ -94,6 +96,8 @@ export class RectangleShape extends FlowchartShape {
         if (!this.svgEl) return
         this.svgEl.setAttribute("width", this.width + "px")
         this.svgEl.setAttribute("height", this.height + "px")
+        this.svgEl.setAttribute("rx", this.r + "px")
+        this.svgEl.setAttribute("ry", this.r + "px")
     }
 
     updateText() {
@@ -146,4 +150,4 @@ export class RectangleShape extends FlowchartShape {
     }
 }
 
-export default RectangleShape
+export default PillShape

@@ -2,6 +2,7 @@ import { type Flowchart } from "../index"
 import FlowchartEdge from "./../edge"
 import type FlowchartShapeRectangle from "../shapes/rectangle"
 import TextHelper from "../shapes/text-helper"
+import type PillShape from "../shapes/pill"
 
 export type FlowchartNodeEvent = "positionChange" | "segmentsChange" | "beforeTextChange" | "afterTextChange"
 
@@ -20,7 +21,7 @@ export type FlowchartNodeOptions = {
 export abstract class FlowchartNode {
 
     abstract type: string
-    abstract shape: FlowchartShapeRectangle | undefined
+    abstract shape: FlowchartShapeRectangle | PillShape | undefined
     
     offsetPadding = 8
     maxWidth = "auto" as number | string

@@ -1,6 +1,8 @@
 import { type FlowchartNode } from "../nodes"
 
 export interface FlowchartShapeOptions {
+    style?: Partial<CSSStyleDeclaration>
+    class?: string | string[]
 }
 
 export abstract class FlowchartShape {
@@ -9,14 +11,17 @@ export abstract class FlowchartShape {
     abstract createSvgEl(): SVGElement | undefined
     abstract updatePosition(): void
     abstract updateShape(): void
-    abstract updateStyle(): void
     abstract containsPoint(x: number, y: number): boolean
     
     private _isVisible: boolean = false
+    updateStyleDelay = undefined as ReturnType<typeof setTimeout> | undefined
+
     
     id: string = crypto.randomUUID()
     node: FlowchartNode
     textEl: SVGTextElement | undefined = undefined
+    style = this.#makeReactive({} as CSSStyleDeclaration, () => this.updateStyle())
+    className = ""
 
     init?(): void
     
@@ -33,10 +38,25 @@ export abstract class FlowchartShape {
     #init() {
     }
 
-    processOptions(options?: Partial<FlowchartShapeOptions>) {
+    processOptions(options?: Partial<FlowchartShapeOptions >) {
         if (!options) return
-    }
 
+        if (options.style) {
+            for (const [key, value] of Object.entries(options.style)) {
+                const compiledKey = key.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase() as keyof CSSStyleDeclaration
+                (this.style as any)[compiledKey] = value
+
+            }
+        }
+
+        if (options.class) {
+            if (Array.isArray(options.class)) {
+                this.className = options.class.join(" ")
+            } else {
+                this.className = options.class
+            }
+        }
+    }
     get flowchart() {   
         return this.node?.flowchart
     }
@@ -69,6 +89,15 @@ export abstract class FlowchartShape {
     
     boundUpdatePosition = this.updatePosition.bind(this)
 
+    updateStyle() {
+        if (this.updateStyleDelay) {
+            clearTimeout(this.updateStyleDelay)
+        }
+
+        this.updateStyleDelay = setTimeout(() => {
+            this.svgEl.style = Object.entries(this.style).map(([key, value]) => `${key}: ${value};`).join(" ")
+        })
+    }
 
     /** Shape */
     setMouseOver(e: MouseEvent) {
@@ -112,6 +141,16 @@ export abstract class FlowchartShape {
         }
 
         return (low + high) / 2
+    }
+
+    #makeReactive<T extends object>(obj: T, onChange: () => void): T {
+        return new Proxy(obj, {
+            set(target, prop, value) {
+                target[prop as keyof T] = value
+                onChange()
+                return true
+            }
+        })
     }
 
     destroy() {
