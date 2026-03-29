@@ -14,6 +14,7 @@ export type FlowchartNodeOptions = {
     y?: number | string
     segments?: number
     maxWidth?: number | string  
+    class?: string | string[]
 }
 
 export abstract class FlowchartNode {
@@ -48,17 +49,17 @@ export abstract class FlowchartNode {
         this.svgGroup.id = this.id
         this.svgGroup.classList.add("flowchart-node")
         
-        if (options) {
-            this.#parseOptions(options)
-        }
+        this.parseOptions(options)
+    
 
         if (this.flowchart) {
             this.flowchart.addNode(this)
             this.updatePosition()
         }
     }
+    parseOptions(options: Partial<FlowchartNodeOptions>) {
+        if (!options) return
 
-    #parseOptions(options: Partial<FlowchartNodeOptions>) {
         if (options.flowchart) {
             this.flowchart = options.flowchart
         }
@@ -66,7 +67,15 @@ export abstract class FlowchartNode {
         if (options.parent) {
             this.addParent(options.parent)
         }
-        
+
+        if (options.class) {
+            if (Array.isArray(options.class)) {
+                this.svgGroup.classList.add(...options.class)
+            } else {
+                this.svgGroup.classList.add(options.class)
+            }
+        }
+
         options.type        ? this.type = options.type          : this.type = "unknown"
         options.maxWidth    ? this.maxWidth = options.maxWidth  : this.maxWidth = "auto"
         options.segments    ? this._segments = options.segments : this._segments = 0
@@ -172,7 +181,7 @@ export abstract class FlowchartNode {
         return this._isVisible
     }
 
-    /** Hover **/
+    /** Mouse over **/
     set mouseOver(value: boolean) {
         if (value) {
             this.onMouseEnter()
@@ -185,19 +194,7 @@ export abstract class FlowchartNode {
     get mouseOver() {
         return this._mouseOver
     }
-    // set isHover(value: boolean) {
-    //     if (value) {
-    //         this.onMouseEnter()
-    //     } else {
-    //         this.onMouseLeave()
-    //     }
-    //     this._isHover = value
-    // }
     
-    // get isHover() {
-    //     return this._isHover
-    // }
-
     /** Event listeners */
     addEventListener(eventName: FlowchartNodeEvent, callback: () => void) {
         this.eventListeners.push({ name: eventName, callback })

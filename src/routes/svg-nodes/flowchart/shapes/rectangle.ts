@@ -39,9 +39,8 @@ export class RectangleShape extends FlowchartShape {
     constructor(node: FlowchartNode, options?: Partial<RectangleShapeOptions>) {
         super( node, options )
 
-        if (options) {
-            this.#processOptions(options)
-        }
+        this.processOptions(options)
+
         const svgEl = this.createSvgEl()
         this.textEl = this.createTextEl()
         
@@ -69,7 +68,9 @@ export class RectangleShape extends FlowchartShape {
     }
     
 
-    #processOptions(options: Partial<RectangleShapeOptions>) {
+    processOptions(options?: Partial<RectangleShapeOptions>) {
+        if (!options) return
+        super.processOptions(options)
         
         // MAX WIDTH
         if (options.maxWidth) {
@@ -219,7 +220,6 @@ export class RectangleShape extends FlowchartShape {
         this.svgEl.setAttribute("y",this.node.y - this.height / 2 + "px")
         
         if (this.textEl) {
-
             const totalHeight = this.node.textBox.lineHeight * this.node.textBox.lines.length
             const textY = this.node.y - totalHeight / 2 + this.node.textBox.lineHeight / 2
 
@@ -231,6 +231,11 @@ export class RectangleShape extends FlowchartShape {
                 }
             })
         }
+
+
+        const x = parseFloat(this.svgEl.getAttribute("x") || "0")
+        const y = parseFloat(this.svgEl.getAttribute("y") || "0")
+        this.node.svgGroup.style.transformOrigin = `${x + this.width/2 }px ${y + this.height/2 }px`
     }
 
     // Destroy
@@ -238,7 +243,6 @@ export class RectangleShape extends FlowchartShape {
         super.destroy()
         this.node.removeEventListener("afterTextChange", this.boundUpdateText)
         if (this.svgEl) this.svgEl.remove()
-        // if (this.textEl) this.textEl.remove()
     }
 }
 

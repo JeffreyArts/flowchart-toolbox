@@ -1,8 +1,6 @@
-import type { un } from "vue-router/dist/index-DFCq6eJK.js"
 import { type FlowchartNode } from "../nodes"
 
 export interface FlowchartShapeOptions {
-       
 }
 
 export abstract class FlowchartShape {
@@ -14,7 +12,6 @@ export abstract class FlowchartShape {
     abstract updateStyle(): void
     abstract containsPoint(x: number, y: number): boolean
     
-    private _isHover: boolean = false
     private _isVisible: boolean = false
     
     id: string = crypto.randomUUID()
@@ -27,11 +24,17 @@ export abstract class FlowchartShape {
         this.node = node
         this.#init()
 
+        this.processOptions(options)
+
         document.addEventListener("mousemove", this.boundSetMouseOver)
         node.addEventListener("positionChange", this.boundUpdatePosition)
     }
     
     #init() {
+    }
+
+    processOptions(options?: Partial<FlowchartShapeOptions>) {
+        if (!options) return
     }
 
     get flowchart() {   
