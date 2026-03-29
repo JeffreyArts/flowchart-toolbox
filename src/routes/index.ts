@@ -9,6 +9,7 @@ import DragNodes from "./drag-nodes/drag-nodes.vue"
 import ClassRedesign from "./class-redesign/class-redesign.vue"
 import StraightEdges from "./straight-edges/straight-edges.vue"
 import StraightEdgeOffset from "./straight-edge-offset/straight-edge-offset.vue"
+import SVGNodes from "./svg-nodes/svg-nodes.vue"
 import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
 import Cytoscape from "./cytoscape.vue"
@@ -73,6 +74,11 @@ const routes = [
         path: "/straight-edge-offset",
         name: "11) Straight edge offset",
         component: StraightEdgeOffset
+    },
+    {
+        path: "/svg-nodes",
+        name: "12) SVG Nodes",
+        component: SVGNodes
     },
     {
         path: "/options-overview",
