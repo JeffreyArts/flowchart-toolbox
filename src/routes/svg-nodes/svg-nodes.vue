@@ -16,25 +16,33 @@
         <aside class="sidebar">
             <div class="options">
                 <div class="option-group" name="Options" >
-                    <div class="option">
+                    <div class="option" v-if="selectedNode">
                         <label for="option-tool">Selected node</label>
-                        <span v-if="selectedNode">
+                        <span>
                             <strong>ID:</strong>
-                            {{ selectedNode.id }} <br><br>
+                            {{ selectedNode.id }}<br>
+
                             <strong>Type:</strong>
                             {{ selectedNode.type }}<br>
-                            <select name="changeNode" id="" v-model="selectedNode.type" @change="changeSelectedNode">
-                                <option value="start">Start</option>
-                                <option value="end">End</option>
-                                <option value="process">Process</option>
-                                <option value="decision">Decision</option>
-                            </select>
-                        </span>
-                        <span v-if="!selectedNode" style="font-style: italic; color: #666; font-size: .8em;">
-                            No node selected
                         </span>
                     </div>
-
+                    <div class="option" v-if="selectedNode">
+                        <label for="changeNode">Verander type node</label>
+                        <select name="changeNode" id="" v-model="selectedNode.type" @change="changeSelectedNode">
+                            <option value="start">Start</option>
+                            <option value="end">End</option>
+                            <option value="process">Process</option>
+                            <option value="decision">Decision</option>
+                        </select>
+                    </div>
+                    <div class="option" v-if="selectedNode">
+                        <label for="node-text">Text</label>
+                        <input type="text" id="node-text" v-model="selectedNode.text">
+                    </div>
+                
+                    <span v-if="!selectedNode" style="font-style: italic; color: #666; font-size: .8em;">
+                        No node selected <br><br>
+                    </span>
                 </div>
 
 
@@ -48,8 +56,17 @@
                 </div>
                 <div class="option-group" name="Known bugs" >
                     <div class="option">
-                       <h3>Decision node</h3>
-                        <p>Deze node verspringt naar heel groot, dat moet niet</p>
+                       <h3>Edge</h3>
+                        <p>De edge loopt te ver door</p>
+                        <p>De edge wordt verkeerd berekend/getekend wanneer je uitgezoomd snel met een node beweegt</p>
+                    </div>
+                    <div class="option">
+                       <h3>Shapes</h3>
+                        <p>Op dit moment is er alleen nog support voor rechthoek</p>
+                    </div>
+                    <div class="option">
+                       <h3>Scale</h3>
+                        <p>De svg groepen raken uit positie met de schaal, valt extra sterk op wanneer je uitzoomt</p>
                     </div>
                 </div>
             </div>
@@ -127,9 +144,10 @@ export default defineComponent ({
         if (this.$el && !this.flowchart) {
             setTimeout(() => {
                 this.flowchart = markRaw(new Flowchart("#svg-nodes-canvas"))
-                const mainNode = new StartNode({ text: "Node 1", flowchart: this.flowchart, x: "50%", y: "90%", segments: 0 })
-                for (let i = 0; i < 4; i++) {
-                    const processNode = new ProcessNode({ text: `Node ${i+1}`, parent: mainNode, x: `${i * 25 + 25/2}%`, y: "10%" })
+                const mainNode = new ProcessNode({ text: "Node 1", flowchart: this.flowchart, x: "50%", y: "90%", segments: 0 })
+                const nodes = 1
+                for (let i = 0; i < nodes; i++) {
+                    const processNode = new ProcessNode({ text: `Node ${i+1} asdkjd askjnadskj nasdkj nasdjk nasd`, parent: mainNode, x: `${i * 100/nodes + 100/nodes/2}%`, y: "10%", maxWidth: 200 })
                 }
                 
                 const selectTool = this.flowchart.getTool("select")
@@ -138,18 +156,19 @@ export default defineComponent ({
                         this.selectedNode = undefined
 
                         this.flowchart?.nodes.forEach(node => {
-                            if (!node.el) return
-                            if (node.isHover) {
-                                if (node.el.classList.contains("__isSelected")) {
-                                    node.el.classList.remove("__isSelected")    
+
+                            if (node.mouseOver) {
+                                if (node.svgGroup.classList.contains("__isSelected")) {
+                                    node.svgGroup.classList.remove("__isSelected")    
                                     return
                                 }
                                 
-                                this.selectedNode = node    
-                                node.el.classList.add("__isSelected")    
+                                this.selectedNode = markRaw(node)
+                                node.svgGroup.classList.add("__isSelected")    
                             } else {
-                                node.el.classList.remove("__isSelected")    
+                                node.svgGroup.classList.remove("__isSelected")    
                             }
+                            console.log(this.selectedNode)
                         })
                     }
                 }
@@ -193,7 +212,7 @@ export default defineComponent ({
                 const selectTool = this.flowchart.getTool("select")
 
                 if (selectTool instanceof SelectTool && selectTool.onClick) {
-                    this.selectedNode.isHover = true
+                    this.selectedNode.mouseOver = true
                     selectTool.onClick(new MouseEvent("click"))
                 }
                 // this.setMouseEvents(this.selectedNode)
@@ -271,6 +290,7 @@ export default defineComponent ({
         transition-duration: .8s;
         transition-property: scale, box-shadow;
         transition-timing-function: linear(0, 0.002 0.5%, 0.008 1.1%, 0.019 1.7%, 0.034 2.3%, 0.052 2.9%, 0.073 3.5%, 0.102 4.2%, 0.134 4.9%, 0.191 6%, 0.264 7.3%, 0.556 12.1%, 0.683 14.3%, 0.742 15.4%, 0.797 16.5%, 0.848 17.6%, 0.89 18.6%, 0.932 19.7%, 0.967 20.7%, 0.997 21.7%, 1.027 22.8%, 1.052 23.9%, 1.073 25%, 1.09 26.1%, 1.104 27.3%, 1.117 28.9%, 1.123 30.6%, 1.124 32.4%, 1.119 34.3%, 1.112 35.9%, 1.101 37.7%, 1.043 45.5%, 1.018 49.5%, 1.007 51.7%, 0.998 54%, 0.992 56.3%, 0.988 58.6%, 0.985 61.7%, 0.985 65.2%, 1 84.5%, 1.002 91.4%, 1);
+        transform-origin: center center;
 
         // Make text unselectable
         -webkit-user-select: none; /* Safari */

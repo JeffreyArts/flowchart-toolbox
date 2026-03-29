@@ -10,7 +10,9 @@ export class FlowchartEdge {
     startNode: FlowchartNode
     endNode: FlowchartNode
     id: string = crypto.randomUUID()
+    svgGroup: SVGGElement = document.createElementNS("http://www.w3.org/2000/svg", "g")
     pathEl: SVGPathElement = this.#createPathEl()
+    markerEl: SVGMarkerElement | null = null
     
     private updatePositionDelay = undefined as ReturnType<typeof setTimeout> | undefined
     private _isVisible: boolean = false
@@ -32,12 +34,12 @@ export class FlowchartEdge {
         
         this.updatePosition()
         // Create watcher for startNode.x, startNode.y, endNode.x, endNode.y
-        this.startNode.addEventListener("positionChange", this.updatePosition.bind(this))
-        this.endNode.addEventListener("positionChange", this.updatePosition.bind(this))
+        this.startNode.addEventListener("positionChange", this.boundUpdatePosition)
+        this.endNode.addEventListener("positionChange", this.boundUpdatePosition)
         
         // Create watcher for startNode.segments & endNode.segments
-        this.startNode.addEventListener("segmentsChange", this.updatePosition.bind(this))
-        this.endNode.addEventListener("segmentsChange", this.updatePosition.bind(this))
+        this.startNode.addEventListener("segmentsChange", this.boundUpdatePosition)
+        this.endNode.addEventListener("segmentsChange", this.boundUpdatePosition)
     }
     
     #init() {
@@ -50,32 +52,35 @@ export class FlowchartEdge {
 
     #createPathEl() {
         this.pathEl = document.createElementNS("http://www.w3.org/2000/svg","path")
-        this.pathEl.classList.add("flowchart-edge")
+        this.svgGroup.appendChild(this.pathEl)
+        this.svgGroup.classList.add("flowchart-edge")
+        this.svgGroup.id = this.id
         return this.pathEl
     }
     
     #createArrowHeadEl() {
-        const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker")
-        marker.setAttribute("id", `arrowhead-${this.id}`)
-        marker.setAttribute("markerWidth", "10")
-        marker.setAttribute("markerHeight", "7")
-        marker.setAttribute("refX", "3.5")
-        marker.setAttribute("refY", "3.5")
-        marker.setAttribute("orient", "auto")
+        this.markerEl = document.createElementNS("http://www.w3.org/2000/svg", "marker")
+        this.markerEl.setAttribute("id", `arrowhead-${this.id}`)
+        this.markerEl.setAttribute("markerWidth", "10")
+        this.markerEl.setAttribute("markerHeight", "7")
+        this.markerEl.setAttribute("refX", "3.5")
+        this.markerEl.setAttribute("refY", "3.5")
+        this.markerEl.setAttribute("orient", "auto")
 
 
         const path = document.createElementNS("http://www.w3.org/2000/svg", "path")
         path.setAttribute("d", "M0,0 L0,7 L5,3.5 z")
         path.setAttribute("fill", "#333")
 
-        marker.appendChild(path)
+        this.markerEl.appendChild(path)
 
         const flowchart = this.endNode.flowchart
         if (!flowchart || !flowchart.edgesGroup) {
             console.warn("End node is not attached to a flowchart, cannot create arrow head")
             return
         }
-        flowchart.edgesGroup.appendChild(marker)
+
+        this.svgGroup.appendChild(this.markerEl)
     }
 
     /** Visible **/
@@ -83,12 +88,12 @@ export class FlowchartEdge {
     set isVisible(value: boolean) {
         this._isVisible = value
 
-        if (!this.pathEl) return
+        if (!this.svgGroup) return
 
         if (value) {
-            this.pathEl.style.opacity = "1"
+            this.svgGroup.style.opacity = "1"
         } else {
-            this.pathEl.style.opacity = "0"
+            this.svgGroup.style.opacity = "0"
         }
     }
 
@@ -128,12 +133,12 @@ export class FlowchartEdge {
     /** Position **/
 
     updatePosition() {
-        if (!this.pathEl) return
-        if (!this.startNode.el) {
+        if (!this.svgGroup) return
+        if (!this.startNode.svgGroup) {
             console.warn("Start node element not found for edge, cannot update position")
             return
         }
-        if (!this.endNode.el) {
+        if (!this.endNode.svgGroup) {
             console.warn("End node element not found for edge, cannot update position")
             return
         }
@@ -155,9 +160,16 @@ export class FlowchartEdge {
         }, 0)
     }
 
+    boundUpdatePosition = this.updatePosition.bind(this)
+
 
     destroy() {
-        if (this.pathEl) { this.pathEl.remove() }
+        if (this.svgGroup) { this.svgGroup.remove() }
+
+        this.startNode.removeEventListener("positionChange", this.boundUpdatePosition)
+        this.endNode.removeEventListener("positionChange", this.boundUpdatePosition)
+        this.startNode.removeEventListener("segmentsChange", this.boundUpdatePosition)
+        this.endNode.removeEventListener("segmentsChange", this.boundUpdatePosition)
     }
 
 }

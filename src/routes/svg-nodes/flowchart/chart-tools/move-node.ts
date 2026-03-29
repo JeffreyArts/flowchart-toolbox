@@ -35,7 +35,7 @@ export class MoveNodeTool extends Tool {
         // Check if mouse is within any node
         this.flowchart.nodes.forEach(node => {
             if (this.mouseStartPos) return
-            if (node.isHover) {
+            if (node.mouseOver) {
                 this.selectedNode = node
             }
         })

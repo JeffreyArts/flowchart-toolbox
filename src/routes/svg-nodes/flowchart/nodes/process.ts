@@ -1,22 +1,19 @@
 import { FlowchartNode, type FlowchartNodeOptions } from "."
+import { RectangleShape } from "../shapes/rectangle"
 
 export class ProcessNode extends FlowchartNode {
     type = "process"
+    shape = undefined as RectangleShape | undefined
 
     constructor(options: Partial<FlowchartNodeOptions>) {
         super(options)
+        this.svgGroup.classList.add("process-node")
     }
 
     init() {
-    }
-    
-    containsPoint(px: number, py: number) {
-        return (
-            px >= this.x - this.width  / 2 &&
-            px <= this.x + this.width  / 2 &&
-            py >= this.y - this.height / 2 &&
-            py <= this.y + this.height / 2
-        )
+        setTimeout(() => {
+            this.shape = new RectangleShape(this, { maxWidth: 200 })
+        }, 0)
     }
 }
 

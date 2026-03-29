@@ -160,13 +160,7 @@ export class Flowchart {
             if (!existingNode) {
                 this.nodes.push(node)
             }
-
-            if (!node.foreignObject) {
-                throw new Error(`Node with id "${node.id}" does not have a foreignObject, cannot add to flowchart`)
-            }
-            
-            this.nodesGroup.appendChild(node.foreignObject)
-            node.updatePosition()
+            this.nodesGroup.appendChild(node.svgGroup)
             return node
         }
     }
@@ -244,7 +238,7 @@ export class Flowchart {
         this.edges.push(edge)
         
         edge.updatePosition()
-        this.edgesGroup.appendChild(edge.pathEl)
+        this.edgesGroup.appendChild(edge.svgGroup)
     }
 
     removeEdge(edge: FlowchartEdge) {

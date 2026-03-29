@@ -11,12 +11,12 @@ export class DecisionNode extends FlowchartNode {
     }
 
     
-    containsPoint(px: number, py: number) {
-        return (
-            Math.abs(px - this.x) / (this.width ) +
-            Math.abs(py - this.y) / (this.height) <= 1
-        )
-    }
+    // containsPoint(px: number, py: number) {
+    //     return (
+    //         Math.abs(px - this.x) / (this.width ) +
+    //         Math.abs(py - this.y) / (this.height) <= 1
+    //     )
+    // }
 }
 
 export default DecisionNode
