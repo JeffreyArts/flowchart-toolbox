@@ -298,7 +298,6 @@ export abstract class FlowchartNode {
         }
         const startNode = this
         const endNode = targetNode
-        // console.log("degrees before snapping:", degrees)
 
         let degrees = Math.atan2(endNode.y - startNode.y, endNode.x - startNode.x) * (180 / Math.PI) + 90
         if (startNode.segments > 0) {

@@ -159,7 +159,6 @@ export default defineComponent ({
                             } else {
                                 node.svgGroup.classList.remove("__isSelected")    
                             }
-                            console.log(this.selectedNode)
                         })
                     }
                 }
@@ -270,6 +269,7 @@ export default defineComponent ({
             overflow: visible;
         }
     }
+
     .flowchart-node {
         transition-duration: .8s;
         transition-property: scale;
