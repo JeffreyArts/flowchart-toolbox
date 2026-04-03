@@ -13,6 +13,7 @@ import SVGNodes from "./svg-nodes/svg-nodes.vue"
 import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
 import Cytoscape from "./cytoscape.vue"
+import ShapeOutside from "./shape-outside.vue"
 
 const routes = [
     {
@@ -79,6 +80,11 @@ const routes = [
         path: "/svg-nodes",
         name: "12) SVG Nodes",
         component: SVGNodes
+    },
+    {
+        path: "/shape-outside",
+        name: "12.1) Shape outside",
+        component: ShapeOutside
     },
     {
         path: "/options-overview",
