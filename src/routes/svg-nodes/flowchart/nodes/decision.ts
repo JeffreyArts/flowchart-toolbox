@@ -1,22 +1,23 @@
 import { FlowchartNode, type FlowchartNodeOptions } from "."
+import DiamondShape from "../shapes/diamond"
 
 export class DecisionNode extends FlowchartNode {
     type = "decision"
+    shape = undefined as DiamondShape | undefined
 
     constructor(options: Partial<FlowchartNodeOptions>) {
         super(options)
     }
 
     init() {
-    }
+        this.shape = new DiamondShape(this, { 
+            class: `${this.type}-node`,
+            style: {
+                maxWidth: "320px",
+            }
+        })
+    } 
 
-    
-    // containsPoint(px: number, py: number) {
-    //     return (
-    //         Math.abs(px - this.x) / (this.width ) +
-    //         Math.abs(py - this.y) / (this.height) <= 1
-    //     )
-    // }
 }
 
 export default DecisionNode

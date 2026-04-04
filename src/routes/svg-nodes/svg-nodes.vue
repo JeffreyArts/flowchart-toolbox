@@ -135,8 +135,8 @@ export default defineComponent ({
         if (this.$el && !this.flowchart) {
             setTimeout(() => {
                 this.flowchart = markRaw(new Flowchart("#svg-nodes-canvas"))
-                const mainNode = new StartNode({ text: "Node 1", flowchart: this.flowchart, x: "50%", y: "90%", segments: 0, class: "main-node" })
-                const nodes = 3
+                const mainNode = new DecisionNode({ text: "asdfadsfafdsafsdadfsafdsasfasdafsdafsafdsfadsfdasfadsafdsdafsafdsafsdafdsfdasadfsNode 1", flowchart: this.flowchart, x: "50%", y: "50%", segments: 0, class: "main-node" })
+                const nodes = 0
                 for (let i = 0; i < nodes; i++) {
                     const processNode = new ProcessNode({ text: `Node ${i+1}`, parent: mainNode, x: `${i * 100/nodes + 100/nodes/2}%`, y: "10%", maxWidth: 200 })
                 }

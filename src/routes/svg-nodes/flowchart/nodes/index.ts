@@ -1,8 +1,10 @@
 import { type Flowchart } from "../index"
 import FlowchartEdge from "./../edge"
-import type FlowchartShapeRectangle from "../shapes/rectangle"
+
 import TextHelper from "../shapes/text-helper"
 import type PillShape from "../shapes/pill"
+import type DiamondShape from "../shapes/diamond"
+import type RectangleShape from "../shapes/rectangle"
 
 export type FlowchartNodeEvent = "positionChange" | "segmentsChange" | "beforeTextChange" | "afterTextChange"
 
@@ -20,10 +22,11 @@ export type FlowchartNodeOptions = {
 
 export abstract class FlowchartNode {
 
+    prevTextHelper = undefined as TextHelper | undefined
     abstract type: string
-    abstract shape: FlowchartShapeRectangle | PillShape | undefined
     
     offsetPadding = 8
+    abstract shape: RectangleShape | PillShape | DiamondShape | undefined
     maxWidth = "auto" as number | string
     
     id: string = crypto.randomUUID()
@@ -99,6 +102,7 @@ export abstract class FlowchartNode {
             if (this.init) {
                 this.init()
             }
+            this.updateTextBox()
         }, 0)
     }
 
@@ -135,6 +139,21 @@ export abstract class FlowchartNode {
     set text(value: string) {
         this.#triggerEvent("beforeTextChange")
         this._text = value
+        
+        this.updateTextBox()
+
+        // Update position after text change to adjust for new size
+        this.updatePosition()
+
+        setTimeout(() => {
+            this.#triggerEvent("afterTextChange")
+        })
+    }
+
+    updateTextBox() {
+
+        let shape = this.shape ? this.shape.name : "rectangle"
+
         const textHelperOptions = {
             padding: "20px"
         } as Partial<CSSStyleDeclaration> 
@@ -146,17 +165,15 @@ export abstract class FlowchartNode {
                 textHelperOptions["maxWidth"] = this.maxWidth
             }
         }
-
-        const textHelper = new TextHelper(value, textHelperOptions)
-        this.textBox = textHelper.measure()
-        textHelper.destroy()
         
-        // Update position after text change to adjust for new size
-        this.updatePosition()
-
-        setTimeout(() => {
-            this.#triggerEvent("afterTextChange")
-        })
+        if (this.prevTextHelper) {
+            this.prevTextHelper.destroy()
+        }
+        
+        const textHelper = new TextHelper(this._text, shape, textHelperOptions)
+        this.textBox = textHelper.measure()
+        // textHelper.destroy()
+        this.prevTextHelper = textHelper
     }
 
     get lines(): string[] {
