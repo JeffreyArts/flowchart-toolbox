@@ -1,41 +1,30 @@
+import type FlowchartShape  from "./index"
+
 class TextHelper {
-    private parentEl: HTMLDivElement
-    private el: HTMLDivElement
-    private leftEl = undefined as  HTMLDivElement | undefined
-    private rightEl = undefined as  HTMLDivElement | undefined
+    parentEl: HTMLDivElement
+    el: HTMLDivElement
+    leftEl = undefined as  HTMLDivElement | undefined
+    rightEl = undefined as  HTMLDivElement | undefined
     private text: string = ""
 
-    constructor(text: string = "", shape: string, styles?: Partial<CSSStyleDeclaration>) {
+    constructor(text: string = "", shape: FlowchartShape, styles?: Partial<CSSStyleDeclaration>) {
         
         this.text = text
         this.parentEl = document.createElement("div")
         this.el = document.createElement("div")
         
-        if (shape === "diamond") {
-            this.parentEl.style.aspectRatio = "1"
-            const leftEl = document.createElement("div")
-            const rightEl = document.createElement("div")
+        this.leftEl = document.createElement("div")
+        this.leftEl.style.float = "left"
+        this.leftEl.classList.add("text-helper-left")
 
-            
-            leftEl.style.width = "50%"
-            leftEl.style.float = "left"
-            leftEl.style.height = "100%"
-            rightEl.style.display = "none"
-            leftEl.style.shapeOutside = "polygon(0 0, 100% 0, 0 50%, 100% 100%, 0 100%)"
-            
-            rightEl.classList.add("right")
-            rightEl.style.width = "50%"
-            rightEl.style.height = "100%"
-            rightEl.style.float = "right"
-            rightEl.style.display = "none"
-            rightEl.style.shapeOutside = "polygon(100% 0, 100% 100%, 0 100%, 100% 50%, 0 0)"
-
-            this.parentEl.appendChild(leftEl)
-            this.parentEl.appendChild(rightEl)
-
-            this.leftEl = leftEl
-            this.rightEl = rightEl
-
+        this.rightEl = document.createElement("div")
+        this.rightEl.style.float = "right"
+        this.rightEl.classList.add("text-helper-right")
+        this.parentEl.appendChild(this.leftEl)
+        this.parentEl.appendChild(this.rightEl)
+        
+        if (shape.afterTextHelperCreated) {
+            shape.afterTextHelperCreated(this)
         }
 
         // Plaats de helper off-screen en onzichtbaar zodat het geen invloed heeft op de layout
@@ -47,13 +36,19 @@ class TextHelper {
             // bottom: "-100vh",
             right: "0vw",
             bottom: "0vh",
-            // whiteSpace: "pre-wrap",
-            // wordWrap: "break-word"
+            textAlign: "center",
+            wordWrap: "break-word"
         })
 
         // Voeg overige styling toe
         Object.assign(this.parentEl.style, styles)
         this.parentEl.appendChild(this.el)
+        
+        if (!this.parentEl.style.maxWidth) {
+            this.parentEl.style.maxWidth = "200px"
+        }
+
+        this.el.style.minWidth = "100px"
 
         document.body.appendChild(this.parentEl)
     }
@@ -62,14 +57,10 @@ class TextHelper {
         const lines = []
         const range = document.createRange()
         range.selectNodeContents(this.el)
-        
-
-        
         const rects = range.getClientRects()
-        // console.log("range", range)
+
         // return rects.length
         let startOffset = 0
-        let prevY = 0
         for (let i = 0; i < rects.length; i++) {
             
             // DOMRange API om substring te vinden
@@ -79,12 +70,7 @@ class TextHelper {
                 range.setStart(this.el.firstChild!, startOffset)
                 range.setEnd(this.el.firstChild!, j + 1)
                 const r = range.getClientRects()
-                // console.log(r)
-                if (r[0]) {
 
-                    // console.log("Check line", r[0], this.text[j])
-                }
-                
                 if (r.length > 1) break // nieuwe visual line
                 line += this.text[j]
             }
@@ -100,7 +86,7 @@ class TextHelper {
         
         if (!this.text.length) return { width: 0, height: 0, lines: [], lineHeight: 0 }
         this.el.textContent = this.text
-
+    
         
         const rectParent = this.parentEl.getBoundingClientRect()
         const rectText = this.el.getBoundingClientRect()
@@ -121,7 +107,6 @@ class TextHelper {
         const paddingBottom = parseFloat(computedStyle.paddingBottom || "0")
         
         const cleanHeight = this.parentEl.getBoundingClientRect().height - paddingTop - paddingBottom
-        console.log(rectParentHeight , ">", cleanHeight , paddingTop , paddingBottom)
         if (Math.floor(rectParentHeight) < Math.floor(cleanHeight) && rectParentHeight < 300) {
             return this.measure() 
         }

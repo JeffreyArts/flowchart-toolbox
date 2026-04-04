@@ -75,43 +75,10 @@ export class RectangleShape extends FlowchartShape {
         return rectangle
     }
 
-    createTextEl() {
-        const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text")
-        textEl.setAttribute("text-anchor", "middle")
-        textEl.setAttribute("dominant-baseline", "middle")
-        textEl.classList.add("flowchart-shape-rectangle-text")
-
-        if (!this.node.flowchart?.nodesGroup) {
-            console.warn("Node is not attached to a flowchart yet. Cannot add shape to SVG.")
-            return
-        }
-
-        this.node.svgGroup.appendChild(textEl)
-        return textEl
-    }
-
     updateShape() {
         if (!this.svgEl) return
         this.svgEl.setAttribute("width", this.width + "px")
         this.svgEl.setAttribute("height", this.height + "px")
-    }
-
-    updateText() {
-        if (!this.textEl) return
-        const textEl = this.textEl
-        textEl.innerHTML = ""
-
-        this.node.textBox.lines.forEach((line, index) => {
-            const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan")
-
-            // Eerste regel dy = 0, volgende regels dy = lineHeight
-            tspan.setAttribute("x", this.node.x + "px")
-            tspan.setAttribute("dy", index === 0 ? "0" : this.node.textBox.lineHeight + "px")
-            tspan.textContent = line
-            textEl.appendChild(tspan)
-        })
-        this.updatePosition()
-        this.updateShape()
     }
 
     updatePosition() {

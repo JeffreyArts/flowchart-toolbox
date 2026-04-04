@@ -10,17 +10,12 @@ export class EndNode extends FlowchartNode {
     }
     
     init() {
-        setTimeout(() => {
-            this.shape = new PillShape(this, { 
-                class: "end-node",
-                // style: {
-                //     maxWidth: "200px",
-                //     fill:"white",
-                //     stroke: "#444",
-                //     strokeWidth: "4" 
-                // }
-            })
-        }, 0)
+        this.shape = new PillShape(this, { 
+            class: `${this.type}-node`,
+            style: {
+                maxWidth: "400px",
+            }
+        })
     } 
 }
 

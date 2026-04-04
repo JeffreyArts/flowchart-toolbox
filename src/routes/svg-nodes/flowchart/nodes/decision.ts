@@ -13,11 +13,10 @@ export class DecisionNode extends FlowchartNode {
         this.shape = new DiamondShape(this, { 
             class: `${this.type}-node`,
             style: {
-                maxWidth: "320px",
+                maxWidth: "360px",
             }
         })
-    } 
-
+    }
 }
 
 export default DecisionNode

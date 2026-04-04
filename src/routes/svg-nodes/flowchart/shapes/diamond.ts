@@ -1,5 +1,6 @@
 import { FlowchartShape, type FlowchartShapeOptions } from "."
 import { type FlowchartNode } from "../nodes"
+import type TextHelper from "./text-helper"
 
 interface FlowchartDiamondShapeOptions extends FlowchartShapeOptions {
     
@@ -37,8 +38,6 @@ export class DiamondShape extends FlowchartShape {
     get width() { return this.node.textBox.width  }    
     get height() { return this.node.textBox.height  }
 
-    private get r()  { return this.height / 2 }
-
     processOptions(options?: Partial<FlowchartDiamondShapeOptions>) {
         if (!options) return
         super.processOptions(options)
@@ -46,8 +45,8 @@ export class DiamondShape extends FlowchartShape {
 
     containsPoint(mouseX: number, mouseY: number) {
         return (
-            Math.abs(mouseX - this.node.x) / (this.width ) +
-            Math.abs(mouseY - this.node.y) / (this.height) <= 1
+            Math.abs(mouseX - this.node.x) / (this.width /2) +
+            Math.abs(mouseY - this.node.y) / (this.height /2) <= 1
         )
     }
 
@@ -70,21 +69,6 @@ export class DiamondShape extends FlowchartShape {
         return diamond
     }
 
-    createTextEl() {
-        const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text")
-        textEl.setAttribute("text-anchor", "middle")
-        textEl.setAttribute("dominant-baseline", "middle")
-        textEl.classList.add("flowchart-shape-rectangle-text")
-
-        if (!this.node.flowchart?.nodesGroup) {
-            console.warn("Node is not attached to a flowchart yet. Cannot add shape to SVG.")
-            return
-        }
-
-        this.node.svgGroup.appendChild(textEl)
-        return textEl
-    }
-
     updateShape() {
         if (!this.svgEl) return
 
@@ -95,25 +79,6 @@ export class DiamondShape extends FlowchartShape {
 
         const points = `${cx},${cy - h / 2} ${cx + w / 2},${cy} ${cx},${cy + h / 2} ${cx - w / 2},${cy}`
         this.svgEl.setAttribute("points", points)
-    }
-
-    updateText() {
-        if (!this.textEl) return
-        const textEl = this.textEl
-        textEl.innerHTML = ""
-
-        this.node.textBox.lines.forEach((line, index) => {
-            const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan")
-
-            // Eerste regel dy = 0, volgende regels dy = lineHeight
-            tspan.setAttribute("x", this.node.x + "px")
-            tspan.setAttribute("dy", index === 0 ? "0" : this.node.textBox.lineHeight + "px")
-            tspan.textContent = line
-            textEl.appendChild(tspan)
-        })
-
-        this.updatePosition()
-        this.updateShape()
     }
 
     updatePosition() {
@@ -134,11 +99,24 @@ export class DiamondShape extends FlowchartShape {
             })
         }
 
-
         const x = parseFloat(this.svgEl.getAttribute("x") || "0")
         const y = parseFloat(this.svgEl.getAttribute("y") || "0")
         this.node.svgGroup.style.transformOrigin = `${x + this.width/2 }px ${y + this.height/2 }px`
         this.updateShape()
+    }
+
+    afterTextHelperCreated(textHelper: TextHelper): void {
+        textHelper.parentEl.style.aspectRatio = "1"
+        const leftEl = textHelper.leftEl 
+        const rightEl = textHelper.rightEl
+        
+        if (!leftEl || !rightEl) return
+        
+        leftEl.style.width = "50%"
+        leftEl.style.shapeOutside = "polygon(0 0, 100% 0, 0 50%, 100% 100%, 0 100%)"
+        
+        rightEl.style.width = "50%"
+        rightEl.style.shapeOutside = "polygon(100% 0, 100% 100%, 0 100%, 100% 50%, 0 0)"
     }
 
     // Destroy

@@ -1,5 +1,6 @@
 import { FlowchartShape, type FlowchartShapeOptions } from "."
 import { type FlowchartNode } from "../nodes"
+import type TextHelper from "./text-helper"
 
 interface FlowchartPillShapeOptions extends FlowchartShapeOptions {
     
@@ -41,8 +42,6 @@ export class PillShape extends FlowchartShape {
     private get lx() { return this.node.x - this.width / 2 + this.r }  // middelpunt linker cirkel
     private get rx() { return this.node.x + this.width / 2 - this.r }  // middelpunt rechter cirkel
 
-    
-
     processOptions(options?: Partial<FlowchartPillShapeOptions>) {
         if (!options) return
         super.processOptions(options)
@@ -77,45 +76,12 @@ export class PillShape extends FlowchartShape {
         return rectangle
     }
 
-    createTextEl() {
-        const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text")
-        textEl.setAttribute("text-anchor", "middle")
-        textEl.setAttribute("dominant-baseline", "middle")
-        textEl.classList.add("flowchart-shape-rectangle-text")
-
-        if (!this.node.flowchart?.nodesGroup) {
-            console.warn("Node is not attached to a flowchart yet. Cannot add shape to SVG.")
-            return
-        }
-
-        this.node.svgGroup.appendChild(textEl)
-        return textEl
-    }
-
     updateShape() {
         if (!this.svgEl) return
         this.svgEl.setAttribute("width", this.width + "px")
         this.svgEl.setAttribute("height", this.height + "px")
         this.svgEl.setAttribute("rx", this.r + "px")
         this.svgEl.setAttribute("ry", this.r + "px")
-    }
-
-    updateText() {
-        if (!this.textEl) return
-        const textEl = this.textEl
-        textEl.innerHTML = ""
-
-        this.node.textBox.lines.forEach((line, index) => {
-            const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan")
-
-            // Eerste regel dy = 0, volgende regels dy = lineHeight
-            tspan.setAttribute("x", this.node.x + "px")
-            tspan.setAttribute("dy", index === 0 ? "0" : this.node.textBox.lineHeight + "px")
-            tspan.textContent = line
-            textEl.appendChild(tspan)
-        })
-        this.updatePosition()
-        this.updateShape()
     }
 
     updatePosition() {
@@ -140,6 +106,19 @@ export class PillShape extends FlowchartShape {
         const x = parseFloat(this.svgEl.getAttribute("x") || "0")
         const y = parseFloat(this.svgEl.getAttribute("y") || "0")
         this.node.svgGroup.style.transformOrigin = `${x + this.width/2 }px ${y + this.height/2 }px`
+    }
+
+    afterTextHelperCreated(textHelper: TextHelper): void {
+        const leftEl = textHelper.leftEl 
+        const rightEl = textHelper.rightEl
+
+        if (!leftEl || !rightEl) return
+        
+        leftEl.style.width = "50%"
+        leftEl.style.shapeOutside = "polygon(0% 0%, 50% 0%, 50% 0%, 44.94% 0.26%, 39.94% 1.02%, 35.03% 2.29%, 30.28% 4.05%, 25.73% 6.28%, 21.44% 8.96%, 17.43% 12.06%, 13.76% 15.55%, 10.46% 19.39%, 7.57% 23.55%, 5.11% 27.98%, 3.11% 32.63%, 1.60% 37.47%, 0.58% 42.43%, 0.06% 47.47%, 0.06% 52.53%, 0.58% 57.57%, 1.60% 62.53%, 3.11% 67.37%, 5.11% 72.02%, 7.57% 76.45%, 10.46% 80.61%, 13.76% 84.45%, 17.43% 87.94%, 21.44% 91.04%, 25.73% 93.72%, 30.28% 95.95%, 35.03% 97.71%, 39.94% 98.98%, 44.94% 99.74%, 50% 100%, 50% 100%, 0% 100%)"
+        
+        rightEl.style.width = "50%"
+        rightEl.style.shapeOutside = "polygon(100% 0%, 50% 0%, 50% 0%, 55.06% 0.26%, 60.06% 1.02%, 64.97% 2.29%, 69.72% 4.05%, 74.27% 6.28%, 78.56% 8.96%, 82.57% 12.06%, 86.24% 15.55%, 89.54% 19.39%, 92.43% 23.55%, 94.89% 27.98%, 96.89% 32.63%, 98.40% 37.47%, 99.42% 42.43%, 99.94% 47.47%, 99.94% 52.53%, 99.42% 57.57%, 98.40% 62.53%, 96.89% 67.37%, 94.89% 72.02%, 92.43% 76.45%, 89.54% 80.61%, 86.24% 84.45%, 82.57% 87.94%, 78.56% 91.04%, 74.27% 93.72%, 69.72% 95.95%, 64.97% 97.71%, 60.06% 98.98%, 55.06% 99.74%, 50% 100%, 50% 100%, 100% 100%)"
     }
 
     // Destroy

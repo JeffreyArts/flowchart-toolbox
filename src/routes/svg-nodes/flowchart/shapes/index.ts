@@ -1,4 +1,5 @@
 import { type FlowchartNode } from "../nodes"
+import TextHelper from "./text-helper"
 
 export interface FlowchartShapeOptions {
     style?: Partial<CSSStyleDeclaration>
@@ -12,18 +13,20 @@ export abstract class FlowchartShape {
     abstract updatePosition(): void
     abstract updateShape(): void
     abstract containsPoint(x: number, y: number): boolean
+
     
     private _isVisible: boolean = false
     updateStyleDelay = undefined as ReturnType<typeof setTimeout> | undefined
-
+    
     
     id: string = crypto.randomUUID()
     node: FlowchartNode
     textEl: SVGTextElement | undefined = undefined
     style = this.#makeReactive({} as CSSStyleDeclaration, () => this.updateStyle())
     className = ""
-
+    
     init?(): void
+    afterTextHelperCreated?(textHelper: TextHelper): void
     
     constructor(node: FlowchartNode, options?: Partial<FlowchartShapeOptions>) {
         this.node = node
@@ -38,6 +41,39 @@ export abstract class FlowchartShape {
     #init() {
     }
 
+    createTextEl() {
+        const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text")
+        textEl.setAttribute("text-anchor", "middle")
+        textEl.setAttribute("dominant-baseline", "middle")
+        textEl.classList.add("flowchart-shape-text")
+
+        if (!this.node.flowchart?.nodesGroup) {
+            console.warn("Node is not attached to a flowchart yet. Cannot add shape to SVG.")
+            return
+        }
+
+        this.node.svgGroup.appendChild(textEl)
+        return textEl
+    }
+
+    updateText() {
+        if (!this.textEl) return
+        const textEl = this.textEl
+        textEl.innerHTML = ""
+
+        this.node.textBox.lines.forEach((line, index) => {
+            const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan")
+
+            // Eerste regel dy = 0, volgende regels dy = lineHeight
+            tspan.setAttribute("x", this.node.x + "px")
+            tspan.setAttribute("dy", index === 0 ? "0" : this.node.textBox.lineHeight + "px")
+            tspan.textContent = line
+            textEl.appendChild(tspan)
+        })
+        this.updatePosition()
+        this.updateShape()
+    }
+    
     processOptions(options?: Partial<FlowchartShapeOptions >) {
         if (!options) return
 

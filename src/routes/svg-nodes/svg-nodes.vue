@@ -56,8 +56,12 @@
                 </div>
                 <div class="option-group" name="Known bugs" >
                     <div class="option">
-                       <h3>Shapes</h3>
-                        <p>Op dit moment is er alleen nog support voor rechthoek</p>
+                       <h3>Shapes wissel</h3>
+                        <p>Wisselen van main node type breekt de relatie met de verbonden nodes</p>
+                    </div>
+                    <div class="option">
+                       <h3>Required feature</h3>
+                        <p>Max-width wijzigen on-the-fly (zeker voor de decision node)</p>
                     </div>
                 </div>
             </div>
@@ -135,8 +139,8 @@ export default defineComponent ({
         if (this.$el && !this.flowchart) {
             setTimeout(() => {
                 this.flowchart = markRaw(new Flowchart("#svg-nodes-canvas"))
-                const mainNode = new DecisionNode({ text: "asdfadsfafdsafsdadfsafdsasfasdafsdafsafdsfadsfdasfadsafdsdafsafdsafsdafdsfdasadfsNode 1", flowchart: this.flowchart, x: "50%", y: "50%", segments: 0, class: "main-node" })
-                const nodes = 0
+                const mainNode = new DecisionNode({ text: "Main node", flowchart: this.flowchart, x: "50%", y: "50%", segments: 0, class: "main-node" , maxWidth: 320 })
+                const nodes = 3
                 for (let i = 0; i < nodes; i++) {
                     const processNode = new ProcessNode({ text: `Node ${i+1}`, parent: mainNode, x: `${i * 100/nodes + 100/nodes/2}%`, y: "10%", maxWidth: 200 })
                 }

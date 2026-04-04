@@ -151,13 +151,10 @@ export abstract class FlowchartNode {
     }
 
     updateTextBox() {
-
-        let shape = this.shape ? this.shape.name : "rectangle"
-
         const textHelperOptions = {
             padding: "20px"
         } as Partial<CSSStyleDeclaration> 
-
+        
         if (typeof this.maxWidth != "undefined") {
             if (typeof this.maxWidth === "number") {
                 textHelperOptions["maxWidth"] = this.maxWidth + "px"
@@ -170,9 +167,14 @@ export abstract class FlowchartNode {
             this.prevTextHelper.destroy()
         }
         
-        const textHelper = new TextHelper(this._text, shape, textHelperOptions)
+        if (!this.shape) {
+            console.warn("Shape is not defined for this node, cannot create text helper")
+            return
+        }
+
+        const textHelper = new TextHelper(this._text, this.shape, textHelperOptions)
         this.textBox = textHelper.measure()
-        // textHelper.destroy()
+        textHelper.destroy()
         this.prevTextHelper = textHelper
     }
 

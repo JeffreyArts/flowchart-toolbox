@@ -8,19 +8,14 @@ export class ProcessNode extends FlowchartNode {
     constructor(options: Partial<FlowchartNodeOptions>) {
         super(options)
     }
-
+    
     init() {
-        setTimeout(() => {
-            this.shape = new RectangleShape(this, { 
-                class: "process-node",
-                // style: {
-                //     maxWidth: "200px",
-                //     fill: "white",
-                //     stroke: "#b2e0f9",
-                //     strokeWidth: "4"
-                // }
-            })
-        }, 0)
+        this.shape = new RectangleShape(this, { 
+            class: `${this.type}-node`,
+            style: {
+                maxWidth: "360px",
+            }
+        })
     }
 }
 
