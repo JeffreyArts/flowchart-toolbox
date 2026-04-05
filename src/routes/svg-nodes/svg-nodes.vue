@@ -56,10 +56,6 @@
                 </div>
                 <div class="option-group" name="Known bugs" >
                     <div class="option">
-                       <h3>Shapes wissel</h3>
-                        <p>Wisselen van main node type breekt de relatie met de verbonden nodes</p>
-                    </div>
-                    <div class="option">
                        <h3>Required feature</h3>
                         <p>Max-width wijzigen on-the-fly (zeker voor de decision node)</p>
                     </div>

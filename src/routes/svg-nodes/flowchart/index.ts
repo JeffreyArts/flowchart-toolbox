@@ -239,6 +239,9 @@ export class Flowchart {
         
         edge.updatePosition()
         this.edgesGroup.appendChild(edge.svgGroup)
+
+        startNode.children.push(endNode)
+        endNode.parents.push(startNode)
     }
 
     removeEdge(edge: FlowchartEdge) {

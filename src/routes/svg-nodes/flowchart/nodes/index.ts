@@ -349,7 +349,6 @@ export abstract class FlowchartNode {
             this.flowchart.addNode(this)
         }
 
-        this.parents.push(node)
         // Create edge if both nodes are in the same flowchart
         if (this.flowchart && node.flowchart && this.flowchart === node.flowchart) {
             const edge = new FlowchartEdge( node, this, { showArrow: true } )
