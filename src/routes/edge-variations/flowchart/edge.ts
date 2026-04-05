@@ -1,6 +1,6 @@
 import { type FlowchartNode } from "./nodes/index"
 
-export type EdgeType = "straight" | "elbow" | "zigzag" | "diagonal-elbow" | "diagonal" | "zigzag-diagonal" | "double-diagonal" | "curve" | "inner-curve" | "inner-curved" | "curved" | "elbow-curve" | "elbow-curved" | "zigzag-curve" | "zigzag-curved" | "diagonal-curve" | "diagonal-curved" | "double-diagonal-curve" | "double-diagonal-curved" | "smart-diagonal" | "smart-elbow" | "smart-elbow-curve" | "smart-elbow-curved" | "smart-diagonal-curve" | "smart-diagonal-curved"
+export type EdgeType = "straight" | "elbow" | "zigzag" | "diagonal-elbow" | "diagonal" | "zigzag-diagonal" | "double-diagonal" | "curve" | "inner-curve" | "inner-curved" | "curved" | "elbow-curve" | "elbow-curved" | "zigzag-curve" | "zigzag-curved" | "diagonal-curve" | "diagonal-curved" | "double-diagonal-curve" | "double-diagonal-curved" | "smart-diagonal" | "smart-elbow" | "smart-elbow-curve" | "smart-elbow-curved" | "smart-diagonal-curve" | "smart-diagonal-curved" | "smart-curve" | "smart-curved"
 
 export type FlowchartEdgeOptions = {
     startNode: FlowchartNode
@@ -198,6 +198,12 @@ export class FlowchartEdge {
 
 
         switch (this.type) {
+            case "smart-curve": {
+                if (normalizedAngle < 1 || normalizedAngle > 89) { type = "curve" } 
+                else if (normalizedAngle < 30 || normalizedAngle > 60) { type = "straight" } 
+                else { type = "zigzag-curved" }
+                break
+            }
             case "smart-elbow": {
                 if (normalizedAngle < 1 || normalizedAngle > 89) { type = "straight" } 
                 else if (normalizedAngle < 30 || normalizedAngle > 60) { type = "elbow" } 

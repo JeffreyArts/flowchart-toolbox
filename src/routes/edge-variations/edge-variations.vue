@@ -47,6 +47,7 @@
                         <label for="edgeType">Edge type</label>
                         <select name="edgeType" id="" v-model="options.edgeType" @change="changeEdgeType">
                             <option value="straight">Straight</option>
+                            <option value="curved">Curved</option>
                             <option value="elbow">Elbow</option>
                             <option value="elbow-curve">Elbow Curve</option>
                             <option value="zigzag">Zigzag</option>
@@ -55,7 +56,7 @@
                             <option value="diagonal-curve">Diagonal Curve</option>
                             <option value="double-diagonal">Double Diagonal</option>
                             <option value="double-diagonal-curve">Double Diagonal Curve</option>
-                            <option value="curved">Curved</option>
+                            <option value="smart-curve">Smart Curve</option>
                             <option value="smart-elbow">Smart Elbow</option>
                             <option value="smart-elbow-curve">Smart Elbow Curve</option>
                             <option value="smart-diagonal">Smart Diagonal</option>

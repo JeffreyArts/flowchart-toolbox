@@ -12,7 +12,6 @@ interface FlowchartOptions {
     edgeType?: EdgeType
 }
 
-
 export class Flowchart {
     parentElement = null as HTMLElement | null
     nodes = [] as Array<FlowchartNode>
@@ -25,7 +24,7 @@ export class Flowchart {
 
     _tools = [] as Array<{ name: string, object: FlowchartTool }>
     _zoom = 1
-    options = new Proxy<FlowchartOptions>({ edgeType: "straight" }, {
+    options = new Proxy<FlowchartOptions>({ edgeType: "smart-curve" }, {
         set: (target, prop, value) => {
             target[prop as keyof FlowchartOptions] = value
             if (prop === "edgeType") {
