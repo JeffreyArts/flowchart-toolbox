@@ -12,6 +12,7 @@ import StraightEdgeOffset from "./straight-edge-offset/straight-edge-offset.vue"
 import SVGNodes from "./svg-nodes/svg-nodes.vue"
 import EdgeVariations from "./edge-variations/edge-variations.vue"
 import FitZoom from "./fit-zoom/fit-zoom.vue"
+import Segments from "./segments/segments.vue"
 import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
 import Cytoscape from "./cytoscape.vue"
@@ -98,6 +99,11 @@ const routes = [
         path: "/fit-zoom",
         name: "14) Fit Zoom",
         component: FitZoom
+    },
+    {
+        path: "/segments",
+        name: "15) Segments",
+        component: Segments
     },
     {
         path: "/options-overview",
