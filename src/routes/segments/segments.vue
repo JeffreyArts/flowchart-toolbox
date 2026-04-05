@@ -63,6 +63,11 @@
                             <option value="smart-diagonal-curve">Smart Diagonal Curve</option>
                         </select>
                     </div>
+
+                    <div class="option" v-if="flowchart">
+                        <label for="options-segments">Segments <i class="info"><span class="info-icon">?</span><span class="info-details">0 = none</span></i></label>
+                        <input min="0" max="360" type="number" id="options-segments" v-model="flowchart.options.segments" @change="updateNodeSegments">
+                    </div>
                 </div>
 
 
@@ -155,8 +160,8 @@ export default defineComponent ({
     mounted() {
         if (this.$el && !this.flowchart) {
             setTimeout(() => {
-                this.flowchart = markRaw(new Flowchart("#segments-canvas", { edgeType: this.options.edgeType }))
-                const mainNode = new DecisionNode({ text: "Main node", flowchart: this.flowchart, x: "50%", y: "50%", segments: 3, class: "main-node" , maxWidth: 320 })
+                this.flowchart = markRaw(new Flowchart("#segments-canvas", { edgeType: this.options.edgeType, segments: 8 }))
+                const mainNode = new DecisionNode({ text: "Main node", flowchart: this.flowchart, x: "50%", y: "50%", segments: 8, class: "main-node" , maxWidth: 320 })
                 const nodes = 3
                 for (let i = 0; i < nodes; i++) {
                     const processNode = new ProcessNode({ text: `Node ${i+1}`, parent: mainNode, x: `${i * 100/nodes + 100/nodes/2}%`, y: "10%", maxWidth: 200 })
@@ -228,6 +233,13 @@ export default defineComponent ({
                 }
                 // this.setMouseEvents(this.selectedNode)
             }
+        },
+        updateNodeSegments() {
+            if (!this.flowchart) return
+
+            this.flowchart.nodes.forEach(node => {
+                node.segments = this.flowchart?.options.segments
+            })
         },
         changeEdgeType() {
             if (!this.flowchart) return

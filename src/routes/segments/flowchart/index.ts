@@ -10,6 +10,7 @@ import type { EdgeType } from "./edge"
 
 interface FlowchartOptions {
     edgeType?: EdgeType
+    segments?: number
 }
 
 export class Flowchart {
@@ -24,7 +25,7 @@ export class Flowchart {
 
     _tools = [] as Array<{ name: string, object: FlowchartTool }>
     _zoom = 1
-    options = new Proxy<FlowchartOptions>({ edgeType: "smart-curve" }, {
+    options = new Proxy<FlowchartOptions>({ edgeType: "smart-curve", segments: 0 }, {
         set: (target, prop, value) => {
             target[prop as keyof FlowchartOptions] = value
             if (prop === "edgeType") {
@@ -32,6 +33,15 @@ export class Flowchart {
                     edge.type = value
                 })
             }
+
+            if (prop === "segments") {
+                this.nodes.forEach(node => {
+                    if (node.segments == undefined) {
+                        node.segments = value
+                    }
+                })
+            }
+
             return true
         }
     })
@@ -44,7 +54,7 @@ export class Flowchart {
         }
     })
 
-    constructor(el?: HTMLElement | string, options?: FlowchartOptions = {}) { 
+    constructor(el?: HTMLElement | string, options?: FlowchartOptions) { 
         if (!el) {
             this.parentElement = document.createElement("div")
             this.parentElement.classList.add("flowchart")
@@ -234,6 +244,12 @@ export class Flowchart {
                 childNode.addParent(newNode)
             })
         }
+
+        newNode.segments = oldNode.segments
+        newNode.maxWidth = oldNode.maxWidth
+        newNode.x = oldNode.x
+        newNode.y = oldNode.y
+        newNode.text = oldNode.text
 
         //  This is already handles by the addParent and addChild methods, which will update the flowchart connections accordingly
         // // Remove old node and add new node to flowchart

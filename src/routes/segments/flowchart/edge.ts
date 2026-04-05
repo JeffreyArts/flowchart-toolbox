@@ -233,7 +233,9 @@ export class FlowchartEdge {
         }
 
         const cpOffset = (end.y - start.y) * midpoint
-
+        const vertDiff = Math.abs(end.y - start.y)
+        const horDiff = Math.abs(end.x - start.x)
+        
         switch (type) {
             case "straight":
                 pathData = `M${start.x} ${start.y} L${end.x} ${end.y}`
@@ -242,7 +244,8 @@ export class FlowchartEdge {
             // Één knik
             case "elbow": {
                 pathData = `M${start.x} ${start.y} L${end.x} ${start.y} L${end.x} ${end.y}`
-                if (Math.abs(end.y - start.y) < this.startNode.height/3) {
+    
+                if (Math.abs(end.y - start.y) < vertDiff) {
                     pathData = `M${start.x} ${start.y} L${start.x} ${end.y} L${end.x} ${end.y}`
                 }
 

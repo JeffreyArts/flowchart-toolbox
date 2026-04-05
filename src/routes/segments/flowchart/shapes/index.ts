@@ -157,9 +157,9 @@ export abstract class FlowchartShape {
     boundSetMouseOver = this.setMouseOver.bind(this)
 
 
-    getBorderDistance(targetNode: FlowchartNode): number {
-        const dx = targetNode.x - this.node.x
-        const dy = targetNode.y - this.node.y
+    getBorderDistance(targetPosition: { x: number, y: number }): number {
+        const dx = targetPosition.x - this.node.x
+        const dy = targetPosition.y - this.node.y
         const length = Math.hypot(dx, dy)
         const nx = dx / length  // genormaliseerde richting
         const ny = dy / length

@@ -1,5 +1,5 @@
 import { type Flowchart } from "../index"
-import FlowchartEdge from "./../edge"
+import FlowchartEdge from "../edge"
 
 import TextHelper from "../shapes/text-helper"
 import type PillShape from "../shapes/pill"
@@ -9,7 +9,6 @@ import type RectangleShape from "../shapes/rectangle"
 export type FlowchartNodeEvent = "positionChange" | "segmentsChange" | "beforeTextChange" | "afterTextChange"
 
 export type FlowchartNodeOptions = {
-    type?: "end" | "process" | "decision" | "start"
     parent?: FlowchartNode
     text?: string
     flowchart?: Flowchart
@@ -80,11 +79,20 @@ export abstract class FlowchartNode {
             }
         }
 
-        options.type        ? this.type = options.type          : this.type = "unknown"
-        options.maxWidth    ? this.maxWidth = options.maxWidth  : this.maxWidth = "auto"
-        options.segments    ? this._segments = options.segments : this._segments = 0
-        options.text        ? this.text = options.text          : this.text = ""
-        
+        if (typeof options.maxWidth != "undefined") {
+            this.maxWidth = options.maxWidth 
+        }
+
+        if (typeof options.segments === "number") {
+            this._segments = options.segments
+        } else {
+            this._segments = this.flowchart?.options.segments || 0
+        }
+
+        if (typeof options.text === "string") {
+            this.text = options.text
+        }
+
         setTimeout(() => {
             if (options.x) {
                 this.setX(options.x)
@@ -312,16 +320,25 @@ export abstract class FlowchartNode {
             throw new Error("Cannot calculate edge start position without a shape defined for the node.")
         }
         const startNode = this
-        const endNode = targetNode
+        let targetPosition = {
+            x: targetNode.x,
+            y: targetNode.y
+        }
 
-        let degrees = Math.atan2(endNode.y - startNode.y, endNode.x - startNode.x) * (180 / Math.PI) + 90
+
+        let degrees = Math.atan2(targetPosition.y - startNode.y, targetPosition.x - startNode.x) * (180 / Math.PI) + 90
         if (startNode.segments > 0) {
             const anglePerSegment = 360 / startNode.segments
             degrees = Math.round(degrees / anglePerSegment) * anglePerSegment            
+            const rad = (degrees - 90) * (Math.PI / 180)
+            targetPosition = {
+                x: this.x + Math.cos(rad) * 1000,
+                y: this.y + Math.sin(rad) * 1000,
+            }
         }
 
         const rad = (degrees - 90) * (Math.PI / 180)
-        const dist = this.shape.getBorderDistance(endNode) + startNode.offsetPadding
+        const dist = this.shape.getBorderDistance(targetPosition) + startNode.offsetPadding
         return {
             x: this.x + Math.cos(rad) * dist,
             y: this.y + Math.sin(rad) * dist,
