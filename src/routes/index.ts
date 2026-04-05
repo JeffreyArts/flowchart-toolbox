@@ -10,10 +10,12 @@ import ClassRedesign from "./class-redesign/class-redesign.vue"
 import StraightEdges from "./straight-edges/straight-edges.vue"
 import StraightEdgeOffset from "./straight-edge-offset/straight-edge-offset.vue"
 import SVGNodes from "./svg-nodes/svg-nodes.vue"
+import EdgeVariations from "./edge-variations/edge-variations.vue"
 import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
 import Cytoscape from "./cytoscape.vue"
 import ShapeOutside from "./shape-outside.vue"
+import path from "path"
 
 const routes = [
     {
@@ -85,6 +87,11 @@ const routes = [
         path: "/shape-outside",
         name: "12.1) Shape outside",
         component: ShapeOutside
+    },
+    {
+        path: "/edge-variations",
+        name: "13) Edge variations",
+        component: EdgeVariations
     },
     {
         path: "/options-overview",
