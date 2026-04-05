@@ -11,6 +11,7 @@ import StraightEdges from "./straight-edges/straight-edges.vue"
 import StraightEdgeOffset from "./straight-edge-offset/straight-edge-offset.vue"
 import SVGNodes from "./svg-nodes/svg-nodes.vue"
 import EdgeVariations from "./edge-variations/edge-variations.vue"
+import FitZoom from "./fit-zoom/fit-zoom.vue"
 import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
 import Cytoscape from "./cytoscape.vue"
@@ -92,6 +93,11 @@ const routes = [
         path: "/edge-variations",
         name: "13) Edge variations",
         component: EdgeVariations
+    },
+    {
+        path: "/fit-zoom",
+        name: "14) Fit Zoom",
+        component: FitZoom
     },
     {
         path: "/options-overview",
