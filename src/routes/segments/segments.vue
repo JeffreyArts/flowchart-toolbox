@@ -81,6 +81,10 @@
                 </div>
                 <div class="option-group" name="Known bugs" >
                     <div class="option">
+                       <h3>Edge alignment</h3>
+                        <p>De angles van de start & end node moet worden meegenomen in de edge berekening, zodat de pijl op de juiste plek binnen komt</p>
+                    </div>
+                    <div class="option">
                        <h3>Required feature</h3>
                         <p>Max-width wijzigen on-the-fly (zeker voor de decision node)</p>
                     </div>

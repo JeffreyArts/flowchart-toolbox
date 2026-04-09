@@ -256,7 +256,7 @@ export class FlowchartEdge {
             case "zigzag": {
                 const bridgeY = start.y + (end.y - start.y) * midpoint
                 pathData = `M${start.x} ${start.y} L${start.x} ${bridgeY} L${end.x} ${bridgeY} L${end.x} ${end.y}`
-                if (Math.abs(end.y - start.y) < this.startNode.height / 3) {
+                if (Math.abs(end.y - start.y) < vertDiff) {
                     const bridgeX = start.x + (end.x - start.x) * midpoint
                     pathData = `M${start.x} ${start.y} L${bridgeX} ${start.y} L${bridgeX} ${end.y} L${end.x} ${end.y}`
                 }
@@ -309,7 +309,7 @@ export class FlowchartEdge {
             case "inner-curved":
             case "curved":
                 pathData = `M${start.x} ${start.y} C${start.x} ${start.y + cpOffset} ${end.x} ${end.y - cpOffset} ${end.x} ${end.y}`
-                if (Math.abs(end.y - start.y) < this.startNode.height / 3) {
+                if (Math.abs(end.y - start.y) < vertDiff) {
                     const cpOffsetX = (end.x - start.x) * 0.1
                     pathData = `M${start.x} ${start.y} C${start.x + cpOffsetX} ${start.y} ${end.x - cpOffsetX} ${end.y} ${end.x} ${end.y}`
                 }
@@ -320,7 +320,7 @@ export class FlowchartEdge {
             case "elbow-curved":
                 pathData = `M${start.x} ${start.y} C${end.x} ${start.y} ${end.x} ${start.y} ${end.x} ${end.y}`
 
-                if (Math.abs(end.y - start.y) < this.startNode.height / 3) {
+                if (Math.abs(end.y - start.y) < vertDiff) {
                     pathData = `M${start.x} ${start.y} C${start.x} ${end.y} ${start.x} ${end.y} ${end.x} ${end.y}`
                 }
 
@@ -335,7 +335,7 @@ export class FlowchartEdge {
             case "zigzag-curved": {
                 const bridgeY = start.y + (end.y - start.y) * midpoint
                 pathData = `M${start.x} ${start.y} C${start.x} ${bridgeY} ${end.x} ${bridgeY} ${end.x} ${end.y}`
-                if (Math.abs(end.y - start.y) < this.startNode.height / 3) {
+                if (Math.abs(end.y - start.y) < vertDiff) {
                     const bridgeX = start.x + (end.x - start.x) * midpoint
                     pathData = `M${start.x} ${start.y} C${bridgeX} ${start.y} ${bridgeX} ${end.y} ${end.x} ${end.y}`
                 }
