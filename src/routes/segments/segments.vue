@@ -66,7 +66,7 @@
 
                     <div class="option" v-if="flowchart">
                         <label for="options-segments">Segments <i class="info"><span class="info-icon">?</span><span class="info-details">0 = none</span></i></label>
-                        <input min="0" max="360" type="number" id="options-segments" v-model="flowchart.options.segments" @change="updateNodeSegments">
+                        <input min="0" max="360" type="number" id="options-segments" v-model="options.segments" @change="updateNodeSegments">
                     </div>
                 </div>
 
@@ -112,6 +112,7 @@ import type { EdgeType } from "./flowchart/edge"
 
 interface Options {
     edgeType: EdgeType
+    segments: number
 }
 
 export default defineComponent ({ 
@@ -120,7 +121,8 @@ export default defineComponent ({
     data() {
         return {
             options: {
-                edgeType: "straight"
+                edgeType: "straight",
+                segments: 0
             } as Partial<Options>,
             nodes: [] as Array<FlowchartNode>,
             flowchart: undefined as Flowchart | undefined,
@@ -164,9 +166,9 @@ export default defineComponent ({
     mounted() {
         if (this.$el && !this.flowchart) {
             setTimeout(() => {
-                this.flowchart = markRaw(new Flowchart("#segments-canvas", { edgeType: this.options.edgeType, segments: 8 }))
-                const mainNode = new DecisionNode({ text: "Main node", flowchart: this.flowchart, x: "50%", y: "50%", segments: 8, class: "main-node" , maxWidth: 320 })
-                const nodes = 3
+                this.flowchart = markRaw(new Flowchart("#segments-canvas", { edgeType: this.options.edgeType, segments:  this.options.segments }))
+                const mainNode = new DecisionNode({ text: "Main node", flowchart: this.flowchart, x: "50%", y: "50%", class: "main-node" , maxWidth: 320 })
+                const nodes = 1
                 for (let i = 0; i < nodes; i++) {
                     const processNode = new ProcessNode({ text: `Node ${i+1}`, parent: mainNode, x: `${i * 100/nodes + 100/nodes/2}%`, y: "10%", maxWidth: 200 })
                 }
@@ -240,7 +242,8 @@ export default defineComponent ({
         },
         updateNodeSegments() {
             if (!this.flowchart) return
-
+            this.flowchart.options.segments = this.options.segments
+            
             this.flowchart.nodes.forEach(node => {
                 node.segments = this.flowchart?.options.segments
             })
