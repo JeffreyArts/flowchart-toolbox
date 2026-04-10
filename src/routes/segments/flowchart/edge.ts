@@ -235,6 +235,10 @@ export class FlowchartEdge {
         const cpOffset = (end.y - start.y) * midpoint
         const vertDiff = Math.abs(end.y - start.y)
         const horDiff = Math.abs(end.x - start.x)
+
+        const endDx = end.x - this.endNode.x
+        const endDy = end.y - this.endNode.y
+        const incomingAngle = Math.atan2(endDy, endDx) // no Math.abs — preserve sign
         
         switch (type) {
             case "straight":
@@ -243,22 +247,33 @@ export class FlowchartEdge {
 
             // Één knik
             case "elbow": {
-                pathData = `M${start.x} ${start.y} L${end.x} ${start.y} L${end.x} ${end.y}`
-    
-                if (Math.abs(end.y - start.y) < vertDiff) {
+                if (incomingAngle > Math.PI / 4 && incomingAngle < (3 * Math.PI) / 4) {
+                    pathData = `M${start.x} ${start.y} L${end.x} ${start.y} L${end.x} ${end.y}`
+                } else {
                     pathData = `M${start.x} ${start.y} L${start.x} ${end.y} L${end.x} ${end.y}`
                 }
-
+                
                 break
             }
 
             // Twee knikken
             case "zigzag": {
-                const bridgeY = start.y + (end.y - start.y) * midpoint
-                pathData = `M${start.x} ${start.y} L${start.x} ${bridgeY} L${end.x} ${bridgeY} L${end.x} ${end.y}`
-                if (Math.abs(end.y - start.y) < vertDiff) {
-                    const bridgeX = start.x + (end.x - start.x) * midpoint
-                    pathData = `M${start.x} ${start.y} L${bridgeX} ${start.y} L${bridgeX} ${end.y} L${end.x} ${end.y}`
+                if (start.y > end.y) {
+                    if (Math.abs(incomingAngle) > Math.PI / 4 && Math.abs(incomingAngle) < (3 * Math.PI) / 4) {
+                        const bridgeY = start.y + (end.y - start.y) * midpoint
+                        pathData = `M${start.x} ${start.y} L${start.x} ${bridgeY} L${end.x} ${bridgeY} L${end.x} ${end.y}`
+                    } else {
+                        const bridgeX = start.x + (end.x - start.x) * midpoint
+                        pathData = `M${start.x} ${start.y} L${bridgeX} ${start.y} L${bridgeX} ${end.y} L${end.x} ${end.y}`
+                    }
+                } else {
+                    if (Math.abs(incomingAngle) > Math.PI / 4 && Math.abs(incomingAngle) < (3 * Math.PI) / 4) {
+                        const bridgeY = start.y + (end.y - start.y) * midpoint
+                        pathData = `M${start.x} ${start.y} L${start.x} ${bridgeY} L${end.x} ${bridgeY} L${end.x} ${end.y}`
+                    } else {
+                        const bridgeX = start.x + (end.x - start.x) * midpoint
+                        pathData = `M${start.x} ${start.y} L${bridgeX} ${start.y} L${bridgeX} ${end.y} L${end.x} ${end.y}`
+                    }
                 }
                 break
             }
@@ -266,18 +281,27 @@ export class FlowchartEdge {
             // Één knik onder een hoek van 45 graden
             case "diagonal-elbow":
             case "diagonal": {
-                const dx = Math.abs(end.x - start.x)
-                const dy = Math.abs(end.y - start.y)
-                const diagOffset = Math.min(dx, dy)
+                
+                const remainX = end.x - start.x
+                const remainY = end.y - start.y
+                const diagOffset = Math.min(Math.abs(remainX), Math.abs(remainY))
+                const signX = remainX > 0 ? 1 : -1
+                const signY = remainY > 0 ? 1 : -1
 
-                const signX = end.x > start.x ? 1 : -1
-                const signY = end.y > start.y ? 1 : -1
-
-                const midPoint = { 
-                    x: start.x + signX * diagOffset, 
-                    y: start.y + signY * diagOffset 
+                if (incomingAngle > Math.PI / 4 && incomingAngle < (3 * Math.PI) / 4) {
+                    // Horizontal first, then diagonal to end
+                    const midPoint = {
+                        x: end.x - signX * diagOffset,
+                        y: start.y
+                    }
+                    pathData = `M${start.x} ${start.y} L${midPoint.x} ${midPoint.y} L${end.x} ${end.y}`
+                } else {
+                    const midPoint = {
+                        x: start.x,
+                        y: end.y - signY * diagOffset
+                    }
+                    pathData = `M${start.x} ${start.y} L${midPoint.x} ${midPoint.y} L${end.x} ${end.y}`
                 }
-                pathData = `M${start.x} ${start.y} L${midPoint.x} ${midPoint.y} L${end.x} ${end.y}`
                 break
             }
 
@@ -307,54 +331,90 @@ export class FlowchartEdge {
             case "curve":
             case "inner-curve":
             case "inner-curved":
-            case "curved":
-                pathData = `M${start.x} ${start.y} C${start.x} ${start.y + cpOffset} ${end.x} ${end.y - cpOffset} ${end.x} ${end.y}`
-                if (Math.abs(end.y - start.y) < vertDiff) {
-                    const cpOffsetX = (end.x - start.x) * 0.1
-                    pathData = `M${start.x} ${start.y} C${start.x + cpOffsetX} ${start.y} ${end.x - cpOffsetX} ${end.y} ${end.x} ${end.y}`
+            case "curved": {
+
+                if (start.y > end.y) {
+                    if (Math.abs(incomingAngle) > Math.PI / 4 && Math.abs(incomingAngle) < (3 * Math.PI) / 4) {
+                    // Mostly vertical
+                        const dirY = Math.sign(endDy) || 1
+                        pathData = `M${start.x} ${start.y} C${start.x} ${start.y + cpOffset * dirY} ${end.x} ${end.y - cpOffset * dirY} ${end.x} ${end.y}`
+                    } else {
+                    // Mostly horizontal
+                        const dirX = Math.sign(endDx) || 1
+                        pathData = `M${start.x} ${start.y} C${start.x + cpOffset * dirX} ${start.y} ${end.x - cpOffset * dirX} ${end.y} ${end.x} ${end.y}`
+                    }
+                } else {
+                    if (Math.abs(incomingAngle) > Math.PI / 4 && Math.abs(incomingAngle) < (3 * Math.PI) / 4) {
+                    // Mostly vertical
+                        const dirY = end.y > start.y ? 1 : -1
+                        pathData = `M${start.x} ${start.y} C${start.x} ${start.y + cpOffset * dirY} ${end.x} ${end.y - cpOffset * dirY} ${end.x} ${end.y}`
+                    } else {
+                    // Mostly horizontal
+                        const dirX = end.x > start.x ? 1 : -1
+                        pathData = `M${start.x} ${start.y} C${start.x + cpOffset * dirX} ${start.y} ${end.x - cpOffset * dirX} ${end.y} ${end.x} ${end.y}`
+                    }
                 }
                 break
+            }
 
             // Één knik met een curve
             case "elbow-curve":
-            case "elbow-curved":
-                pathData = `M${start.x} ${start.y} C${end.x} ${start.y} ${end.x} ${start.y} ${end.x} ${end.y}`
-
-                if (Math.abs(end.y - start.y) < vertDiff) {
+            case "elbow-curved": {
+                if (incomingAngle > Math.PI / 4 && incomingAngle < (3 * Math.PI) / 4) {
+                    // Incoming direction is mostly vertical → curve horizontal first
+                    pathData = `M${start.x} ${start.y} C${end.x} ${start.y} ${end.x} ${start.y} ${end.x} ${end.y}`
+                } else {
+                    // Incoming direction is mostly horizontal → curve vertical first
                     pathData = `M${start.x} ${start.y} C${start.x} ${end.y} ${start.x} ${end.y} ${end.x} ${end.y}`
                 }
-
-                if (Math.abs(start.x - end.x) < 1) {
-                    pathData = `M${start.x} ${start.y} L${end.x} ${end.y}`
-                }
                 break
-
+            }
 
             // Twee knikken met een curve
             case "zigzag-curve":
             case "zigzag-curved": {
-                const bridgeY = start.y + (end.y - start.y) * midpoint
-                pathData = `M${start.x} ${start.y} C${start.x} ${bridgeY} ${end.x} ${bridgeY} ${end.x} ${end.y}`
-                if (Math.abs(end.y - start.y) < vertDiff) {
-                    const bridgeX = start.x + (end.x - start.x) * midpoint
-                    pathData = `M${start.x} ${start.y} C${bridgeX} ${start.y} ${bridgeX} ${end.y} ${end.x} ${end.y}`
+                if (start.y > end.y) {
+                    if (Math.abs(incomingAngle) > Math.PI / 4 && Math.abs(incomingAngle) < (3 * Math.PI) / 4) {
+                        const bridgeY = start.y + (end.y - start.y) * midpoint
+                        pathData = `M${start.x} ${start.y} C${start.x} ${bridgeY} ${end.x} ${bridgeY} ${end.x} ${end.y}`
+                    } else {
+                        const bridgeX = start.x + (end.x - start.x) * midpoint
+                        pathData = `M${start.x} ${start.y} C${bridgeX} ${start.y} ${bridgeX} ${end.y} ${end.x} ${end.y}`
+                    }
+                } else {
+                    if (Math.abs(incomingAngle) > Math.PI / 4 && Math.abs(incomingAngle) < (3 * Math.PI) / 4) {
+                        const bridgeY = start.y + (end.y - start.y) * midpoint
+                        pathData = `M${start.x} ${start.y} C${start.x} ${bridgeY} ${end.x} ${bridgeY} ${end.x} ${end.y}`
+                    } else {
+                        const bridgeX = start.x + (end.x - start.x) * midpoint
+                        pathData = `M${start.x} ${start.y} C${bridgeX} ${start.y} ${bridgeX} ${end.y} ${end.x} ${end.y}`
+                    }
                 }
                 break
             }
             case "diagonal-curve":
             case "diagonal-curved": {
-                const dx = Math.abs(end.x - start.x)
-                const dy = Math.abs(end.y - start.y)
-                const diagOffset = Math.min(dx, dy)
+                
+                const remainX = end.x - start.x
+                const remainY = end.y - start.y
+                const diagOffset = Math.min(Math.abs(remainX), Math.abs(remainY))
+                const signX = remainX > 0 ? 1 : -1
+                const signY = remainY > 0 ? 1 : -1
 
-                const signX = end.x > start.x ? 1 : -1
-                const signY = end.y > start.y ? 1 : -1
-
-                const midPoint = { 
-                    x: start.x + signX * diagOffset, 
-                    y: start.y + signY * diagOffset 
+                if (incomingAngle > Math.PI / 4 && incomingAngle < (3 * Math.PI) / 4) {
+                    // Horizontal first, then diagonal to end
+                    const midPoint = {
+                        x: end.x - signX * diagOffset,
+                        y: start.y
+                    }
+                    pathData = `M${start.x} ${start.y} C${midPoint.x} ${midPoint.y} ${midPoint.x} ${midPoint.y} ${end.x} ${end.y}`
+                } else {
+                    const midPoint = {
+                        x: start.x,
+                        y: end.y - signY * diagOffset
+                    }
+                    pathData = `M${start.x} ${start.y} C${midPoint.x} ${midPoint.y} ${midPoint.x} ${midPoint.y} ${end.x} ${end.y}`
                 }
-                pathData = `M${start.x} ${start.y} C${midPoint.x} ${midPoint.y} ${midPoint.x} ${midPoint.y} ${end.x} ${end.y}`
                 break
             }
             
