@@ -65,6 +65,11 @@ export class Flowchart {
                         node.options.maxWidth = value
                     })
                 }
+                if (prop === "offsetPadding") {
+                    this.nodes.forEach(node => {
+                        node.options.offsetPadding = value
+                    })
+                }
                 return true
             }
         }),

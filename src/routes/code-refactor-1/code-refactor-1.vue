@@ -52,9 +52,15 @@
                     </div>
 
                     <div class="option" v-if="flowchart">
-                        <label for="options-nodeMaxWidth">Node Max Width</label>
+                        <label for="options-nodeMaxWidth">Max Width</label>
                         <input min="100" max="1000" step="1" type="range" id="options-nodeMaxWidth" v-model="options.nodeMaxWidth" @input="updateNodeMaxWidth">
                         <input type="number"  min="100" max="1000" v-model="options.nodeMaxWidth" @change="updateNodeMaxWidth">
+                    </div>
+
+                    <div class="option" v-if="flowchart">
+                        <label for="options-nodeOffsetPadding">Offset Padding</label>
+                        <input min="0" max="48" step="1" type="range" id="options-nodeOffsetPadding" v-model="options.nodeOffsetPadding" @input="updateOffsetPadding">
+                        <input type="number"  min="0" max="48" v-model="options.nodeOffsetPadding" @change="updateOffsetPadding">
                     </div>
                 </div>
 
@@ -164,6 +170,7 @@ interface Options {
     edgeVisible: boolean
     edgeShowArrow: boolean
     nodeMaxWidth: number
+    nodeOffsetPadding: number
 }
 
 export default defineComponent ({ 
@@ -179,6 +186,7 @@ export default defineComponent ({
                 edgeVisible: true,
                 edgeShowArrow: true,
                 nodeMaxWidth: 200,
+                nodeOffsetPadding: 8,
             } as Partial<Options>,
             nodes: [] as Array<FlowchartNode>,
             flowchart: undefined as Flowchart | undefined,
@@ -233,6 +241,8 @@ export default defineComponent ({
                     },
                     nodes: {
                         segments: this.options.segments,
+                        maxWidth: this.options.nodeMaxWidth,
+                        offsetPadding: this.options.nodeOffsetPadding,
                     }
                 }
 
@@ -337,6 +347,10 @@ export default defineComponent ({
         updateNodeMaxWidth() {
             if (!this.flowchart) return
             this.flowchart.options.nodes.maxWidth = this.options.nodeMaxWidth
+        },
+        updateOffsetPadding() {
+            if (!this.flowchart) return
+            this.flowchart.options.nodes.offsetPadding = this.options.nodeOffsetPadding
         },
 
         resetPan(e:Event) {

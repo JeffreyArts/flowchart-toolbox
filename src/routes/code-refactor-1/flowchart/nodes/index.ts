@@ -11,7 +11,7 @@ export type FlowchartNodeOptions = {
     maxWidth: number | string  
     segments: number
     class?: string | string[]
-    offsetPadding?: number
+    offsetPadding: number
 }
 
 export type FlowchartNodeConstructOptions = {
@@ -28,12 +28,16 @@ export type FlowchartNodeConstructOptions = {
 export class FlowchartNode {
     prevTextHelper = undefined as TextHelper | undefined
     type: string
-    
-    offsetPadding = 8
     shape: FlowchartShape
 
-    options = new Proxy<FlowchartNodeOptions>({ maxWidth: "auto", segments: 0 }, {
+    options = new Proxy<FlowchartNodeOptions>({ maxWidth: "auto", segments: 0, offsetPadding: 0 }, {
         set: (target, prop, value) => {
+
+            // Type forcing
+            if (prop === "offsetPadding") {
+                value = Number(value) || 0
+            }
+
             (target as Record<string, any>)[prop as string] = value
     
             if (prop === "maxWidth") {
@@ -43,7 +47,10 @@ export class FlowchartNode {
             }
 
             if (prop === "segments") { this.#triggerEvent("segmentsChange") }
-    
+            if (prop === "offsetPadding") {
+                this.updatePosition()
+            }
+
             return true
         }
     })
@@ -278,16 +285,6 @@ export class FlowchartNode {
         })
     }
 
-    /** Segments **/
-    // get segments() {
-    //     // return this._segments
-    // }
-    
-    // set segments(value: number) {   
-    //     // this._segments = value/
-    //     this.#triggerEvent("segmentsChange")
-    // }
-
     /** Position **/
     updatePosition(first = true) {
         if (!this.svgGroup) return
@@ -362,7 +359,6 @@ export class FlowchartNode {
             y: targetNode.y
         }
 
-
         let degrees = Math.atan2(targetPosition.y - startNode.y, targetPosition.x - startNode.x) * (180 / Math.PI) + 90
         if (startNode.options.segments > 0) {
             const anglePerSegment = 360 / startNode.options.segments
@@ -375,7 +371,7 @@ export class FlowchartNode {
         }
 
         const rad = (degrees - 90) * (Math.PI / 180)
-        const dist = this.shape.getBorderDistance(targetPosition) + startNode.offsetPadding
+        const dist = this.shape.getBorderDistance(targetPosition) + startNode.options.offsetPadding
         return {
             x: this.x + Math.cos(rad) * dist,
             y: this.y + Math.sin(rad) * dist,
