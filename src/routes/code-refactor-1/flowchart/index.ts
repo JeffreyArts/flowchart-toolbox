@@ -57,7 +57,12 @@ export class Flowchart {
                 target[prop as keyof FlowchartNodeOptions] = value
                 if (prop === "segments") {
                     this.nodes.forEach(node => {
-                        node.segments = value
+                        node.options.segments = value
+                    })
+                }
+                if (prop === "maxWidth") {
+                    this.nodes.forEach(node => {
+                        node.options.maxWidth = value
                     })
                 }
                 return true
@@ -298,8 +303,8 @@ export class Flowchart {
             })
         }
 
-        newNode.segments = oldNode.segments
-        newNode.maxWidth = oldNode.maxWidth
+        newNode.options.segments = oldNode.options.segments
+        newNode.options.maxWidth = oldNode.options.maxWidth
         newNode.x = oldNode.x
         newNode.y = oldNode.y
         newNode.text = oldNode.text

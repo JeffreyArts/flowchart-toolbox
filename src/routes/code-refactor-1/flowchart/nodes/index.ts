@@ -8,16 +8,22 @@ export type FlowchartNodeEvent = "positionChange" | "segmentsChange" | "beforeTe
 export type FlowchartTypeMethod = (node: FlowchartNode) => FlowchartShape
 
 export type FlowchartNodeOptions = {
+    maxWidth: number | string  
+    segments: number
+    class?: string | string[]
+    offsetPadding?: number
+}
+
+export type FlowchartNodeConstructOptions = {
     parent?: FlowchartNode
     text?: string
     flowchart?: Flowchart
     x?: number | string
     y?: number | string
-    maxWidth?: number | string  
-    class?: string | string[]
-    segments?: number
-    offsetPadding?: number
+    options?: Partial<FlowchartNodeOptions>
 }
+
+
 
 export class FlowchartNode {
     prevTextHelper = undefined as TextHelper | undefined
@@ -25,7 +31,22 @@ export class FlowchartNode {
     
     offsetPadding = 8
     shape: FlowchartShape
-    maxWidth = "auto" as number | string
+
+    options = new Proxy<FlowchartNodeOptions>({ maxWidth: "auto", segments: 0 }, {
+        set: (target, prop, value) => {
+            (target as Record<string, any>)[prop as string] = value
+    
+            if (prop === "maxWidth") {
+                this.updateTextBox()
+                this.updatePosition()
+                this.#triggerEvent("afterTextChange")
+            }
+
+            if (prop === "segments") { this.#triggerEvent("segmentsChange") }
+    
+            return true
+        }
+    })
 
     id: string = crypto.randomUUID()
     flowchart: Flowchart | null = null
@@ -39,14 +60,14 @@ export class FlowchartNode {
 
     private _x = "0"
     private _y = "0"
-    private _segments = 0
+    // private _segments = 0
     private _mouseOver: boolean = false
     private _isVisible: boolean = false
     private _text: string = ""
 
     init?(): void
 
-    constructor(type: string, options: Partial<FlowchartNodeOptions>) {
+    constructor(type: string, options: Partial<FlowchartNodeConstructOptions>) {
         this.svgGroup.id = this.id
         this.svgGroup.classList.add("flowchart-node")
         
@@ -73,45 +94,50 @@ export class FlowchartNode {
         this.updatePosition()
     }
 
-    parseOptions(options: Partial<FlowchartNodeOptions>) {
+    parseOptions(options: Partial<FlowchartNodeConstructOptions>) {
         if (!options) return
 
-        if (options.flowchart) {
-            this.flowchart = options.flowchart
-        }
+        if (options.flowchart) { this.flowchart = options.flowchart}
+        if (options.parent) { this.addParent(options.parent) }
+        if (options.x) { this.setX(options.x) }
+        if (options.y) { this.setY(options.y) }
 
-        if (options.parent) {
-            this.addParent(options.parent)
+        // First load default options from flowchart
+        if (this.flowchart?.options.nodes) {
+            const nodeOptions = this.flowchart.options.nodes
+            for (const key in nodeOptions) {
+                const k = key as keyof FlowchartNodeOptions
+                (this.options as Record<string, any>)[k] = nodeOptions[k]
+            }
         }
-
-        if (options.class) {
-            if (Array.isArray(options.class)) {
-                this.svgGroup.classList.add(...options.class)
-            } else {
-                this.svgGroup.classList.add(options.class)
+        
+        // Then load options from the constructor options
+        if (options.options) {
+            const nodeOptions = options.options
+            for (const key in nodeOptions) {
+                const k = key as keyof FlowchartNodeOptions
+                (this.options as Record<string, any>)[k] = nodeOptions[k]
             }
         }
 
-        if (typeof options.maxWidth != "undefined") {
-            this.maxWidth = options.maxWidth 
-        }
+        // if (options.class) {
+        //     if (Array.isArray(options.class)) {
+        //         this.svgGroup.classList.add(...options.class)
+        //     } else {
+        //         this.svgGroup.classList.add(options.class)
+        //     }
+        // }
 
-        if (typeof options.segments === "number") {
-            this._segments = options.segments
-        } else {
-            this._segments = this.flowchart?.options.nodes?.segments || 0
-        }
+        // if (typeof options.options.maxWidth != "undefined") {
+        //     this.maxWidth = options.maxWidth 
+        // }
 
+        // if (typeof options.segments === "number") {
+        //     this._segments = options.segments
+        // } else {
+        //     this._segments = this.flowchart?.options.nodes?.segments || 0
+        // }
 
-        setTimeout(() => {
-            if (options.x) {
-                this.setX(options.x)
-            }
-
-            if (options.y) {
-                this.setY(options.y)
-            }
-        })
     }
     
     #init() {
@@ -173,11 +199,13 @@ export class FlowchartNode {
             padding: "20px"
         } as Partial<CSSStyleDeclaration> 
         
-        if (typeof this.maxWidth != "undefined") {
-            if (typeof this.maxWidth === "number") {
-                textHelperOptions["maxWidth"] = this.maxWidth + "px"
+        if (typeof this.options.maxWidth != "undefined") {
+            if (typeof this.options.maxWidth === "number") {
+                textHelperOptions["maxWidth"] = this.options.maxWidth + "px"
+            } else if (!isNaN(Number(this.options.maxWidth))) {
+                textHelperOptions["maxWidth"] = this.options.maxWidth + "px"
             } else {
-                textHelperOptions["maxWidth"] = this.maxWidth
+                textHelperOptions["maxWidth"] = this.options.maxWidth
             }
         }
         
@@ -251,14 +279,14 @@ export class FlowchartNode {
     }
 
     /** Segments **/
-    get segments() {
-        return this._segments
-    }
+    // get segments() {
+    //     // return this._segments
+    // }
     
-    set segments(value: number) {   
-        this._segments = value
-        this.#triggerEvent("segmentsChange")
-    }
+    // set segments(value: number) {   
+    //     // this._segments = value/
+    //     this.#triggerEvent("segmentsChange")
+    // }
 
     /** Position **/
     updatePosition(first = true) {
@@ -336,8 +364,8 @@ export class FlowchartNode {
 
 
         let degrees = Math.atan2(targetPosition.y - startNode.y, targetPosition.x - startNode.x) * (180 / Math.PI) + 90
-        if (startNode.segments > 0) {
-            const anglePerSegment = 360 / startNode.segments
+        if (startNode.options.segments > 0) {
+            const anglePerSegment = 360 / startNode.options.segments
             degrees = Math.round(degrees / anglePerSegment) * anglePerSegment            
             const rad = (degrees - 90) * (Math.PI / 180)
             targetPosition = {

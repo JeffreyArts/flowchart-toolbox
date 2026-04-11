@@ -50,6 +50,12 @@
                         <label for="options-segments">Segments <i class="info"><span class="info-icon">?</span><span class="info-details">0 = none</span></i></label>
                         <input min="0" max="360" type="number" id="options-segments" v-model="options.segments" @change="updateNodeSegments">
                     </div>
+
+                    <div class="option" v-if="flowchart">
+                        <label for="options-nodeMaxWidth">Node Max Width</label>
+                        <input min="100" max="1000" step="1" type="range" id="options-nodeMaxWidth" v-model="options.nodeMaxWidth" @input="updateNodeMaxWidth">
+                        <input type="number"  min="100" max="1000" v-model="options.nodeMaxWidth" @change="updateNodeMaxWidth">
+                    </div>
                 </div>
 
 
@@ -143,7 +149,7 @@
 <script lang="ts">
 //@ts-nocheck
 import { defineComponent, markRaw } from "vue"
-import _ from "lodash"
+import _, { update } from "lodash"
 import gsap from "gsap"
 import { Flowchart } from "./flowchart"
 import { FlowchartNode, type FlowchartNodeOptions } from "./flowchart/nodes"
@@ -157,6 +163,7 @@ interface Options {
     edgeType: EdgeType
     edgeVisible: boolean
     edgeShowArrow: boolean
+    nodeMaxWidth: number
 }
 
 export default defineComponent ({ 
@@ -171,6 +178,7 @@ export default defineComponent ({
                 midpoint: 0.5,
                 edgeVisible: true,
                 edgeShowArrow: true,
+                nodeMaxWidth: 200,
             } as Partial<Options>,
             nodes: [] as Array<FlowchartNode>,
             flowchart: undefined as Flowchart | undefined,
@@ -229,10 +237,10 @@ export default defineComponent ({
                 }
 
                 this.flowchart = markRaw(new Flowchart("#segments-canvas", flowchartOptions))
-                const mainNode = new FlowchartNode("decision", { text: "Main node", flowchart: this.flowchart, x: "50%", y: "50%", class: "main-node" , maxWidth: 320 })
+                const mainNode = new FlowchartNode("decision", { text: "Main node", flowchart: this.flowchart, x: "50%", y: "50%", class: "main-node", options: { maxWidth: 320 }})
                 const nodes = 2
                 for (let i = 0; i < nodes; i++) {
-                    const processNode = new FlowchartNode("process", { text: `Node ${i+1}`, parent: mainNode, x: `${i * 100/nodes + 100/nodes/2}%`, y: "10%", maxWidth: 200 })
+                    const processNode = new FlowchartNode("process", { text: `Node ${i+1}`, parent: mainNode, x: `${i * 100/nodes + 100/nodes/2}%`, y: "10%", options: { maxWidth: 200 }})
                 }
                 
                 const selectTool = this.flowchart.getTool("select")
@@ -274,7 +282,8 @@ export default defineComponent ({
                 text: this.selectedNode.text,
                 x: this.selectedNode.x,
                 y: this.selectedNode.y,
-                flowchart: this.flowchart 
+                flowchart: this.flowchart,
+                options: this.selectedNode.options
             } as Partial<FlowchartNodeOptions>
             
             
@@ -324,6 +333,10 @@ export default defineComponent ({
         changeEdgeShowArrow() {
             if (!this.flowchart) return
             this.flowchart.options.edges.showArrow = this.options.edgeShowArrow
+        },
+        updateNodeMaxWidth() {
+            if (!this.flowchart) return
+            this.flowchart.options.nodes.maxWidth = this.options.nodeMaxWidth
         },
 
         resetPan(e:Event) {
