@@ -115,6 +115,15 @@ export abstract class FlowchartShape {
         return this._isVisible
     }
 
+    // Width & height
+    get width() {
+        return this.node.textBox.width 
+    }
+    
+    get height() {
+        return this.node.textBox.height 
+    }
+    
 
     /** Position **/
     // #updatePosition() {

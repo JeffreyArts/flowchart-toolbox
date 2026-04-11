@@ -33,10 +33,6 @@ export class PillShape extends FlowchartShape {
     }
 
     boundUpdateText = this.updateText.bind(this)
-    
-
-    get width() { return this.node.textBox.width  }    
-    get height() { return this.node.textBox.height  }
 
     private get r()  { return this.height / 2 }
     private get lx() { return this.node.x - this.width / 2 + this.r }  // middelpunt linker cirkel

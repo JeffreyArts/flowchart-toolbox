@@ -30,16 +30,6 @@ export class RectangleShape extends FlowchartShape {
     }
 
     boundUpdateText = this.updateText.bind(this)
-    
-
-    get width() {
-        return this.node.textBox.width 
-    }
-    
-    get height() {
-        return this.node.textBox.height 
-    }
-    
 
     processOptions(options?: Partial<RectangleShapeOptions>) {
         if (!options) return

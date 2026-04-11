@@ -53,24 +53,24 @@ export class FlowchartNode {
         this.parseOptions(options)
         this.#init()
 
-        
-        if (this.flowchart) {
-            
-            const matchedNodeType = this.flowchart.registered.nodes.find(node => node.type === type)
-            if (!matchedNodeType) {
-                throw new Error(`Invalid node type: ${type}`)
-            }
-            
-            this.type = type
-            this.shape = matchedNodeType.shape(this)
-            
-            if (typeof options.text === "string") {
-                this.text = options.text
-            }
-            
-            this.flowchart.addNode(this)
-            this.updatePosition()
+        if (!this.flowchart) {
+            throw new Error("FlowchartNode must be initialized with a flowchart reference in options or by adding a parent with a flowchart reference")
         }
+
+        const matchedType = this.flowchart.registered.nodes.find(node => node.type === type)
+        if (!matchedType) {
+            throw new Error(`Invalid node type: ${type}`)
+        }
+            
+        this.type = type
+        this.shape = matchedType.shape(this)
+            
+        if (typeof options.text === "string") {
+            this.text = options.text
+        }
+            
+        this.flowchart.addNode(this)
+        this.updatePosition()
     }
 
     parseOptions(options: Partial<FlowchartNodeOptions>) {
