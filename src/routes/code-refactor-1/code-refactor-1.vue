@@ -131,7 +131,7 @@
                 <div class="option-group" name="Desired features" >
                     <div class="option">
                        <h3>Options object</h3>
-                        <p>Het flowchart model en de nodes, edges en tools classes moeten hun opties bijhouden in een options object</p>
+                        <p>✅ Het flowchart model en de nodes, edges en tools classes moeten hun opties bijhouden in een options object</p>
                     </div>
                     <div class="option">
                        <h3>Edge object</h3>
@@ -143,7 +143,7 @@
                     </div>
                     <div class="option">
                        <h3>Max-width Node</h3>
-                        <p>Max-width wijzigen on-the-fly (zeker voor de decision node)</p>
+                        <p>✅ Max-width wijzigen on-the-fly (zeker voor de decision node)</p>
                     </div>
                 </div>
             </div>

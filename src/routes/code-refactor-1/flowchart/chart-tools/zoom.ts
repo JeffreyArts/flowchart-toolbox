@@ -7,6 +7,10 @@ export class ZoomTool extends FlowchartTool {
     mouseStartPos = undefined as FlowchartPos | undefined
     isZoomingTimeout = 0
     _isZooming = false
+
+    options = {
+        fitPadding: 16,
+    }
     
     constructor(flowchart: FlowchartType) {
         super(flowchart)
@@ -19,7 +23,7 @@ export class ZoomTool extends FlowchartTool {
         }
         if (nodes.length === 0) return
 
-        const padding = 0
+        const padding = this.options.fitPadding
         const minX = (Math.min(...nodes.map(n => Number(n.x - n.width * this.flowchart.zoom / 2)))) - padding
         const maxX = Math.max(...nodes.map(n => Number(n.x + n.width * this.flowchart.zoom / 2))) + padding
         const minY = Math.min(...nodes.map(n => Number(n.y - n.height * this.flowchart.zoom / 2))) - padding
