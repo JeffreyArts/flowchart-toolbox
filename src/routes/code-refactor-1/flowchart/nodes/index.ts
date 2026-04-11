@@ -10,7 +10,6 @@ export type FlowchartTypeMethod = (node: FlowchartNode) => FlowchartShape
 export type FlowchartNodeOptions = {
     maxWidth: number | string  
     segments: number
-    class?: string | string[]
     offsetPadding: number
 }
 
@@ -41,7 +40,9 @@ export class FlowchartNode {
             (target as Record<string, any>)[prop as string] = value
     
             if (prop === "maxWidth") {
-                this.updateTextBox()
+                if (this.text) {
+                    this.updateTextBox()
+                }
                 this.updatePosition()
                 this.#triggerEvent("afterTextChange")
             }
@@ -153,7 +154,6 @@ export class FlowchartNode {
             if (this.init) {
                 this.init()
             }
-            this.updateTextBox()
         }, 0)
     }
 
