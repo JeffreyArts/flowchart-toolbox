@@ -13,11 +13,11 @@ import SVGNodes from "./svg-nodes/svg-nodes.vue"
 import EdgeVariations from "./edge-variations/edge-variations.vue"
 import FitZoom from "./fit-zoom/fit-zoom.vue"
 import Segments from "./segments/segments.vue"
+import CodeRefactor1 from "./code-refactor-1/code-refactor-1.vue"
 import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
 import Cytoscape from "./cytoscape.vue"
 import ShapeOutside from "./shape-outside.vue"
-import path from "path"
 
 const routes = [
     {
@@ -104,6 +104,11 @@ const routes = [
         path: "/segments",
         name: "15) Segments",
         component: Segments
+    },
+    {
+        path: "/code-refactor-1",
+        name: "15) Code Refactor 1",
+        component: CodeRefactor1
     },
     {
         path: "/options-overview",
