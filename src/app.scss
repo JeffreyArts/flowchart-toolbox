@@ -126,7 +126,7 @@ src: url("/src/assets/fonts/fixed-sys.otf");
     display: flex;
     transition: width ease 0.24s;
     width: 100%;
-    height: 100%;
+    height: 100dvh;
     opacity: 1; transform: translateY(0);
     > * {
         margin: 0 32px 32px 64px;
