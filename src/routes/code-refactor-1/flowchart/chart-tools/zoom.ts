@@ -1,8 +1,8 @@
 import type { FlowchartType, FlowchartPos } from "../types"
 import type FlowchartNode from "../nodes/index"
-import Tool from "./index"
+import FlowchartTool from "./index"
 
-export class ZoomTool extends Tool {
+export class ZoomTool extends FlowchartTool {
     name = "zoom"
     mouseStartPos = undefined as FlowchartPos | undefined
     isZoomingTimeout = 0

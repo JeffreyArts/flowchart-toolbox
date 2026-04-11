@@ -127,7 +127,7 @@
                     </div>
                     <div class="option">
                        <h3>Register object</h3>
-                        <p>Object maken voor flowchart model om nodes, edges en tools te registreren</p>
+                        <p>✅ Object maken voor flowchart model om nodes, edges en tools te registreren</p>
                     </div>
                     <div class="option">
                        <h3>Max-width Node</h3>

@@ -5,9 +5,8 @@ import { SelectTool } from "./chart-tools/select"
 import FlowchartNode, { type FlowchartNodeOptions, type FlowchartTypeMethod } from "./nodes/index"
 import FlowchartEdge, { type FlowchartEdgeOptions } from "./edges/index"
 import { type DrawEdgeType } from "./edges/index"
-import type { FlowchartTool } from "./types"
+import { type FlowchartTool } from "./chart-tools/index"
 import { MoveNodeTool } from "./chart-tools/move-node"
-
 
 
 // Default nodes
@@ -29,6 +28,9 @@ interface FlowchartOptions {
     nodes: Partial<FlowchartNodeOptions>
 }
 
+type FlowchartToolConstructor = new (...args: any[]) => FlowchartTool
+
+
 export class Flowchart {
     parentElement = null as HTMLElement | null
     nodes = [] as Array<FlowchartNode>
@@ -39,14 +41,13 @@ export class Flowchart {
     nodesGroup = null as SVGGElement | null
     edgesGroup = null as SVGGElement | null
 
-    _tools = [] as Array<{ name: string, object: FlowchartTool }>
-    _zoom = 1
     options = {
         edges: new Proxy<Partial<FlowchartEdgeOptions>>({ showArrow: true }, {
             set: (target, prop, value) => {
-                target[prop as keyof FlowchartEdgeOptions] = value
+                const key = prop as keyof FlowchartEdgeOptions
+                target[key] = value
                 this.edges.forEach(edge => {
-                    edge.options[prop] = value
+                    (edge.options as Record<string, any>)[key] = value
                 })
                 return true
             }
@@ -65,10 +66,12 @@ export class Flowchart {
     }
 
     registered = {
-        nodes: [] as Array<{ type: string, shape: FlowchartTypeMethod, defaultOptions?: Partial<FlowchartNodeOptions> }>,
-        edges: [] as Array<{ type: string, draw: DrawEdgeType, defaultOptions?: Partial<FlowchartEdgeOptions> }>
+        nodes: [] as Array<{ type: string, shape: FlowchartTypeMethod }>,
+        edges: [] as Array<{ type: string, draw: DrawEdgeType }>,
+        tools: [] as Array<{ type: string, object: FlowchartTool }>
     }
-    
+
+    // Pan
     pan = new Proxy({ x: 0, y: 0 }, {
         set: (target, prop, value) => {
             target[prop as "x" | "y"] = value
@@ -76,6 +79,14 @@ export class Flowchart {
             return true
         }
     })
+
+    // Zoom 
+    _zoom = 1
+    get zoom() { return this._zoom }
+    set zoom(value: number) {
+        this._zoom = value
+        this.edges.forEach(edge => edge.updatePosition())
+    }
 
     constructor(el?: HTMLElement | string, options?: FlowchartOptions) { 
         if (!el) {
@@ -107,10 +118,10 @@ export class Flowchart {
         this.#addChart()
         
         // Default tools
-        this.addTool({ name: "pan", object: new PanTool(this) })
-        this.addTool({ name: "zoom", object: new ZoomTool(this) })
-        this.addTool({ name: "select", object: new SelectTool(this) })
-        this.addTool({ name: "move-node", object: new MoveNodeTool(this) })
+        this.register("tool","zoom", ZoomTool)
+        this.register("tool","select", SelectTool)
+        this.register("tool","move-node", MoveNodeTool)
+        this.register("tool","pan", PanTool)
 
         // Default Nodes
         this.register("node", "process", ProcessNode)
@@ -137,6 +148,17 @@ export class Flowchart {
             for (const key in options.nodes) {
                 this.options.nodes[key as keyof FlowchartNodeOptions] = options.nodes[key as keyof FlowchartNodeOptions] as any
             }
+        }
+    }
+
+    register(registrationType: "node" | "edge" | "tool", type: string, value: FlowchartTypeMethod | DrawEdgeType | FlowchartToolConstructor) {
+        if (registrationType === "node") {
+            this.registered.nodes.push({ type: type, shape: value as FlowchartTypeMethod })
+        } else if (registrationType === "edge") {
+            this.registered.edges.push({ type: type, draw: value as DrawEdgeType })
+        } else if (registrationType === "tool") {
+            const o = value as FlowchartToolConstructor
+            this.registered.tools.push({ type: type, object: new o(this) })
         }
     }
 
@@ -176,14 +198,6 @@ export class Flowchart {
         this.chart.setAttribute("viewBox", `${x} ${y} ${w} ${h}`)
     }
 
-    register(registrationType: "node" | "edge", type: string, value: FlowchartTypeMethod | DrawEdgeType) {
-        if (registrationType === "node") {
-            this.registered.nodes.push({ type: type, shape: value as FlowchartTypeMethod })
-        } else if (registrationType === "edge") {
-            this.registered.edges.push({ type: type, draw: value as DrawEdgeType })
-        }
-    }
-
     updateChartSize() {
         if (!this.chart) return
         this.chart.setAttribute( "viewBox", `0 0 ${this.chart.clientWidth} ${this.chart.clientHeight}`)
@@ -197,17 +211,6 @@ export class Flowchart {
 
     get height() {
         return this.parentElement?.clientHeight || 0
-    }
-
-    /** Zoom **/
-
-    set zoom(value: number) {
-        this._zoom = value
-        this.edges.forEach(edge => edge.updatePosition())
-    }
-
-    get zoom() {
-        return this._zoom
     }
 
     // ▗▖  ▗▖ ▗▄▖ ▗▄▄▄ ▗▄▄▄▖ ▗▄▄▖
@@ -267,8 +270,7 @@ export class Flowchart {
         this.nodes = this.nodes.filter(n => n.id !== node.id)
         node.destroy()
     }
-
-    
+ 
     replaceNode(oldNode: FlowchartNode | string, newNode: FlowchartNode) {
         if (typeof oldNode === "string") {
             oldNode = this.nodes.find(n => n.id === oldNode) as FlowchartNode
@@ -347,69 +349,22 @@ export class Flowchart {
     //   █ ▐▌ ▐▌▐▌ ▐▌▐▌    ▝▀▚▖
     //   █ ▝▚▄▞▘▝▚▄▞▘▐▙▄▄▖▗▄▄▞
 
-    addTool(tool: { name: string, object: FlowchartTool }) {
-        // Check if tool already exists in _tools
-        const existingTool = this._tools.find(t => t.name === tool.name)
-        if (existingTool) {
-            return
-        }
-        this._tools.push(tool)
-        
-        if (this.parentElement) {
-            // if this.parentElement.classList has a class that starts with "__tool", remove it
-            const toolClasses = Array.from(this.parentElement.classList).filter(c => c.startsWith("__tool"))
-            toolClasses.forEach(c => this.parentElement?.classList.remove(c))
-
-            let tools = this._tools.map(t => t.name).join(",")
-            this.parentElement.setAttribute("data-tools", tools)
-            // Add class for the current tool
-            this._tools.forEach(t => {
-                if (!this.parentElement) return
-
-                if (t.object) {
-                    this.parentElement.classList.add(`__tool${t.name.charAt(0).toUpperCase() + t.name.slice(1)}`)
-                }
-            })
-        }
-
-        return tool.object
-    }
-
-    removeTool(toolName: string) {
-        // Remove tool from _tools
-        const tool = this._tools.find(t => t.name === toolName)
-        if (tool) {
-            if (tool.object) {
-                tool.object.destroy()
-            }
-            this._tools = this._tools.filter(t => t.name !== toolName)
-        }
-
-        if (this.parentElement) {
-
-            // Remove class for the current tool
-            this.parentElement.classList.remove(`__tool${toolName.charAt(0).toUpperCase() + toolName.slice(1)}`)
-
-            this.parentElement.removeAttribute("data-tool")
-        }
-    }
-
     activateTool(toolName: string) {
-        const tool = this._tools.find(t => t.name === toolName)
+        const tool = this.registered.tools.find(t => t.type === toolName)
         if (tool) {
             tool.object.activate()
         }
-    }
+    } 
 
     deactivateTool(toolName: string) {
-        const tool = this._tools.find(t => t.name === toolName)
+        const tool = this.registered.tools.find(t => t.type === toolName)
         if (tool) {
             tool.object.deactivate()
         }
     }
 
     getTool(toolName: string) {
-        const tool = this._tools.find(t => t.name === toolName)
+        const tool = this.registered.tools.find(t => t.type === toolName)
         if (!tool) {
             return undefined
         }
@@ -421,9 +376,14 @@ export class Flowchart {
 
     destroy() {
         this.nodes = []
+        this.edges = []
         this.chart.remove()
 
-        this._tools.forEach(t => t.object?.destroy())
+        this.registered.tools.forEach(t => t.object?.destroy())
+
+        this.registered.edges = []
+        this.registered.nodes = []
+        this.registered.tools = []
 
         this.parentElement = null
     }

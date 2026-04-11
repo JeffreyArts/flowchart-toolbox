@@ -1,6 +1,6 @@
 import type Flowchart  from "../index"
 
-export class Tool {
+export class FlowchartTool {
     name = "unknown-tool"
     mouseDown = false
     flowchart: Flowchart
@@ -114,4 +114,4 @@ export class Tool {
     }
 }
 
-export default Tool
+export default FlowchartTool

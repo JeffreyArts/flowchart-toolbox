@@ -1,7 +1,7 @@
 import type { FlowchartType, FlowchartPos } from "../types"
-import Tool from "./index"
+import FlowchartTool from "./index"
 
-export class PanTool extends Tool {
+export class PanTool extends FlowchartTool {
     name = "pan"
     mouseStartPos = undefined as FlowchartPos | undefined
     
@@ -16,8 +16,7 @@ export class PanTool extends Tool {
     }
 
     onMouseDown = (e: MouseEvent) => {  
-        if (!this.isWithinChart) return
-
+        if (!this.isWithinChart) return        
         this.mouseStartPos = { ...this.globalMousePos }
     }
     

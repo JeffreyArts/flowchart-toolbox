@@ -1,11 +1,11 @@
 import type { Flowchart } from "../index"
 import type { FlowchartPos } from "../types"
 import type Node  from "../nodes/index"
-import Tool from "./index"
+import FlowchartTool from "./index"
 import type PanTool from "./pan"
 import type { SelectTool } from "./select"
 
-export class MoveNodeTool extends Tool {
+export class MoveNodeTool extends FlowchartTool {
     name = "move-node"
     mouseStartPos = undefined as FlowchartPos | undefined
     selectedNode = null as Node | null
@@ -27,10 +27,11 @@ export class MoveNodeTool extends Tool {
 
     onMouseDown = () => {  
         this.mouseStartPos = undefined
+        const tools = this.flowchart.registered.tools
         
         // Check is flowchart has pan tool
-        this.panTool = this.flowchart?._tools.find(t => t.name === "pan")?.object as PanTool | undefined
-        this.selectTool = this.flowchart?._tools.find(t => t.name === "select")?.object as SelectTool | undefined
+        this.panTool = tools.find(t => t.type === "pan")?.object as PanTool | undefined
+        this.selectTool = tools.find(t => t.type === "select")?.object as SelectTool | undefined
 
         // Check if mouse is within any node
         this.flowchart.nodes.forEach(node => {

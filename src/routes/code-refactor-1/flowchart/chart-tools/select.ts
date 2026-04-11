@@ -1,7 +1,7 @@
 import type { FlowchartType, FlowchartPos } from "../types"
-import Tool from "./index"
+import FlowchartTool from "./index"
 
-export class SelectTool extends Tool {
+export class SelectTool extends FlowchartTool {
     name = "select"
     mouseStartPos = undefined as FlowchartPos | undefined
     startPan = { x: 0, y: 0 } as FlowchartPos
