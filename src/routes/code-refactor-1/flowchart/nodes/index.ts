@@ -2,11 +2,10 @@ import { type Flowchart } from "../index"
 import FlowchartEdge from "../edges/index"
 
 import TextHelper from "../shapes/text-helper"
-import type PillShape from "../shapes/pill"
-import type DiamondShape from "../shapes/diamond"
-import type RectangleShape from "../shapes/rectangle"
+import type FlowchartShape from "../shapes/index"
 
 export type FlowchartNodeEvent = "positionChange" | "segmentsChange" | "beforeTextChange" | "afterTextChange"
+export type FlowchartTypeMethod = (node: FlowchartNode) => FlowchartShape
 
 export type FlowchartNodeOptions = {
     parent?: FlowchartNode
@@ -14,20 +13,20 @@ export type FlowchartNodeOptions = {
     flowchart?: Flowchart
     x?: number | string
     y?: number | string
-    segments?: number
     maxWidth?: number | string  
     class?: string | string[]
+    segments?: number
+    offsetPadding?: number
 }
 
-export abstract class FlowchartNode {
-
+export class FlowchartNode {
     prevTextHelper = undefined as TextHelper | undefined
-    abstract type: string
+    type: string
     
     offsetPadding = 8
-    abstract shape: RectangleShape | PillShape | DiamondShape | undefined
+    shape: FlowchartShape
     maxWidth = "auto" as number | string
-    
+
     id: string = crypto.randomUUID()
     flowchart: Flowchart | null = null
     children: FlowchartNode[] = []
@@ -47,19 +46,33 @@ export abstract class FlowchartNode {
 
     init?(): void
 
-    constructor(options: Partial<FlowchartNodeOptions>) {
-        this.#init()
+    constructor(type: string, options: Partial<FlowchartNodeOptions>) {
         this.svgGroup.id = this.id
         this.svgGroup.classList.add("flowchart-node")
         
         this.parseOptions(options)
-    
+        this.#init()
 
+        
         if (this.flowchart) {
+            
+            const matchedNodeType = this.flowchart.registered.nodes.find(node => node.type === type)
+            if (!matchedNodeType) {
+                throw new Error(`Invalid node type: ${type}`)
+            }
+            
+            this.type = type
+            this.shape = matchedNodeType.shape(this)
+            
+            if (typeof options.text === "string") {
+                this.text = options.text
+            }
+            
             this.flowchart.addNode(this)
             this.updatePosition()
         }
     }
+
     parseOptions(options: Partial<FlowchartNodeOptions>) {
         if (!options) return
 
@@ -86,12 +99,9 @@ export abstract class FlowchartNode {
         if (typeof options.segments === "number") {
             this._segments = options.segments
         } else {
-            this._segments = this.flowchart?.options.segments || 0
+            this._segments = this.flowchart?.options.nodes?.segments || 0
         }
 
-        if (typeof options.text === "string") {
-            this.text = options.text
-        }
 
         setTimeout(() => {
             if (options.x) {

@@ -52,7 +52,7 @@
                     </div>
                 </div>
 
-                
+
                 <div class="option-group" name="Edge options" >
                     
                     <div class="option">
@@ -143,17 +143,12 @@
 <script lang="ts">
 //@ts-nocheck
 import { defineComponent, markRaw } from "vue"
-import _, { update } from "lodash"
+import _ from "lodash"
 import gsap from "gsap"
 import { Flowchart } from "./flowchart"
-import { StartNode } from "./flowchart/nodes/start"
-import { EndNode } from "./flowchart/nodes/end"
-import { DecisionNode } from "./flowchart/nodes/decision"
-import { ProcessNode } from "./flowchart/nodes/process"
-import type { FlowchartNodeOptions } from "./flowchart/nodes"
+import { FlowchartNode, type FlowchartNodeOptions } from "./flowchart/nodes"
+import { type EdgeType } from "./flowchart/edge"
 import SelectTool from "./flowchart/chart-tools/select"
-import type { FlowchartNode } from "./flowchart/types"
-import type { EdgeType } from "./flowchart/edge"
 
 interface Options {
     segments: number
@@ -234,10 +229,10 @@ export default defineComponent ({
                 }
 
                 this.flowchart = markRaw(new Flowchart("#segments-canvas", flowchartOptions))
-                const mainNode = new DecisionNode({ text: "Main node", flowchart: this.flowchart, x: "50%", y: "50%", class: "main-node" , maxWidth: 320 })
+                const mainNode = new FlowchartNode("decision", { text: "Main node", flowchart: this.flowchart, x: "50%", y: "50%", class: "main-node" , maxWidth: 320 })
                 const nodes = 2
                 for (let i = 0; i < nodes; i++) {
-                    const processNode = new ProcessNode({ text: `Node ${i+1}`, parent: mainNode, x: `${i * 100/nodes + 100/nodes/2}%`, y: "10%", maxWidth: 200 })
+                    const processNode = new FlowchartNode("process", { text: `Node ${i+1}`, parent: mainNode, x: `${i * 100/nodes + 100/nodes/2}%`, y: "10%", maxWidth: 200 })
                 }
                 
                 const selectTool = this.flowchart.getTool("select")
@@ -285,15 +280,13 @@ export default defineComponent ({
             
             let newNode: FlowchartNode | undefined
 
-            if (this.selectedNode.type == "start") {
-                newNode = new StartNode(target)
-            } else if (this.selectedNode.type == "process") {
-                newNode = new ProcessNode(target)
-            } else if (this.selectedNode.type == "end") {
-                newNode = new EndNode(target)
-            } else if (this.selectedNode.type == "decision") {
-                newNode = new DecisionNode(target)
+            const registeredNode = this.flowchart.registered.nodes.find(node => node.type === this.selectedNode.type)
+            if (!registeredNode) {
+                throw new Error(`Node no longer registered with flowchart: ${this.selectedNode.type}`)
             }
+            
+            newNode = new FlowchartNode(registeredNode.type, target)
+
 
             if (this.selectedNode) {
                 // this.selectedNode.x = target.x

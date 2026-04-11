@@ -2,10 +2,21 @@ import { PanTool } from "./chart-tools/pan"
 import { ZoomTool } from "./chart-tools/zoom"
 import { SelectTool } from "./chart-tools/select"
 
-import FlowchartNode, { type FlowchartNodeOptions } from "./nodes/index"
+import FlowchartNode, { type FlowchartNodeOptions, type FlowchartTypeMethod } from "./nodes/index"
 import FlowchartEdge, { type FlowchartEdgeOptions } from "./edges/index"
+import { type DrawEdgeType } from "./edges/index"
 import type { FlowchartTool } from "./types"
 import { MoveNodeTool } from "./chart-tools/move-node"
+
+
+
+// Default nodes
+import StartNode from "./nodes/types/start"
+import EndNode from "./nodes/types/end"
+import DecisionNode from "./nodes/types/decision"
+import ProcessNode from "./nodes/types/process"
+
+
 
 interface FlowchartOptions {
     edges: Partial<FlowchartEdgeOptions>
@@ -45,6 +56,11 @@ export class Flowchart {
                 return true
             }
         }),
+    }
+
+    registered = {
+        nodes: [] as Array<{ type: string, shape: FlowchartTypeMethod, defaultOptions?: Partial<FlowchartNodeOptions> }>,
+        edges: [] as Array<{ type: string, draw: DrawEdgeType, defaultOptions?: Partial<FlowchartEdgeOptions> }>
     }
     
     pan = new Proxy({ x: 0, y: 0 }, {
@@ -89,6 +105,12 @@ export class Flowchart {
         this.addTool({ name: "zoom", object: new ZoomTool(this) })
         this.addTool({ name: "select", object: new SelectTool(this) })
         this.addTool({ name: "move-node", object: new MoveNodeTool(this) })
+
+        // Default Nodes
+        this.register("node", "process", ProcessNode)
+        this.register("node", "start", StartNode)
+        this.register("node", "end", EndNode)
+        this.register("node", "decision", DecisionNode)
     }
 
     #parseOptions(options?: FlowchartOptions) {
@@ -139,6 +161,14 @@ export class Flowchart {
         const h = height / this.zoom
 
         this.chart.setAttribute("viewBox", `${x} ${y} ${w} ${h}`)
+    }
+
+    register(registrationType: "node" | "edge", type: string, value: FlowchartTypeMethod | DrawEdgeType) {
+        if (registrationType === "node") {
+            this.registered.nodes.push({ type: type, shape: value as FlowchartTypeMethod })
+        } else if (registrationType === "edge") {
+            this.registered.edges.push({ type: type, draw: value as DrawEdgeType })
+        }
     }
 
     updateChartSize() {
