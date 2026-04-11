@@ -1,11 +1,4 @@
 import { type FlowchartNode } from "./../nodes/index"
-import drawStraightEdge from "./draw/straight"
-import drawElbowEdge from "./draw/elbow"
-import drawZigZagEdge from "./draw/zigzag"
-import drawDiagonalEdge from "./draw/diagonal"
-import drawDoubleDiagonalEdge from "./draw/double-diagonal"
-
-// export type EdgeType = "straight" | "curved" | "elbow" | "elbow-curved" | "zigzag" | "double-diagonal"
 
 export type FlowchartEdgeOptions = {
     showArrow: boolean
@@ -24,14 +17,6 @@ export class FlowchartEdge {
     svgGroup: SVGGElement = document.createElementNS("http://www.w3.org/2000/svg", "g")
     pathEl: SVGPathElement = this.#createPathEl()
     markerEl: SVGMarkerElement | null = null
-    edgeTypes = {
-        straight: drawStraightEdge,
-        elbow: drawElbowEdge, 
-        zigzag: drawZigZagEdge,
-        diagonal: drawDiagonalEdge,
-        "double-diagonal": drawDoubleDiagonalEdge
-    } as Record<string, DrawEdgeType>
-
     private updatePositionDelay = undefined as ReturnType<typeof setTimeout> | undefined
 
     init?(): void
@@ -41,6 +26,12 @@ export class FlowchartEdge {
             (target as Record<string, any>)[prop as string] = value
 
             if (prop === "type") {
+                const registeredEdge = this.startNode.flowchart?.registered.edges.find(edge => edge.type === this.options.type)
+
+                if (registeredEdge) {
+                    this.draw = registeredEdge.draw
+                }
+                
                 this.updatePosition()
             }
 
@@ -204,6 +195,10 @@ export class FlowchartEdge {
         }, 0)
     }
     
+    draw(_start: { x: number, y: number }, _end: { x: number, y: number }, _edge: FlowchartEdge): string {
+        return ""
+    }
+
     drawEdge() {
         if (!this.startNode || !this.endNode) return
         if (!this.pathEl) return
@@ -211,14 +206,7 @@ export class FlowchartEdge {
         const start = this.startNode.calculateEdgeStart(this.endNode)
         const end = this.endNode.calculateEdgeStart(this.startNode)
 
-        if (!this.options.type) {
-            throw new Error("Edge type is not defined")
-        }
-
-        const draw = this.edgeTypes[this.options.type]
-        if (!draw) { return }
-        
-        const pathData = draw(start, end, this)
+        const pathData = this.draw(start, end, this)
         this.pathEl.setAttribute("d", pathData)
     }
 

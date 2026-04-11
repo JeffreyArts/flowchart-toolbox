@@ -17,6 +17,12 @@ import DecisionNode from "./nodes/types/decision"
 import ProcessNode from "./nodes/types/process"
 
 
+// Default edges
+import drawStraightEdge from "./edges/draw/straight"
+import drawElbowEdge from "./edges/draw/elbow"
+import drawZigZagEdge from "./edges/draw/zigzag"
+import drawDiagonalEdge from "./edges/draw/diagonal"
+import drawDoubleDiagonalEdge from "./edges/draw/double-diagonal"
 
 interface FlowchartOptions {
     edges: Partial<FlowchartEdgeOptions>
@@ -111,6 +117,13 @@ export class Flowchart {
         this.register("node", "start", StartNode)
         this.register("node", "end", EndNode)
         this.register("node", "decision", DecisionNode)
+
+        // Default edges
+        this.register("edge", "straight", drawStraightEdge)
+        this.register("edge", "elbow", drawElbowEdge)
+        this.register("edge", "zigzag", drawZigZagEdge)
+        this.register("edge", "diagonal", drawDiagonalEdge)
+        this.register("edge", "double-diagonal", drawDoubleDiagonalEdge)
     }
 
     #parseOptions(options?: FlowchartOptions) {
