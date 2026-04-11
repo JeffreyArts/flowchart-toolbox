@@ -17,7 +17,7 @@ export type FlowchartEdgeOptions = {
 
 export type DrawEdgeType = (start: { x: number, y: number }, end: { x: number, y: number }, edge: FlowchartEdge) => string
 
-export abstract class FlowchartEdge {
+export class FlowchartEdge {
     startNode: FlowchartNode
     endNode: FlowchartNode
     id: string = crypto.randomUUID()
@@ -31,7 +31,6 @@ export abstract class FlowchartEdge {
         diagonal: drawDiagonalEdge,
         "double-diagonal": drawDoubleDiagonalEdge
     } as Record<string, DrawEdgeType>
-    abstract draw(start: { x: number, y: number }, end: { x: number, y: number }): void
 
     private updatePositionDelay = undefined as ReturnType<typeof setTimeout> | undefined
 
@@ -39,7 +38,8 @@ export abstract class FlowchartEdge {
 
     options = new Proxy<FlowchartEdgeOptions>({ type: "curve", showArrow: true, isVisible: true, midpoint: 0.5, curvatureStrength: .5 }, {
         set: (target, prop, value) => {
-            target[prop as keyof FlowchartEdgeOptions] = value
+            (target as Record<string, any>)[prop as string] = value
+
             if (prop === "type") {
                 this.updatePosition()
             }
@@ -47,7 +47,6 @@ export abstract class FlowchartEdge {
             if (prop === "showArrow") {
                 value ? this.setArrow() : this.removeArrow()
             }
-
             if (prop === "isVisible") {
                 value ? this.setVisible() : this.setInvisible()
             }

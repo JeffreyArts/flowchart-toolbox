@@ -315,7 +315,6 @@ export abstract class FlowchartNode {
 
 
     calculateEdgeStart(targetNode: FlowchartNode) {
-
         if (!this.shape) {
             throw new Error("Cannot calculate edge start position without a shape defined for the node.")
         }

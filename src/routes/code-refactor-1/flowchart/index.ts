@@ -28,11 +28,9 @@ export class Flowchart {
         edges: new Proxy<Partial<FlowchartEdgeOptions>>({ showArrow: true }, {
             set: (target, prop, value) => {
                 target[prop as keyof FlowchartEdgeOptions] = value
-                if (prop === "curvatureStrength" || prop === "midpoint" || prop === "type") {
-                    this.edges.forEach(edge => {
-                        edge.options[prop] = value
-                    })
-                }
+                this.edges.forEach(edge => {
+                    edge.options[prop] = value
+                })
                 return true
             }
         }),

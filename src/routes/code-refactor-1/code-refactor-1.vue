@@ -15,9 +15,8 @@
 
         <aside class="sidebar">
             <div class="options">
-                <div class="option-group" name="Options" >
+                <div class="option-group" name="Selected node" >
                     <div class="option" v-if="selectedNode">
-                        <label for="option-tool">Selected node</label>
                         <span>
                             <strong>ID:</strong>
                             {{ selectedNode.id }}<br>
@@ -43,6 +42,19 @@
                     <span v-if="!selectedNode" style="font-style: italic; color: #666; font-size: .8em;">
                         No node selected <br><br>
                     </span>
+                </div>
+
+
+                <div class="option-group" name="Node options" >
+                    <div class="option" v-if="flowchart">
+                        <label for="options-segments">Segments <i class="info"><span class="info-icon">?</span><span class="info-details">0 = none</span></i></label>
+                        <input min="0" max="360" type="number" id="options-segments" v-model="options.segments" @change="updateNodeSegments">
+                    </div>
+                </div>
+
+                
+                <div class="option-group" name="Edge options" >
+                    
                     <div class="option">
                         <label for="edgeType">Edge type</label>
                         <select name="edgeType" id="" v-model="options.edgeType" @change="changeEdgeType">
@@ -55,23 +67,45 @@
                     </div>
 
                     <div class="option" v-if="flowchart">
-                        <label for="options-segments">Segments <i class="info"><span class="info-icon">?</span><span class="info-details">0 = none</span></i></label>
-                        <input min="0" max="360" type="number" id="options-segments" v-model="options.segments" @change="updateNodeSegments">
+                        <label for="options-curvatureStrength">Curvature Strength <i class="info"><span class="info-icon">?</span><span class="info-details">0 = none, 1 = maximum</span></i></label>
+                        <input min="0" max="1" step="0.01" type="range" id="options-curvatureStrength" v-model="options.curvatureStrength" @input="updateEdgeCurvature">
+                        <input type="number"  min="0" max="1" v-model="options.curvatureStrength" @change="updateEdgeCurvature">
                     </div>
 
                     <div class="option" v-if="flowchart">
-                        <label for="options-curvatureStrength">Curvature Strength <i class="info"><span class="info-icon">?</span><span class="info-details">0 = none, 1 = maximum</span></i></label>
-                        <input min="0" max="1" step="0.01" type="range" id="options-curvatureStrength" v-model="options.curvatureStrength" @input="updateEdgeCurvature">
+                        <label for="options-edge-visible">Edge visible</label>
+                        <span>
+                            <input type="radio" id="options-edge-visible-v0" :value="false" v-model="options.edgeVisible" @change="changeEdgeVisibility">
+                            <label for="options-edge-visible-v0"> false </label>
+                        </span>
+
+                        <span>
+                            <input type="radio" id="options-edge-visible-v1" :value="true" v-model="options.edgeVisible" @change="changeEdgeVisibility">
+                            <label for="options-edge-visible-v1"> true </label>
+                        </span>
+                    </div>
+
+                    <div class="option" v-if="flowchart">
+                        <label for="options-edge-show-arrow">Show arrow</label>
+                        <span>
+                            <input type="radio" id="options-edge-show-arrow-v0" :value="false" v-model="options.edgeShowArrow" @change="changeEdgeShowArrow">
+                            <label for="options-edge-show-arrow-v0"> false </label>
+                        </span>
+
+                        <span>
+                            <input type="radio" id="options-edge-show-arrow-v1" :value="true" v-model="options.edgeShowArrow" @change="changeEdgeShowArrow">
+                            <label for="options-edge-show-arrow-v1"> true </label>
+                        </span>
                     </div>
 
                     
-                    <div class="option" v-if="flowchart">
+                    <div class="option" v-if="flowchart && ['diagonal', 'straight'].includes(options.edgeType)" >
                         <label for="options-midpoint">Midpoint <i class="info"><span class="info-icon">?</span><span class="info-details">0 = none, 1 = maximum</span></i></label>
                         <input min="0" max="1" step="0.01" type="range" id="options-midpoint" v-model="options.midpoint" @input="updateEdgeMidpoint">
+                        <input type="number"  min="0" max="1" v-model="options.midpoint" @change="updateEdgeMidpoint">
                     </div>
-
-
                 </div>
+
 
 
                 <div class="option-group" name="Actions" >
@@ -122,10 +156,12 @@ import type { FlowchartNode } from "./flowchart/types"
 import type { EdgeType } from "./flowchart/edge"
 
 interface Options {
-    edgeType: EdgeType
     segments: number
     curvatureStrength: number
     midpoint: number
+    edgeType: EdgeType
+    edgeVisible: boolean
+    edgeShowArrow: boolean
 }
 
 export default defineComponent ({ 
@@ -138,6 +174,8 @@ export default defineComponent ({
                 segments: 0,
                 curvatureStrength: 0.5,
                 midpoint: 0.5,
+                edgeVisible: true,
+                edgeShowArrow: true,
             } as Partial<Options>,
             nodes: [] as Array<FlowchartNode>,
             flowchart: undefined as Flowchart | undefined,
@@ -186,7 +224,9 @@ export default defineComponent ({
                     edges: { 
                         type: this.options.edgeType,
                         curvatureStrength: this.options.curvatureStrength,
-                        midpoint: this.options.midpoint 
+                        midpoint: this.options.midpoint ,
+                        isVisible: this.options.edgeVisible,
+                        showArrow: this.options.edgeShowArrow,
                     },
                     nodes: {
                         segments: this.options.segments,
@@ -284,6 +324,14 @@ export default defineComponent ({
 
             this.flowchart.options.edges.type = this.options.edgeType || "straight"
         },
+        changeEdgeVisibility() {
+            if (!this.flowchart) return
+            this.flowchart.options.edges.isVisible = this.options.edgeVisible
+        },
+        changeEdgeShowArrow() {
+            if (!this.flowchart) return
+            this.flowchart.options.edges.showArrow = this.options.edgeShowArrow
+        },
 
         resetPan(e:Event) {
             e.preventDefault()
@@ -306,7 +354,7 @@ export default defineComponent ({
                 const localOptions = JSON.parse(optionsString)
                 _.forOwn(this.options, (_value,key) => {
                     const typedKey = key as keyof Options
-                    if (localOptions[typedKey]) {
+                    if (typeof localOptions[typedKey] !== "undefined") {
                         this.options[typedKey] = localOptions[key]
                     }
                 })
