@@ -107,7 +107,7 @@ const routes = [
     },
     {
         path: "/code-refactor-1",
-        name: "15) Code Refactor 1",
+        name: "16) Code Refactor 1",
         component: CodeRefactor1
     },
     {
