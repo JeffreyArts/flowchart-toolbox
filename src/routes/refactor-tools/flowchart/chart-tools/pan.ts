@@ -11,9 +11,19 @@ export class PanTool extends FlowchartTool {
     name = "pan"
     mouseStartPos = undefined as { x: number, y: number } | undefined
     spaceBarDown = false
+    options = {
+        spaceBarPanning: true,
+        middleMousePanning: true,
+        touchSwipePanning: true,
+        scrollPanning: true,
+    }
     
-    constructor(flowchart: Flowchart) {
+    constructor(flowchart: Flowchart, options?: Partial<PanTool["options"]>) {
         super(flowchart)
+
+        if (options) {
+            this.options = { ...this.options, ...options }
+        }
 
         if (flowchart.parentElement) {
             if (!flowchart.parentElement.classList.contains("__toolPan")) {
@@ -23,40 +33,45 @@ export class PanTool extends FlowchartTool {
     }
 
     onKeyDown = (e: KeyboardEvent) => {
-        if (e.code.toLowerCase() === "space") {
-            e.preventDefault()
-            if (this.spaceBarDown) return
-            if (!this.flowchart.parentElement) return
-            
-            this.spaceBarDown = true
-            this.flowchart.parentElement.style.cursor = "grab"
+        if (this.options.spaceBarPanning) {
+            if (e.code.toLowerCase() === "space") {
+                e.preventDefault()
+                if (this.spaceBarDown) return
+                if (!this.flowchart.parentElement) return
+                
+                this.spaceBarDown = true
+                this.flowchart.parentElement.style.cursor = "grab"
+            }
         }
     }
 
     onKeyUp = (e: KeyboardEvent) => {
-        if (e.code.toLowerCase() === "space") {
-            this.spaceBarDown = false
-            if (!this.flowchart.parentElement) return
-            this.flowchart.parentElement.style.cursor = ""
+        if (this.options.spaceBarPanning) {
+            if (e.code.toLowerCase() === "space") {
+                this.spaceBarDown = false
+                if (!this.flowchart.parentElement) return
+                this.flowchart.parentElement.style.cursor = ""
+            }
         }
     }
 
-    onSwipe = (_e: TouchEvent, deltaX: number, deltaY: number) => {
-        if (!this.flowchart) return
-
-        this.flowchart.pan.x += deltaX
-        this.flowchart.pan.y += deltaY
+    onSwipe = (_e: TouchEvent, deltaX: number, deltaY: number) => {        
+        if (this.options.touchSwipePanning) {
+            this.flowchart.pan.x += deltaX
+            this.flowchart.pan.y += deltaY
+        }
     }
     
     onWheel = (e: WheelEvent) => {
         if (e.ctrlKey || e.metaKey) return
         if (!this.isWithinChart) return
-        if (!this.flowchart) return
-
-        e.preventDefault()
-
-        this.flowchart.pan.x -= e.deltaX
-        this.flowchart.pan.y -= e.deltaY
+        
+        if (this.options.scrollPanning) {    
+            e.preventDefault()
+            
+            this.flowchart.pan.x -= e.deltaX
+            this.flowchart.pan.y -= e.deltaY
+        }
     }
 
     onMouseDown = (e: MouseEvent) => {  
@@ -64,30 +79,35 @@ export class PanTool extends FlowchartTool {
         this.mouseStartPos = { ...this.globalMousePos }
 
         //  Allow panning when spacebar is held down
-        if (this.spaceBarDown) {
-            if (!this.flowchart.parentElement) return
-            this.flowchart.parentElement.style.cursor = "grabbing"
+        if (this.options.spaceBarPanning) {
+            if (this.spaceBarDown) {
+                if (!this.flowchart.parentElement) return
+                this.flowchart.parentElement.style.cursor = "grabbing"
+            }
         }
 
         // Allow panning via middle mouse button
-        if (e.button === 1) {
-            e.preventDefault()
-            if (!this.flowchart.parentElement) return
-            this.flowchart.parentElement.style.cursor = "grabbing"
+        if (this.options.middleMousePanning) {
+            if (e.button === 1) {
+                e.preventDefault()
+                if (!this.flowchart.parentElement) return
+                this.flowchart.parentElement.style.cursor = "grabbing"
+            }
         }
     }
     
-    onMouseMove = (e: MouseEvent) => {  
+    onMouseMove = () => {  
         if (!this.spaceBarDown) return
         if (!this.mouseDown) return
-        if (!this.flowchart) return
         if (!this.mouseStartPos) return
 
-        const deltaX = this.globalMousePos.x - this.mouseStartPos.x
-        const deltaY = this.globalMousePos.y - this.mouseStartPos.y
-
-        this.flowchart.pan.x += deltaX
-        this.flowchart.pan.y += deltaY
+        if (this.options.spaceBarPanning) {
+            const deltaX = this.globalMousePos.x - this.mouseStartPos.x
+            const deltaY = this.globalMousePos.y - this.mouseStartPos.y
+            
+            this.flowchart.pan.x += deltaX
+            this.flowchart.pan.y += deltaY
+        }
 
         this.mouseStartPos = { ...this.globalMousePos }
     }
@@ -96,15 +116,19 @@ export class PanTool extends FlowchartTool {
         this.mouseStartPos = undefined
 
         // Reset cursor if mouse button release without spacebar
-        if (this.spaceBarDown) {
-            if (!this.flowchart.parentElement) return
-            this.flowchart.parentElement.style.cursor = "grab"
+        if (this.options.spaceBarPanning) {
+            if (this.spaceBarDown) {
+                if (!this.flowchart.parentElement) return
+                this.flowchart.parentElement.style.cursor = "grab"
+            }
         }
         
         // Reset cursor if middle mouse button was used
-        if (e.button === 1) {
-            if (!this.flowchart.parentElement) return
-            this.flowchart.parentElement.style.cursor = "grab"
+        if (this.options.middleMousePanning) {
+            if (e.button === 1) {
+                if (!this.flowchart.parentElement) return
+                this.flowchart.parentElement.style.cursor = "grab"
+            }
         }
     }   
 
