@@ -1,0 +1,52 @@
+import type { FlowchartType, FlowchartPos } from "../types"
+import FlowchartTool from "./index"
+
+export class SelectTool extends FlowchartTool {
+    name = "select"
+    mouseStartPos = undefined as FlowchartPos | undefined
+    startPan = { x: 0, y: 0 } as FlowchartPos
+
+    onClick = undefined as ((e: MouseEvent) => void) | undefined
+    
+    constructor(flowchart: FlowchartType) {
+        super(flowchart)
+
+        if (flowchart.parentElement) {
+            if (!flowchart.parentElement.classList.contains("__toolSelect")) {
+                flowchart.parentElement.classList.add("__toolSelect")
+            }
+        }
+
+        if (flowchart.parentElement) {
+            flowchart.parentElement.addEventListener("click", this.#onClick)
+        }
+    }
+
+    onMouseDown: (e: MouseEvent) => void = (_e) => {  
+        this.startPan = { ...this.flowchart.pan } as FlowchartPos
+    }
+
+    #onClick = (e: MouseEvent) => {
+        if (!this.isActive) return
+
+        if (this.startPan.x !== this.flowchart.pan.x || this.startPan.y !== this.flowchart.pan.y) {
+            // If pan has changed since mouse down, don't trigger click event (prevents click when panning)
+            return
+        }
+
+        if (this.onClick) {
+            this.onClick(e)
+        }
+    }
+
+    destroy() {
+        super.destroy()
+
+        if (this.flowchart?.parentElement) {
+            this.flowchart.parentElement.classList.remove("__toolSelect")
+            this.flowchart.parentElement.removeEventListener("click", this.#onClick)
+        }
+    }
+}
+
+export default SelectTool
