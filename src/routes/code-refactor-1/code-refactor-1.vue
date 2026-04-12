@@ -83,6 +83,12 @@
                         <input min="0" max="1" step="0.01" type="range" id="options-curvatureStrength" v-model="options.curvatureStrength" @input="updateEdgeCurvature">
                         <input type="number"  min="0" max="1" v-model="options.curvatureStrength" @change="updateEdgeCurvature">
                     </div>
+                    
+                    <div class="option" v-if="flowchart && ['zigzag', 'straight'].includes(options.edgeType)" >
+                        <label for="options-midpoint">Midpoint <i class="info"><span class="info-icon">?</span><span class="info-details">0 = none, 1 = maximum</span></i></label>
+                        <input min="0" max="1" step="0.01" type="range" id="options-midpoint" v-model="options.midpoint" @input="updateEdgeMidpoint">
+                        <input type="number"  min="0" max="1" v-model="options.midpoint" @change="updateEdgeMidpoint">
+                    </div>
 
                     <div class="option" v-if="flowchart">
                         <label for="options-edge-visible">Edge visible</label>
@@ -108,13 +114,6 @@
                             <input type="radio" id="options-edge-show-arrow-v1" :value="true" v-model="options.edgeShowArrow" @change="changeEdgeShowArrow">
                             <label for="options-edge-show-arrow-v1"> true </label>
                         </span>
-                    </div>
-
-                    
-                    <div class="option" v-if="flowchart && ['diagonal', 'straight'].includes(options.edgeType)" >
-                        <label for="options-midpoint">Midpoint <i class="info"><span class="info-icon">?</span><span class="info-details">0 = none, 1 = maximum</span></i></label>
-                        <input min="0" max="1" step="0.01" type="range" id="options-midpoint" v-model="options.midpoint" @input="updateEdgeMidpoint">
-                        <input type="number"  min="0" max="1" v-model="options.midpoint" @change="updateEdgeMidpoint">
                     </div>
                 </div>
 
@@ -157,7 +156,7 @@
 import { defineComponent, markRaw } from "vue"
 import _, { update } from "lodash"
 import gsap from "gsap"
-import { Flowchart } from "./flowchart"
+import Joffa from "./flowchart/joffa"
 import { FlowchartNode, type FlowchartNodeOptions } from "./flowchart/nodes"
 import { type EdgeType } from "./flowchart/edge"
 import SelectTool from "./flowchart/chart-tools/select"
@@ -246,7 +245,7 @@ export default defineComponent ({
                     }
                 }
 
-                this.flowchart = markRaw(new Flowchart("#segments-canvas", flowchartOptions))
+                this.flowchart = markRaw(new Joffa("#segments-canvas", flowchartOptions))
                 const mainNode = new FlowchartNode("decision", { text: "Main node", flowchart: this.flowchart, x: "50%", y: "50%", class: "main-node", options: { maxWidth: 320 }})
                 const nodes = 2
                 for (let i = 0; i < nodes; i++) {

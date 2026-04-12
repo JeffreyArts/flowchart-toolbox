@@ -1,29 +1,11 @@
-import { PanTool } from "./chart-tools/pan"
-import { ZoomTool } from "./chart-tools/zoom"
-import { SelectTool } from "./chart-tools/select"
+
 
 import FlowchartNode, { type FlowchartNodeOptions, type FlowchartTypeMethod } from "./nodes/index"
 import FlowchartEdge, { type FlowchartEdgeOptions } from "./edges/index"
 import { type DrawEdgeType } from "./edges/index"
 import { type FlowchartTool } from "./chart-tools/index"
-import { MoveNodeTool } from "./chart-tools/move-node"
 
-
-// Default nodes
-import StartNode from "./nodes/types/start"
-import EndNode from "./nodes/types/end"
-import DecisionNode from "./nodes/types/decision"
-import ProcessNode from "./nodes/types/process"
-
-
-// Default edges
-import drawStraightEdge from "./edges/draw/straight"
-import drawElbowEdge from "./edges/draw/elbow"
-import drawZigZagEdge from "./edges/draw/zigzag"
-import drawDiagonalEdge from "./edges/draw/diagonal"
-import drawDoubleDiagonalEdge from "./edges/draw/double-diagonal"
-
-interface FlowchartOptions {
+export interface FlowchartOptions {
     edges: Partial<FlowchartEdgeOptions>
     nodes: Partial<FlowchartNodeOptions>
 }
@@ -126,25 +108,6 @@ export class Flowchart {
 
         this.#parseOptions(options)
         this.#addChart()
-        
-        // Default tools
-        this.register("tool","zoom", ZoomTool)
-        this.register("tool","select", SelectTool)
-        this.register("tool","move-node", MoveNodeTool)
-        this.register("tool","pan", PanTool)
-
-        // Default Nodes
-        this.register("node", "process", ProcessNode)
-        this.register("node", "start", StartNode)
-        this.register("node", "end", EndNode)
-        this.register("node", "decision", DecisionNode)
-
-        // Default edges
-        this.register("edge", "straight", drawStraightEdge)
-        this.register("edge", "elbow", drawElbowEdge)
-        this.register("edge", "zigzag", drawZigZagEdge)
-        this.register("edge", "diagonal", drawDiagonalEdge)
-        this.register("edge", "double-diagonal", drawDoubleDiagonalEdge)
     }
 
     #parseOptions(options?: FlowchartOptions) {
