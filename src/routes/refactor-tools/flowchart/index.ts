@@ -4,6 +4,7 @@ import FlowchartNode, { type FlowchartNodeOptions, type FlowchartTypeMethod } fr
 import FlowchartEdge, { type FlowchartEdgeOptions } from "./edges/index"
 import { type DrawEdgeType } from "./edges/index"
 import { type FlowchartTool } from "./chart-tools/index"
+import { SelectTool } from "./chart-tools/select"
 
 export interface FlowchartOptions {
     edges: Partial<FlowchartEdgeOptions>
@@ -113,6 +114,8 @@ export class Flowchart {
             this.parentElement.removeChild(oldChart)
         }
 
+        this.register("tool","select", SelectTool)
+        
         this.#parseOptions(options)
         this.#addChart()
     }

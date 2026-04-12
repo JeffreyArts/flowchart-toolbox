@@ -3,7 +3,6 @@ import Flowchart, { type FlowchartOptions } from "."
 // Tools
 import { PanTool } from "./chart-tools/pan"
 import { ZoomTool } from "./chart-tools/zoom"
-import { SelectTool } from "./chart-tools/select"
 import { MoveNodeTool } from "./chart-tools/move-node"
 
 // Nodes
@@ -26,7 +25,6 @@ export default class Joffa extends Flowchart {
         
         // Default tools
         this.register("tool","zoom", ZoomTool)
-        this.register("tool","select", SelectTool)
         this.register("tool","move-node", MoveNodeTool)
         this.register("tool","pan", PanTool)
         
