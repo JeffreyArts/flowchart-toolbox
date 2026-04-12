@@ -25,6 +25,14 @@
                             {{ selectedNode.type }}<br>
                         </span>
                     </div>
+
+                <div class="option-group" name="Desired features" >
+                    <div class="option">
+                       <h3>Move tool</h3>
+                        <p>Move tool should work in conjunction with the select tool. Misschien dat de select tool mandatory moet zijn</p>
+                    </div>
+                </div>
+
                     <div class="option" v-if="selectedNode">
                         <label for="changeNode">Verander type node</label>
                         <select name="changeNode" id="" v-model="selectedNode.type" @change="changeSelectedNode">

@@ -42,7 +42,5 @@ export default class Joffa extends Flowchart {
         this.register("edge", "zigzag", drawZigZagEdge)
         this.register("edge", "diagonal", drawDiagonalEdge)
         this.register("edge", "double-diagonal", drawDoubleDiagonalEdge)
-
-        console.log(this.options.edges)
     }
 }
