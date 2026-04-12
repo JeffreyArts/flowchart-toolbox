@@ -11,10 +11,40 @@ export class ZoomTool extends FlowchartTool {
 
     options = {
         fitPadding: 16,
+        // Different methods of zooming
+        pinchZooming: true,
+        zHotkeyZooming: true,
+        cmdZooming: true,
+        cmdFit: true,
+        cmdReset: true,
+        scrollZooming: true,
     }
     
     constructor(flowchart: Flowchart) {
         super(flowchart)
+    }
+
+    private zoomAtCenter(factor: number) {
+        if (!this.flowchart?.parentElement) return
+
+        const width = this.flowchart.parentElement.clientWidth
+        const height = this.flowchart.parentElement.clientHeight
+
+        this.zoomAt(width / 2, height / 2, factor)
+    }
+
+    private zoomAt(x: number, y: number, factor: number) {
+        if (!this.flowchart) return
+
+        const currentZoom = this.flowchart.zoom
+        const newZoom = Math.min(Math.max(currentZoom * factor, 0.1), 10)
+
+        const viewBoxX = -this.flowchart.pan.x / currentZoom + x / currentZoom
+        const viewBoxY = -this.flowchart.pan.y / currentZoom + y / currentZoom
+
+        this.flowchart.pan.x = -viewBoxX * newZoom + x
+        this.flowchart.pan.y = -viewBoxY * newZoom + y
+        this.flowchart.zoom = newZoom
     }
 
     fit(nodes?: FlowchartNode[]) {
@@ -43,14 +73,6 @@ export class ZoomTool extends FlowchartTool {
         this.flowchart.pan.x = (chartWidth - (maxX - minX) * newZoom) / 2 - minX * newZoom
         this.flowchart.pan.y = (chartHeight - (maxY - minY) * newZoom) / 2 - minY * newZoom
     }
-    private zoomAtCenter(factor: number) {
-        if (!this.flowchart?.parentElement) return
-
-        const width = this.flowchart.parentElement.clientWidth
-        const height = this.flowchart.parentElement.clientHeight
-
-        this.zoomAt(width / 2, height / 2, factor)
-    }
 
     resetZoom() {
         if (!this.flowchart?.parentElement) return
@@ -77,78 +99,77 @@ export class ZoomTool extends FlowchartTool {
         this.zoomAt(x, y, 1 / factor)
     }
 
-    private zoomAt(x: number, y: number, factor: number) {
-        if (!this.flowchart) return
-
-        const currentZoom = this.flowchart.zoom
-        const newZoom = Math.min(Math.max(currentZoom * factor, 0.1), 10)
-
-        const viewBoxX = -this.flowchart.pan.x / currentZoom + x / currentZoom
-        const viewBoxY = -this.flowchart.pan.y / currentZoom + y / currentZoom
-
-        this.flowchart.pan.x = -viewBoxX * newZoom + x
-        this.flowchart.pan.y = -viewBoxY * newZoom + y
-        this.flowchart.zoom = newZoom
-    }
-
     onWheel: (e: WheelEvent) => void = (e) => {
         if (!this.flowchart?.parentElement) return
-        if (!e.ctrlKey && !e.metaKey) return
-
+        
         if (this.isWithinChart) {
             e.preventDefault()
         } else {
             return
         }
-
-        const zoomIntensity = 0.005
-        const delta = -e.deltaY * zoomIntensity
-        const factor = 1 + delta
-
-        this.zoomAt(this.globalMousePos.x, this.globalMousePos.y, factor)
-
-        this.isZooming = true
-        if (this.isZoomingTimeout) {
-            clearTimeout(this.isZoomingTimeout)
+        
+        // If ctrl or meta key is held, zoom 
+        if (this.options.scrollZooming) {
+            if (!e.ctrlKey && !e.metaKey) return
+            const zoomIntensity = 0.005
+            const delta = -e.deltaY * zoomIntensity
+            const factor = 1 + delta
+            
+            this.zoomAt(this.globalMousePos.x, this.globalMousePos.y, factor)
+            
+            this.isZooming = true
+            if (this.isZoomingTimeout) {
+                clearTimeout(this.isZoomingTimeout)
+            }
+            
+            this.isZoomingTimeout = setTimeout(() => {
+                this.isZooming = false
+            }, 100)
         }
-
-        this.isZoomingTimeout = setTimeout(() => {
-            this.isZooming = false
-        }, 100)
     }
+
     onKeyDown = (e: KeyboardEvent) => {
-        if (e.key.toLowerCase() === "z") {
-            e.preventDefault()
-            if (this.zKeyDown) return
-            if (!this.flowchart.parentElement) return
         
-            this.zKeyDown = true
-            this.flowchart.parentElement.style.cursor = "zoom-in"
+        // Zoom with cmd/ctrl + +/-
+        if (this.options.cmdZooming) {
+            if ((e.ctrlKey || e.metaKey) && (e.code === "Equal" || e.code === "NumpadAdd")) {
+                e.preventDefault()
+                this.zoomAtCenter(1.2)
+            }
+
+            if ((e.ctrlKey || e.metaKey) && (e.code === "Minus" || e.code === "NumpadSubtract")) {
+                e.preventDefault()
+                this.zoomAtCenter(1 / 1.2)
+            }
         }
 
-        if ((e.ctrlKey || e.metaKey) && (e.key === "=" || e.key === "+")) {
-            e.preventDefault()
-            this.zoomAtCenter(1.2)
+        // Fit with cmd/ctrl + 0
+        if (this.options.cmdFit) {
+            if ((e.ctrlKey || e.metaKey) && e.code === "Digit0") {
+                e.preventDefault()
+                this.fit()
+            }
         }
 
-        if ((e.ctrlKey || e.metaKey) && e.key === "-") {
-            e.preventDefault()
-            this.zoomAtCenter(1 / 1.2)
+        // Reset with cmd/ctrl + 1
+        if (this.options.cmdReset) {
+            if ((e.ctrlKey || e.metaKey) && e.code === "Digit1") {
+                e.preventDefault()
+                this.resetZoom()
+            }
         }
 
-        if ((e.ctrlKey || e.metaKey) && e.key === "0") {
-            e.preventDefault()
-            this.fit()
-        }
-
-        if ((e.ctrlKey || e.metaKey) && e.key === "1") {
-            e.preventDefault()
-            this.resetZoom()
-        }
-
-        
-        if (this.zKeyDown) {
+        // Allow zooming via clicking when Z key is held down (zoom-out when alt is also held)
+        if (this.options.zHotkeyZooming) {
             if (!this.flowchart.parentElement) return
+            
+            if (e.code === "KeyZ") {
+                e.preventDefault()
+                if (this.zKeyDown) return
+                
+                this.zKeyDown = true
+                this.flowchart.parentElement.style.cursor = "zoom-in"
+            }
 
             if (e.altKey) {
                 this.flowchart.parentElement.style.cursor = "zoom-out"
@@ -159,41 +180,49 @@ export class ZoomTool extends FlowchartTool {
     }
     
     onKeyUp = (e: KeyboardEvent) => {
-        if (e.key.toLowerCase() === "z") {
-            this.zKeyDown = false
-        }
-        
-        if (!this.flowchart.parentElement) return
+        if (this.options.zHotkeyZooming) { 
+            if (!this.flowchart.parentElement) return
 
-        if (this.zKeyDown) {
-            this.flowchart.parentElement.style.cursor = "zoom-in"
-        } else {
-            this.flowchart.parentElement.style.cursor = ""
+            if (e.code === "KeyZ") {
+                this.zKeyDown = false
+            }
+            
+            if (this.zKeyDown) {
+                this.flowchart.parentElement.style.cursor = "zoom-in"
+            } else {
+                this.flowchart.parentElement.style.cursor = ""
+            }
         }
     }
 
     onMouseDown = (e: MouseEvent) => {
         if (!this.isWithinChart) return
-        if (!this.zKeyDown) return
-        
 
-        if (e.altKey) {
-            this.zoomOut(this.globalMousePos.x, this.globalMousePos.y)
-        } else {
-            this.zoomIn(this.globalMousePos.x, this.globalMousePos.y)
+        if (this.options.zHotkeyZooming) { 
+            if (!this.zKeyDown) return
+        
+            if (e.altKey) {
+                this.zoomOut(this.globalMousePos.x, this.globalMousePos.y)
+            } else {
+                this.zoomIn(this.globalMousePos.x, this.globalMousePos.y)
+            }
         }
     }
 
     onPinch = (e: TouchEvent, scale: number) => {
-        const t0 = e.touches.item(0)
-        const t1 = e.touches.item(1)
-        if (!t0 || !t1) return
-
-        const rect = this.flowchart.chart.getBoundingClientRect()
-        const midX = (t0.clientX + t1.clientX) / 2 - rect.left
-        const midY = (t0.clientY + t1.clientY) / 2 - rect.top
-
-        this.zoomAt(midX, midY, scale)
+        if (!this.isWithinChart) return
+    
+        if (this.options.pinchZooming) {
+            const t0 = e.touches.item(0)
+            const t1 = e.touches.item(1)
+            if (!t0 || !t1) return
+            
+            const rect = this.flowchart.chart.getBoundingClientRect()
+            const midX = (t0.clientX + t1.clientX) / 2 - rect.left
+            const midY = (t0.clientY + t1.clientY) / 2 - rect.top
+            
+            this.zoomAt(midX, midY, scale)
+        }
     }
 
     set isZooming(value: boolean) {
