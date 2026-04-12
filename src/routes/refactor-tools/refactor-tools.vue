@@ -342,7 +342,6 @@ export default defineComponent ({
         },
         resetZoom(e:Event) {
             e.preventDefault()
-            console.log("reset zoom")
             if (this.flowchart) {
                 const zoom = this.flowchart.getTool("zoom")
                 zoom.fit()

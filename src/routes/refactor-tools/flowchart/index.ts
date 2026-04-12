@@ -67,10 +67,17 @@ export class Flowchart {
     pan = new Proxy({ x: 0, y: 0 }, {
         set: (target, prop, value) => {
             target[prop as "x" | "y"] = value
-            this.#updateViewBox()
+            if (!this.#viewBoxPending) {
+                this.#viewBoxPending = true
+                requestAnimationFrame(() => {
+                    this.#updateViewBox()
+                    this.#viewBoxPending = false
+                })
+            }
             return true
         }
     })
+    #viewBoxPending = false
 
     // Zoom 
     _zoom = 1

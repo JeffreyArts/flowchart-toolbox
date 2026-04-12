@@ -2,7 +2,6 @@ import type { Flowchart } from "../index"
 import type { FlowchartPos } from "../types"
 import type Node  from "../nodes/index"
 import FlowchartTool from "./index"
-import type PanTool from "./pan"
 import type { SelectTool } from "./select"
 
 export class MoveNodeTool extends FlowchartTool {
@@ -10,8 +9,8 @@ export class MoveNodeTool extends FlowchartTool {
     mouseStartPos = undefined as FlowchartPos | undefined
     selectedNode = null as Node | null
     selectedNodeStartPos = undefined as FlowchartPos | undefined
-    panTool = undefined as PanTool | undefined
     selectTool = undefined as SelectTool | undefined
+    keyDown = false
     
     constructor(flowchart: Flowchart) {
         super(flowchart)
@@ -23,14 +22,21 @@ export class MoveNodeTool extends FlowchartTool {
         }
     }
 
-    
+    onKeyDown = (e: KeyboardEvent) => {
+        this.keyDown = true
+    }
+
+    onKeyUp = (e: KeyboardEvent) => {
+        this.keyDown = false
+    }
 
     onMouseDown = () => {  
+        if (this.keyDown) return
+
         this.mouseStartPos = undefined
         const tools = this.flowchart.registered.tools
         
         // Check is flowchart has pan tool
-        this.panTool = tools.find(t => t.type === "pan")?.object as PanTool | undefined
         this.selectTool = tools.find(t => t.type === "select")?.object as SelectTool | undefined
 
         // Check if mouse is within any node
@@ -45,9 +51,6 @@ export class MoveNodeTool extends FlowchartTool {
             this.mouseStartPos = { ...this.globalMousePos }
             this.selectedNodeStartPos = { x: Number(this.selectedNode.x), y: Number(this.selectedNode.y) }
             this.selectedNode.isSelected = true
-            if (this.panTool) {
-                this.panTool.deactivate()
-            }
 
             if (this.selectTool) {
                 this.selectTool.deactivate()
@@ -72,10 +75,6 @@ export class MoveNodeTool extends FlowchartTool {
     onMouseUp = (e: MouseEvent) => {  
         this.mouseStartPos = undefined
 
-
-        if (this.panTool) {
-            this.panTool.activate()
-        }
 
         if (this.selectTool) {
             if (this.selectedNodeStartPos?.x == this.selectedNode?.x && this.selectedNodeStartPos?.y == this.selectedNode?.y) {
