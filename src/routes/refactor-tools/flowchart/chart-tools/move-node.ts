@@ -1,14 +1,13 @@
 import type { Flowchart } from "../index"
-import type { FlowchartPos } from "../types"
 import type Node  from "../nodes/index"
 import FlowchartTool from "./index"
 import type { SelectTool } from "./select"
 
 export class MoveNodeTool extends FlowchartTool {
     name = "move-node"
-    mouseStartPos = undefined as FlowchartPos | undefined
+    mouseStartPos = undefined as { x: number, y: number } | undefined
     selectedNode = null as Node | null
-    selectedNodeStartPos = undefined as FlowchartPos | undefined
+    selectedNodeStartPos = undefined as { x: number, y: number } | undefined
     selectTool = undefined as SelectTool | undefined
     keyDown = false
     
@@ -22,11 +21,11 @@ export class MoveNodeTool extends FlowchartTool {
         }
     }
 
-    onKeyDown = (e: KeyboardEvent) => {
+    onKeyDown = () => {
         this.keyDown = true
     }
 
-    onKeyUp = (e: KeyboardEvent) => {
+    onKeyUp = () => {
         this.keyDown = false
     }
 
@@ -49,6 +48,7 @@ export class MoveNodeTool extends FlowchartTool {
         
         if (this.selectedNode) {
             this.mouseStartPos = { ...this.globalMousePos }
+
             this.selectedNodeStartPos = { x: Number(this.selectedNode.x), y: Number(this.selectedNode.y) }
             this.selectedNode.isSelected = true
 
@@ -57,14 +57,23 @@ export class MoveNodeTool extends FlowchartTool {
             }
         }
     }
-    
-    onMouseMove = (e: MouseEvent) => {  
+
+    onMouseMove = (e: MouseEvent) => {
         if (!this.mouseDown) return
         if (!this.selectedNode || !this.selectedNodeStartPos) return
         if (!this.mouseStartPos) return
 
-        const deltaX = (this.globalMousePos.x - this.mouseStartPos.x) / this.flowchart.zoom
-        const deltaY = (this.globalMousePos.y - this.mouseStartPos.y) / this.flowchart.zoom
+        let deltaX = (this.globalMousePos.x - this.mouseStartPos.x) / this.flowchart.zoom
+        let deltaY = (this.globalMousePos.y - this.mouseStartPos.y) / this.flowchart.zoom
+
+        // If holding shift key only move vertical or horizontal
+        if (e.shiftKey) {
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                deltaY = 0
+            } else {
+                deltaX = 0
+            }
+        }
 
         if (this.selectedNode) {
             this.selectedNode.x = Number(this.selectedNodeStartPos.x) + deltaX

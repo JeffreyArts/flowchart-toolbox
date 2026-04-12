@@ -163,18 +163,20 @@ export class ZoomTool extends FlowchartTool {
         if (this.options.zHotkeyZooming) {
             if (!this.flowchart.parentElement) return
             
+            if (this.zKeyDown) {
+                if (e.altKey) {
+                    this.flowchart.parentElement.style.cursor = "zoom-out"
+                } else {
+                    this.flowchart.parentElement.style.cursor = "zoom-in"   
+                }
+            }
+
             if (e.code === "KeyZ") {
                 e.preventDefault()
                 if (this.zKeyDown) return
                 
                 this.zKeyDown = true
                 this.flowchart.parentElement.style.cursor = "zoom-in"
-            }
-
-            if (e.altKey) {
-                this.flowchart.parentElement.style.cursor = "zoom-out"
-            } else {
-                this.flowchart.parentElement.style.cursor = "zoom-in"   
             }
         }
     }
