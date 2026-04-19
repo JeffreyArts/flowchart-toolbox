@@ -1,5 +1,6 @@
 import type { Flowchart } from "../index"
 import FlowchartTool from "./index"
+import type { FlowchartEventContext } from "../events"
 
 // Allows you to pan the viewbox via the follow UX
 // 1. Hold space bar and then click + drag
@@ -25,14 +26,23 @@ export class PanTool extends FlowchartTool {
             this.options = { ...this.options, ...options }
         }
 
-        if (flowchart.parentElement) {
-            if (!flowchart.parentElement.classList.contains("__toolPan")) {
-                flowchart.parentElement.classList.add("__toolPan")
+        if (this.flowchart.parentElement) {
+            if (!this.flowchart.parentElement.classList.contains("__toolPan")) {
+                this.flowchart.parentElement.classList.add("__toolPan")
             }
         }
+
+        this.flowchart.events.add("wheel", this.onWheel)
+        this.flowchart.events.add("keyDown", this.onKeyDown)
+        this.flowchart.events.add("keyUp", this.onKeyUp)
+        this.flowchart.events.add("mouseDown", this.onMouseDown)
+        this.flowchart.events.add("mouseMove", this.onMouseMove)
+        this.flowchart.events.add("mouseUp", this.onMouseUp)
     }
 
-    onKeyDown = (e: KeyboardEvent) => {
+    onKeyDown = (fec: FlowchartEventContext) => {
+        const e = fec.originalEvent as KeyboardEvent
+
         if (this.options.spaceBarPanning) {
             if (e.code.toLowerCase() === "space") {
                 e.preventDefault()
@@ -45,7 +55,8 @@ export class PanTool extends FlowchartTool {
         }
     }
 
-    onKeyUp = (e: KeyboardEvent) => {
+    onKeyUp = (fec: FlowchartEventContext) => {
+        const e = fec.originalEvent as KeyboardEvent
         if (this.options.spaceBarPanning) {
             if (e.code.toLowerCase() === "space") {
                 this.spaceBarDown = false
@@ -55,16 +66,18 @@ export class PanTool extends FlowchartTool {
         }
     }
 
-    onSwipe = (_e: TouchEvent, deltaX: number, deltaY: number) => {        
+    onSwipe = (fec: FlowchartEventContext) => {        
         if (this.options.touchSwipePanning) {
-            this.flowchart.pan.x += deltaX
-            this.flowchart.pan.y += deltaY
+            this.flowchart.pan.x += this.flowchart.events.touchDelta.x
+            this.flowchart.pan.y += this.flowchart.events.touchDelta.y
         }
     }
     
-    onWheel = (e: WheelEvent) => {
+    
+    onWheel = (fec: FlowchartEventContext) => {
+        const e = fec.originalEvent as WheelEvent
         if (e.ctrlKey || e.metaKey) return
-        if (!this.isWithinChart) return
+        if (!this.flowchart.events.isWithinChart) return
         
         if (this.options.scrollPanning) {    
             e.preventDefault()
@@ -74,9 +87,10 @@ export class PanTool extends FlowchartTool {
         }
     }
 
-    onMouseDown = (e: MouseEvent) => {  
-        if (!this.isWithinChart) return
-        this.mouseStartPos = { ...this.globalMousePos }
+    onMouseDown = (fec: FlowchartEventContext) => {  
+        const e = fec.originalEvent as MouseEvent
+        if (!this.flowchart.events.isWithinChart) return
+        this.mouseStartPos = { ...this.flowchart.events.mousePos }
 
         //  Allow panning when spacebar is held down
         if (this.options.spaceBarPanning) {
@@ -96,23 +110,32 @@ export class PanTool extends FlowchartTool {
         }
     }
     
-    onMouseMove = () => {  
+    onMouseMove = (fec: FlowchartEventContext) => {  
+        const e = fec.originalEvent as MouseEvent
+        const mouseStartPos = this.flowchart.events.mouseStartPos
         if (!this.spaceBarDown) return
-        if (!this.mouseDown) return
-        if (!this.mouseStartPos) return
+        if (!this.flowchart.events.mouseDown) return
+        if (!mouseStartPos) return
+
+        // const mousePos = this.flowchart.events.mousePos
+        const deltaX = (this.flowchart.events.mouseDelta.x) * this.flowchart.zoom
+        const deltaY = (this.flowchart.events.mouseDelta.y) * this.flowchart.zoom
 
         if (this.options.spaceBarPanning) {
-            const deltaX = this.globalMousePos.x - this.mouseStartPos.x
-            const deltaY = this.globalMousePos.y - this.mouseStartPos.y
-            
             this.flowchart.pan.x += deltaX
             this.flowchart.pan.y += deltaY
         }
+        
+        if (this.options.middleMousePanning) {
+            if (e.button !== 1) return
 
-        this.mouseStartPos = { ...this.globalMousePos }
+            this.flowchart.pan.x += deltaX
+            this.flowchart.pan.y += deltaY
+        }
     }
 
-    onMouseUp = (e: MouseEvent) => {  
+    onMouseUp = (fec: FlowchartEventContext) => {  
+        const e = fec.originalEvent as MouseEvent
         this.mouseStartPos = undefined
 
         // Reset cursor if mouse button release without spacebar
@@ -133,13 +156,10 @@ export class PanTool extends FlowchartTool {
     }   
 
     deactivate(): void {
-        super.deactivate()
         this.mouseStartPos = undefined
     }
 
     destroy() {
-        super.destroy()
-
         if (this.flowchart?.parentElement) {
             this.flowchart.parentElement.classList.remove("__toolPan")
             this.flowchart.parentElement.classList.remove("__isPanning")

@@ -2,6 +2,7 @@
 
 import FlowchartNode, { type FlowchartNodeOptions, type FlowchartTypeMethod } from "./nodes/index"
 import FlowchartEdge, { type FlowchartEdgeOptions } from "./edges/index"
+import FlowchartEvents from "./events"
 import { type DrawEdgeType } from "./edges/index"
 import { type FlowchartTool } from "./chart-tools/index"
 import { SelectTool } from "./chart-tools/select"
@@ -23,6 +24,8 @@ export class Flowchart {
     chart: SVGElement 
     nodesGroup = null as SVGGElement | null
     edgesGroup = null as SVGGElement | null
+
+    events: FlowchartEvents 
 
     options = {
         edges: new Proxy<Partial<FlowchartEdgeOptions>>({ showArrow: true }, {
@@ -114,8 +117,10 @@ export class Flowchart {
             this.parentElement.removeChild(oldChart)
         }
 
+        this.events = new FlowchartEvents(this)
+
         this.register("tool","select", SelectTool)
-        
+
         this.#parseOptions(options)
         this.#addChart()
     }
@@ -362,7 +367,7 @@ export class Flowchart {
         this.edges = []
         this.chart.remove()
 
-        this.registered.tools.forEach(t => t.object?.destroy())
+        // this.registered.tools.forEach(t => t.object ?.destroy())
 
         this.registered.edges = []
         this.registered.nodes = []

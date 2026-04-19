@@ -1,6 +1,8 @@
 import type Flowchart from "../index"
 import type FlowchartNode from "../nodes/index"
+import type { FlowchartEventContext } from "../events"
 import FlowchartTool from "./index"
+import type { K } from "vue-router/dist/index-DFCq6eJK.js"
 
 export class ZoomTool extends FlowchartTool {
     name = "zoom"
@@ -22,6 +24,11 @@ export class ZoomTool extends FlowchartTool {
     
     constructor(flowchart: Flowchart) {
         super(flowchart)
+
+        this.flowchart.events.add("wheel", this.onWheel)
+        this.flowchart.events.add("keyDown", this.onKeyDown)
+        this.flowchart.events.add("keyUp", this.onKeyUp)
+        this.flowchart.events.add("mouseDown", this.onMouseDown)
     }
 
     private zoomAtCenter(factor: number) {
@@ -99,10 +106,26 @@ export class ZoomTool extends FlowchartTool {
         this.zoomAt(x, y, 1 / factor)
     }
 
-    onWheel: (e: WheelEvent) => void = (e) => {
+    set isZooming(value: boolean) {
+        if (this.flowchart?.parentElement) {
+            if (value) {
+                this.flowchart.parentElement.classList.add("__isZooming")
+            } else {
+                this.flowchart.parentElement.classList.remove("__isZooming")
+            }
+        }
+        this._isZooming = value
+    }
+
+    get isZooming() {
+        return this._isZooming
+    }
+    
+
+    onWheel = (fec: FlowchartEventContext) => {
+        const e = fec.originalEvent as WheelEvent
         if (!this.flowchart?.parentElement) return
-        
-        if (this.isWithinChart) {
+        if (this.flowchart.events.isWithinChart) {
             e.preventDefault()
         } else {
             return
@@ -115,7 +138,7 @@ export class ZoomTool extends FlowchartTool {
             const delta = -e.deltaY * zoomIntensity
             const factor = 1 + delta
             
-            this.zoomAt(this.globalMousePos.x, this.globalMousePos.y, factor)
+            this.zoomAt(this.flowchart.events.globalMousePos.x, this.flowchart.events.globalMousePos.y, factor)
             
             this.isZooming = true
             if (this.isZoomingTimeout) {
@@ -128,7 +151,8 @@ export class ZoomTool extends FlowchartTool {
         }
     }
 
-    onKeyDown = (e: KeyboardEvent) => {
+    onKeyDown = (fec: FlowchartEventContext) => {
+        const e = fec.originalEvent as KeyboardEvent
         
         // Zoom with cmd/ctrl + +/-
         if (this.options.cmdZooming) {
@@ -181,7 +205,8 @@ export class ZoomTool extends FlowchartTool {
         }
     }
     
-    onKeyUp = (e: KeyboardEvent) => {
+    onKeyUp = (fec: FlowchartEventContext) => {
+        const e = fec.originalEvent as KeyboardEvent
         if (this.options.zHotkeyZooming) { 
             if (!this.flowchart.parentElement) return
 
@@ -197,53 +222,28 @@ export class ZoomTool extends FlowchartTool {
         }
     }
 
-    onMouseDown = (e: MouseEvent) => {
-        if (!this.isWithinChart) return
+    onMouseDown = (fec: FlowchartEventContext) => {
+        const e = fec.originalEvent as MouseEvent
+        if (!this.flowchart.events.isWithinChart) return
 
         if (this.options.zHotkeyZooming) { 
             if (!this.zKeyDown) return
         
             if (e.altKey) {
-                this.zoomOut(this.globalMousePos.x, this.globalMousePos.y)
+                this.zoomOut(this.flowchart.events.globalMousePos.x, this.flowchart.events.globalMousePos.y)
             } else {
-                this.zoomIn(this.globalMousePos.x, this.globalMousePos.y)
+                this.zoomIn(this.flowchart.events.globalMousePos.x, this.flowchart.events.globalMousePos.y)
             }
         }
     }
 
-    onPinch = (e: TouchEvent, scale: number) => {
-        if (!this.isWithinChart) return
-    
+    onPinch = (_fec: FlowchartEventContext) => {
+        if (!this.flowchart.events.isWithinChart) return
+        
         if (this.options.pinchZooming) {
-            const t0 = e.touches.item(0)
-            const t1 = e.touches.item(1)
-            if (!t0 || !t1) return
-            
-            const rect = this.flowchart.chart.getBoundingClientRect()
-            const midX = (t0.clientX + t1.clientX) / 2 - rect.left
-            const midY = (t0.clientY + t1.clientY) / 2 - rect.top
-            
-            this.zoomAt(midX, midY, scale)
+            const { globalTouchAvg, touchScale } = this.flowchart.events
+            this.zoomAt(globalTouchAvg.x, globalTouchAvg.y, touchScale)
         }
-    }
-
-    set isZooming(value: boolean) {
-        if (this.flowchart?.parentElement) {
-            if (value) {
-                this.flowchart.parentElement.classList.add("__isZooming")
-            } else {
-                this.flowchart.parentElement.classList.remove("__isZooming")
-            }
-        }
-        this._isZooming = value
-    }
-
-    get isZooming() {
-        return this._isZooming
-    }
-    
-    destroy() {
-        super.destroy()
     }
 }
 

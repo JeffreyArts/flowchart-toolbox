@@ -1,5 +1,5 @@
 <template>
-    <div class="refactor-tools">
+    <div class="refactor-tools" @click="updateSelectedNodes">
         <header class="title">
             <h1>Refactor Tools</h1>
         </header>
@@ -16,38 +16,33 @@
         <aside class="sidebar">
             <div class="options">
                 <div class="option-group" name="Selected node" >
-                    <div class="option" v-if="selectedNode">
-                        <span>
-                            <strong>ID:</strong>
-                            {{ selectedNode.id }}<br>
+                    <div v-for="selectedNode in selectedNodes" :key="selectedNode.id">
+                        <div class="option">
+                            <span>
+                                <strong>ID:</strong>
+                                {{ selectedNode.id }}<br>
 
-                            <strong>Type:</strong>
-                            {{ selectedNode.type }}<br>
-                        </span>
-                    </div>
+                                <strong>Type:</strong>
+                                {{ selectedNode.type }}<br>
+                            </span>
+                        </div>
 
-                <div class="option-group" name="Desired features" >
-                    <div class="option">
-                       <h3>Move tool</h3>
-                        <p>Move tool should work in conjunction with the select tool. Misschien dat de select tool mandatory moet zijn</p>
-                    </div>
-                </div>
-
-                    <div class="option" v-if="selectedNode">
-                        <label for="changeNode">Verander type node</label>
-                        <select name="changeNode" id="" v-model="selectedNode.type" @change="changeSelectedNode">
-                            <option value="start">Start</option>
-                            <option value="end">End</option>
-                            <option value="process">Process</option>
-                            <option value="decision">Decision</option>
-                        </select>
-                    </div>
-                    <div class="option" v-if="selectedNode">
-                        <label for="node-text">Text</label>
-                        <input type="text" id="node-text" v-model="selectedNode.text">
+                        <div class="option">
+                            <label for="changeNode">Verander type node</label>
+                            <select name="changeNode" id="" v-model="selectedNode.type" @change="changeSelectedNode(selectedNode)">
+                                <option value="start">Start</option>
+                                <option value="end">End</option>
+                                <option value="process">Process</option>
+                                <option value="decision">Decision</option>
+                            </select>
+                        </div>
+                        <div class="option" v-if="selectedNode">
+                            <label for="node-text">Text</label>
+                            <input type="text" id="node-text" v-model="selectedNode.text">
+                        </div>
                     </div>
                 
-                    <span v-if="!selectedNode" style="font-style: italic; color: #666; font-size: .8em;">
+                    <span v-if="selectedNodes.length <= 0" style="font-style: italic; color: #666; font-size: .8em;">
                         No node selected <br><br>
                     </span>
                 </div>
@@ -179,8 +174,8 @@ export default defineComponent ({
             } as Partial<Options>,
             nodes: [] as Array<FlowchartNode>,
             flowchart: undefined as Flowchart | undefined,
-            selectedNode: undefined as FlowchartNode | undefined,
             ignoreOptionsUpdate: true,
+            selectedNodes: [] as Array<FlowchartNode>,
         }
     },
     watch: {
@@ -215,7 +210,7 @@ export default defineComponent ({
             },
             deep: true
         },
-    },
+    },  
     mounted() {
         if (this.$el && !this.flowchart) {
             setTimeout(() => {
@@ -243,26 +238,10 @@ export default defineComponent ({
                 }
                 
                 const selectTool = this.flowchart.getTool("select")
-                if (selectTool && selectTool instanceof SelectTool) {
-                    selectTool.onClick = (_e: MouseEvent) => {
-                        this.selectedNode = undefined
-
-                        this.flowchart?.nodes.forEach(node => {
-
-                            if (node.mouseOver) {
-                                if (node.svgGroup.classList.contains("__isSelected")) {
-                                    node.svgGroup.classList.remove("__isSelected")    
-                                    return
-                                }
-                                
-                                this.selectedNode = markRaw(node)
-                                node.svgGroup.classList.add("__isSelected")    
-                            } else {
-                                node.svgGroup.classList.remove("__isSelected")    
-                            }
-                        })
-                    }
-                }
+                // if (selectTool && selectTool instanceof SelectTool) {
+                //     selectTool.onClick = (_e: MouseEvent) => {
+                //     }
+                // }
             })
         }
 
@@ -272,37 +251,37 @@ export default defineComponent ({
         this.flowchart?.destroy()
     },
     methods: {
-        changeSelectedNode() {
-            if (!this.selectedNode) return
+        changeSelectedNode(selectedNode: FlowchartNode) {
+            if (!selectedNode) return
             if (!this.flowchart) return
 
 
             let target = {
-                text: this.selectedNode.text,
-                x: this.selectedNode.x,
-                y: this.selectedNode.y,
+                text: selectedNode.text,
+                x: selectedNode.x,
+                y: selectedNode.y,
                 flowchart: this.flowchart,
-                options: this.selectedNode.options
+                options: selectedNode.options
             } as Partial<FlowchartNodeOptions>
             
             
             let newNode: FlowchartNode | undefined
 
-            const registeredNode = this.flowchart.registered.nodes.find(node => node.type === this.selectedNode.type)
+            const registeredNode = this.flowchart.registered.nodes.find(node => node.type === selectedNode.type)
             if (!registeredNode) {
-                throw new Error(`Node no longer registered with flowchart: ${this.selectedNode.type}`)
+                throw new Error(`Node no longer registered with flowchart: ${selectedNode.type}`)
             }
             
             newNode = new FlowchartNode(registeredNode.type, target)
 
 
-            if (this.selectedNode) {
+            if (selectedNode) {
                 // this.selectedNode.x = target.x
-                this.flowchart.replaceNode(this.selectedNode, newNode)
+                this.flowchart.replaceNode(selectedNode, newNode)
                 const selectTool = this.flowchart.getTool("select")
 
                 if (selectTool instanceof SelectTool && selectTool.onClick) {
-                    this.selectedNode.mouseOver = true
+                    selectedNode.mouseOver = true
                     selectTool.onClick(new MouseEvent("click"))
                 }
                 // this.setMouseEvents(this.selectedNode)
@@ -375,6 +354,10 @@ export default defineComponent ({
             e.preventDefault()
             this.options = {
             }
+        },
+        updateSelectedNodes() {
+            if (!this.flowchart) return
+            this.selectedNodes = markRaw(this.flowchart.nodes.filter(n => n.isSelected))
         },
     }
 })

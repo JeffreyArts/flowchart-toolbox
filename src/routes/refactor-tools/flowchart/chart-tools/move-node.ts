@@ -1,15 +1,12 @@
 import type { Flowchart } from "../index"
-import type Node  from "../nodes/index"
+import type { FlowchartEventContext } from "../events"
 import FlowchartTool from "./index"
-import type { SelectTool } from "./select"
+import type { FlowchartNode } from "../nodes"
 
 export class MoveNodeTool extends FlowchartTool {
     name = "move-node"
-    mouseStartPos = undefined as { x: number, y: number } | undefined
-    selectedNode = null as Node | null
-    selectedNodeStartPos = undefined as { x: number, y: number } | undefined
-    selectTool = undefined as SelectTool | undefined
     keyDown = false
+    selectedNodesStartPos = [] as { x: number, y: number, node: FlowchartNode }[]
     
     constructor(flowchart: Flowchart) {
         super(flowchart)
@@ -19,6 +16,11 @@ export class MoveNodeTool extends FlowchartTool {
                 flowchart.parentElement.classList.add("__toolMoveNode")
             }
         }
+
+        this.flowchart.events.add("keyDown", this.onKeyDown)
+        this.flowchart.events.add("keyUp", this.onKeyUp)
+        this.flowchart.events.add("mouseDown", this.moveNodeMouseDown)
+        this.flowchart.events.add("mouseMove", this.onMouseMove)
     }
 
     onKeyDown = () => {
@@ -29,43 +31,32 @@ export class MoveNodeTool extends FlowchartTool {
         this.keyDown = false
     }
 
-    onMouseDown = () => {  
-        if (this.keyDown) return
+    moveNodeMouseDown = (fec: FlowchartEventContext) => {  
+        this.selectedNodesStartPos = []
+        if (!this.flowchart.events.isWithinChart) return
 
-        this.mouseStartPos = undefined
-        const tools = this.flowchart.registered.tools
-        
-        // Check is flowchart has pan tool
-        this.selectTool = tools.find(t => t.type === "select")?.object as SelectTool | undefined
-
-        // Check if mouse is within any node
-        this.flowchart.nodes.forEach(node => {
-            if (this.mouseStartPos) return
-            if (node.mouseOver) {
-                this.selectedNode = node
-            }
+        this.flowchart.nodes.filter(node => {
+            if (!node.shape) return false
+            if (!node.isSelected) return false
+            this.selectedNodesStartPos.push({ x: Number(node.x), y: Number(node.y), node: node })
+            return node
         })
         
-        if (this.selectedNode) {
-            this.mouseStartPos = { ...this.globalMousePos }
-
-            this.selectedNodeStartPos = { x: Number(this.selectedNode.x), y: Number(this.selectedNode.y) }
-            this.selectedNode.isSelected = true
-
-            if (this.selectTool) {
-                this.selectTool.deactivate()
-            }
-        }
+        return
     }
+        
 
-    onMouseMove = (e: MouseEvent) => {
-        if (!this.mouseDown) return
-        if (!this.selectedNode || !this.selectedNodeStartPos) return
-        if (!this.mouseStartPos) return
+    onMouseMove = (fec: FlowchartEventContext) => {
+        const e = fec.originalEvent as MouseEvent
+        const mouseDown = this.flowchart.events.mouseDown
+        const mouseStartPos = this.flowchart.events.mouseStartPos
+        const globalMousePos = this.flowchart.events.mousePos
+        
+        if (!mouseDown) return
+        if (!mouseStartPos) return
 
-        let deltaX = (this.globalMousePos.x - this.mouseStartPos.x) / this.flowchart.zoom
-        let deltaY = (this.globalMousePos.y - this.mouseStartPos.y) / this.flowchart.zoom
-
+        let deltaX = (globalMousePos.x - mouseStartPos.x) /// this.flowchart.zoom
+        let deltaY = (globalMousePos.y - mouseStartPos.y) /// this.flowchart.zoom
         // If holding shift key only move vertical or horizontal
         if (e.shiftKey) {
             if (Math.abs(deltaX) > Math.abs(deltaY)) {
@@ -74,41 +65,15 @@ export class MoveNodeTool extends FlowchartTool {
                 deltaX = 0
             }
         }
-
-        if (this.selectedNode) {
-            this.selectedNode.x = Number(this.selectedNodeStartPos.x) + deltaX
-            this.selectedNode.y = Number(this.selectedNodeStartPos.y) + deltaY
-        }
+        
+        this.selectedNodesStartPos.forEach(pos => {
+            // const startPos = this.selectedNodeStartPos ?? { x: Number(node.x), y: Number(node.y) }
+            pos.node.x = pos.x + deltaX
+            pos.node.y = pos.y + deltaY
+        })
     }
 
-    onMouseUp = (e: MouseEvent) => {  
-        this.mouseStartPos = undefined
-
-
-        if (this.selectTool) {
-            if (this.selectedNodeStartPos?.x == this.selectedNode?.x && this.selectedNodeStartPos?.y == this.selectedNode?.y) {
-                this.selectTool.activate()
-                this.selectTool = undefined
-            } else {
-                setTimeout(() => {
-                    if (this.selectTool) {
-                        this.selectTool.activate()
-                    }
-                    this.selectTool = undefined
-                })
-            }
-        }
-
-        if (this.selectedNode) {
-            this.selectedNode.isSelected = false
-            this.selectedNode = null
-            this.selectedNodeStartPos = undefined
-        }
-    } 
-
     destroy() {
-        super.destroy()
-
         if (this.flowchart?.parentElement) {
             this.flowchart.parentElement.classList.remove("__toolMoveNode")
         }

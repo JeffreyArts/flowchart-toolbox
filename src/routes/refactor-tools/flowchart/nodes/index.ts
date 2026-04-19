@@ -188,6 +188,7 @@ export class FlowchartNode {
     }
 
     set text(value: string) {
+        console.log(this)
         this.#triggerEvent("beforeTextChange")
         this._text = value
         
