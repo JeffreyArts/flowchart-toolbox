@@ -4,7 +4,7 @@ import FlowchartEdge from "../edges/index"
 import TextHelper from "../shapes/text-helper"
 import type FlowchartShape from "../shapes/index"
 
-export type FlowchartNodeEvent = "positionChange" | "segmentsChange" | "beforeTextChange" | "afterTextChange"
+export type FlowchartNodeEvent = "positionChange" | "segmentsChange" | "beforeTextChange" | "afterTextChange" | "mouseOver" | "mouseEnter" | "mouseLeave"
 export type FlowchartTypeMethod = (node: FlowchartNode) => FlowchartShape
 
 export type FlowchartNodeOptions = {
@@ -20,6 +20,13 @@ export type FlowchartNodeConstructOptions = {
     x?: number | string
     y?: number | string
     options?: Partial<FlowchartNodeOptions>
+}
+
+export type FlowchartNodeStates = {
+    mouseOver: boolean,
+    selected: boolean,
+    visible: boolean,
+    [key: string]: any
 }
 
 
@@ -44,10 +51,9 @@ export class FlowchartNode {
                     this.updateTextBox()
                 }
                 this.updatePosition()
-                this.#triggerEvent("afterTextChange")
             }
 
-            if (prop === "segments") { this.#triggerEvent("segmentsChange") }
+            if (prop === "segments") { this.triggerEvent("segmentsChange") }
             if (prop === "offsetPadding") {
                 this.updatePosition()
             }
@@ -56,20 +62,50 @@ export class FlowchartNode {
         }
     })
 
+    state = new Proxy<FlowchartNodeStates>({
+        mouseOver: false,
+        selected: false,
+        visible: false
+    }, {
+        set: (target, prop, value) => {
+            (target as Record<string, any>)[prop as string] = value
+
+            if (prop === "mouseOver") {
+                if (value === true) {
+                    this.triggerEvent("mouseOver")
+                }
+            }
+
+            if (prop === "mouseEnter") {
+                if (value === true) {
+                    this.triggerEvent("mouseEnter")
+                }
+            }
+
+            if (prop === "mouseLeave") {
+                if (value === true) {
+                    this.triggerEvent("mouseLeave")
+                }
+            }
+
+            return true
+        }
+    })
+
+
     id: string = crypto.randomUUID()
     flowchart: Flowchart | null = null
     children: FlowchartNode[] = []
     parents: FlowchartNode[] = []
     textBox: { width: number, height: number, lines: string[], lineHeight: number } = { width: 0, height: 0, lines: [], lineHeight: 0 }
-    isSelected: boolean = false
+    // isSelected: boolean = false
     svgGroup: SVGElement = document.createElementNS("http://www.w3.org/2000/svg", "g")
     
-    eventListeners: Array<{ name: string, callback: () => void }> = []
+    events: Array<{ name: string, callback: () => void }> = []
 
     private _x = "0"
     private _y = "0"
     
-    private _mouseOver: boolean = false
     private _isVisible: boolean = false
     private _text: string = ""
 
@@ -188,8 +224,7 @@ export class FlowchartNode {
     }
 
     set text(value: string) {
-        console.log(this)
-        this.#triggerEvent("beforeTextChange")
+        this.triggerEvent("beforeTextChange")
         this._text = value
         
         this.updateTextBox()
@@ -198,11 +233,11 @@ export class FlowchartNode {
         this.updatePosition()
 
         setTimeout(() => {
-            this.#triggerEvent("afterTextChange")
+            this.triggerEvent("afterTextChange")
         })
     }
 
-    updateTextBox() {
+    private updateTextBox() {
         const textHelperOptions = {
             padding: "20px"
         } as Partial<CSSStyleDeclaration> 
@@ -250,44 +285,31 @@ export class FlowchartNode {
     get isVisible() {
         return this._isVisible
     }
-
-    /** Mouse over **/
-    set mouseOver(value: boolean) {
-        if (value) {
-            this.onMouseEnter()
-        } else {
-            this.onMouseLeave()
-        }
-        this._mouseOver = value
-    }
-
-    get mouseOver() {
-        return this._mouseOver
-    }
     
     /** Event listeners */
     addEventListener(eventName: FlowchartNodeEvent, callback: () => void) {
-        this.eventListeners.push({ name: eventName, callback })
+        this.events.push({ name: eventName, callback })
     }
 
     removeEventListener(eventName: FlowchartNodeEvent, callback: () => void) {
-        this.eventListeners = this.eventListeners.filter(e => e.name !== eventName || e.callback !== callback)
+        this.events = this.events.filter(e => e.name !== eventName || e.callback !== callback)
     }
 
     removeAllEventListeners(eventName: FlowchartNodeEvent) {
-        this.eventListeners = this.eventListeners.filter(e => e.name !== eventName)
+        this.events = this.events.filter(e => e.name !== eventName)
     }
 
-    #triggerEvent(eventName: FlowchartNodeEvent) {
-        this.eventListeners.forEach(e => {
+    private triggerEvent(eventName: FlowchartNodeEvent) {
+        this.events.forEach(e => {
             if (e.name === eventName) {
+                console.log(`Triggering "${eventName}" for node "${this.id}"`)
                 e.callback()
             }
         })
     }
 
     /** Position **/
-    updatePosition(first = true) {
+    private updatePosition(first = true) {
         if (!this.svgGroup) return
 
         if (first) {
@@ -296,7 +318,7 @@ export class FlowchartNode {
                 this.isVisible = true
             }, 0)
         } else {
-            this.#triggerEvent("positionChange")
+            this.triggerEvent("positionChange")
         }
     }
 
@@ -308,7 +330,7 @@ export class FlowchartNode {
         this.setX(value)
     }
     
-    setX(value: number | string) {
+    private setX(value: number | string) {
         if (!this.flowchart) return
         // if (!this.foreignObject) return
         let res = ""
@@ -333,7 +355,7 @@ export class FlowchartNode {
         this.setY(value)
     }
 
-    setY(value: number | string) {
+    private setY(value: number | string) {
         if (!this.flowchart) return
         let res = ""
 
@@ -348,7 +370,6 @@ export class FlowchartNode {
         this._y = res
         this.updatePosition(false)
     }
-
 
     calculateEdgeStart(targetNode: FlowchartNode) {
         if (!this.shape) {
@@ -457,14 +478,6 @@ export class FlowchartNode {
     }
 
     /** Lifecycle Hooks **/
-
-    onMouseEnter() {
-        this.svgGroup.classList.add("__isHover")
-    }
-
-    onMouseLeave() {
-        this.svgGroup.classList.remove("__isHover")
-    }
 
     destroy() {
         // document.removeEventListener("mousemove", this.boundSetIsHover)

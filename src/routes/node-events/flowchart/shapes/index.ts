@@ -144,27 +144,34 @@ export abstract class FlowchartShape {
         })
     }
 
-    /** Shape */
-    setMouseOver(e: MouseEvent) {
-
+    private mouseInsideShape = () => {
         const flowchart = this.flowchart
         if (!flowchart || !flowchart.chart) {
-            return
+            return false
         }
-        const rect = flowchart.chart.getBoundingClientRect()
-
-        const x = (e.clientX - rect.left - flowchart.pan.x) / flowchart.zoom
-        const y = (e.clientY - rect.top  - flowchart.pan.y) / flowchart.zoom
+        const { x,y } = flowchart.events.mousePos
 
         if (!this.node.shape) {
             throw new Error("Shape is not defined for this node")
         }
 
-        this.node.mouseOver = this.node.shape.containsPoint(x, y)
+        return this.node.shape.containsPoint(x, y)
+    }
+
+    /** Shape */
+    private setMouseOver() {
+        this.node.state.mouseOver = this.mouseInsideShape()
+
+        if (this.node.state.mouseOver && !this.node.state.mouseEnter) {
+            this.node.state.mouseEnter = true
+            this.node.state.mouseLeave = false
+        } else if (!this.node.state.mouseOver && this.node.state.mouseEnter) {
+            this.node.state.mouseEnter = false
+            this.node.state.mouseLeave = true
+        }
     }
 
     boundSetMouseOver = this.setMouseOver.bind(this)
-
 
     getBorderDistance(targetPosition: { x: number, y: number }): number {
         const dx = targetPosition.x - this.node.x
