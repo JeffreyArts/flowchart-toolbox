@@ -15,6 +15,7 @@ import FitZoom from "./fit-zoom/fit-zoom.vue"
 import Segments from "./segments/segments.vue"
 import CodeRefactor1 from "./code-refactor-1/code-refactor-1.vue"
 import RefactorTools from "./refactor-tools/refactor-tools.vue"
+import NodeEvents from "./node-events/node-events.vue"
 import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
 import Cytoscape from "./cytoscape.vue"
@@ -115,6 +116,11 @@ const routes = [
         path: "/refactor-tools",
         name: "17) Refactor Tools",
         component: RefactorTools
+    },
+    {
+        path: "/node-events",
+        name: "18) Node Events",
+        component: NodeEvents
     },
     {
         path: "/options-overview",

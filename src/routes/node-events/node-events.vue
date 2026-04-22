@@ -1,0 +1,438 @@
+<template>
+    <div class="node-events" @click="updateSelectedNodes" @mousemove="updateSelectedNodes">
+        <header class="title">
+            <h1>Node Events</h1>
+        </header>
+
+        <hr>
+        <section class="viewport">
+            <div class="viewport-content" ratio="1x1" >
+                <div id="segments-canvas"> 
+
+                </div>
+            </div>
+        </section>
+
+        <aside class="sidebar">
+            <div class="options">
+                <div class="option-group" name="Selected node" >
+                    <div v-for="selectedNode in selectedNodes" :key="selectedNode.id">
+                        <div class="option">
+                            <span>
+                                <strong>ID:</strong>
+                                {{ selectedNode.id }}<br>
+
+                                <strong>Type:</strong>
+                                {{ selectedNode.type }}<br>
+                            </span>
+                        </div>
+
+                        <div class="option">
+                            <label for="changeNode">Verander type node</label>
+                            <select name="changeNode" id="" v-model="selectedNode.type" @change="changeSelectedNode(selectedNode)">
+                                <option value="start">Start</option>
+                                <option value="end">End</option>
+                                <option value="process">Process</option>
+                                <option value="decision">Decision</option>
+                            </select>
+                        </div>
+                        <div class="option" v-if="selectedNode">
+                            <label for="node-text">Text</label>
+                            <input type="text" id="node-text" v-model="selectedNode.text">
+                        </div>
+                    </div>
+                
+                    <span v-if="selectedNodes.length <= 0" style="font-style: italic; color: #666; font-size: .8em;">
+                        No node selected <br><br>
+                    </span>
+                </div>
+
+
+                <div class="option-group" name="Node options" >
+                    <div class="option" v-if="flowchart">
+                        <label for="options-segments">Segments <i class="info"><span class="info-icon">?</span><span class="info-details">0 = none</span></i></label>
+                        <input min="0" max="360" type="number" id="options-segments" v-model="options.segments" @change="updateNodeSegments">
+                    </div>
+
+                    <div class="option" v-if="flowchart">
+                        <label for="options-nodeMaxWidth">Max Width</label>
+                        <input min="100" max="1000" step="1" type="range" id="options-nodeMaxWidth" v-model="options.nodeMaxWidth" @input="updateNodeMaxWidth">
+                        <input type="number"  min="100" max="1000" v-model="options.nodeMaxWidth" @change="updateNodeMaxWidth">
+                    </div>
+
+                    <div class="option" v-if="flowchart">
+                        <label for="options-nodeOffsetPadding">Offset Padding</label>
+                        <input min="0" max="48" step="1" type="range" id="options-nodeOffsetPadding" v-model="options.nodeOffsetPadding" @input="updateOffsetPadding">
+                        <input type="number"  min="0" max="48" v-model="options.nodeOffsetPadding" @change="updateOffsetPadding">
+                    </div>
+                </div>
+
+
+                <div class="option-group" name="Edge options" >
+                    
+                    <div class="option">
+                        <label for="edgeType">Edge type</label>
+                        <select name="edgeType" id="" v-model="options.edgeType" @change="changeEdgeType">
+                            <option value="straight">Straight</option>
+                            <option value="elbow">Elbow</option>
+                            <option value="zigzag">Zigzag</option>
+                            <option value="diagonal">Diagonal</option>
+                            <option value="double-diagonal">Double Diagonal</option>
+                        </select>
+                    </div>
+
+                    <div class="option" v-if="flowchart">
+                        <label for="options-curvatureStrength">Curvature Strength <i class="info"><span class="info-icon">?</span><span class="info-details">0 = none, 1 = maximum</span></i></label>
+                        <input min="0" max="1" step="0.01" type="range" id="options-curvatureStrength" v-model="options.curvatureStrength" @input="updateEdgeCurvature">
+                        <input type="number"  min="0" max="1" v-model="options.curvatureStrength" @change="updateEdgeCurvature">
+                    </div>
+                    
+                    <div class="option" v-if="flowchart && ['zigzag', 'straight'].includes(options.edgeType)" >
+                        <label for="options-midpoint">Midpoint <i class="info"><span class="info-icon">?</span><span class="info-details">0 = none, 1 = maximum</span></i></label>
+                        <input min="0" max="1" step="0.01" type="range" id="options-midpoint" v-model="options.midpoint" @input="updateEdgeMidpoint">
+                        <input type="number"  min="0" max="1" v-model="options.midpoint" @change="updateEdgeMidpoint">
+                    </div>
+
+                    <div class="option" v-if="flowchart">
+                        <label for="options-edge-visible">Edge visible</label>
+                        <span>
+                            <input type="radio" id="options-edge-visible-v0" :value="false" v-model="options.edgeVisible" @change="changeEdgeVisibility">
+                            <label for="options-edge-visible-v0"> false </label>
+                        </span>
+
+                        <span>
+                            <input type="radio" id="options-edge-visible-v1" :value="true" v-model="options.edgeVisible" @change="changeEdgeVisibility">
+                            <label for="options-edge-visible-v1"> true </label>
+                        </span>
+                    </div>
+
+                    <div class="option" v-if="flowchart">
+                        <label for="options-edge-show-arrow">Show arrow</label>
+                        <span>
+                            <input type="radio" id="options-edge-show-arrow-v0" :value="false" v-model="options.edgeShowArrow" @change="changeEdgeShowArrow">
+                            <label for="options-edge-show-arrow-v0"> false </label>
+                        </span>
+
+                        <span>
+                            <input type="radio" id="options-edge-show-arrow-v1" :value="true" v-model="options.edgeShowArrow" @change="changeEdgeShowArrow">
+                            <label for="options-edge-show-arrow-v1"> true </label>
+                        </span>
+                    </div>
+                </div>
+
+
+
+                <div class="option-group" name="Actions" >
+                    <div class="option">
+                        <label for="options-resetPan">Reset zoom/pan</label>
+                        <div class="row">
+                            <button class="button" id="options-resetBoth" @click="resetZoom($event); resetPan($event)">Reset</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+</template>
+
+
+<script lang="ts">
+//@ts-nocheck
+import { defineComponent, markRaw } from "vue"
+import _, { update } from "lodash"
+import gsap from "gsap"
+import Joffa from "./flowchart/joffa"
+import { FlowchartNode, type FlowchartNodeOptions } from "./flowchart/nodes"
+import { type EdgeType } from "./flowchart/edge"
+import SelectTool from "./flowchart/chart-tools/select"
+
+interface Options {
+    segments: number
+    curvatureStrength: number
+    midpoint: number
+    edgeType: EdgeType
+    edgeVisible: boolean
+    edgeShowArrow: boolean
+    nodeMaxWidth: number
+    nodeOffsetPadding: number
+}
+
+export default defineComponent ({ 
+    components: {},
+    props: [],
+    data() {
+        return {
+            options: {
+                edgeType: "straight",
+                segments: 0,
+                curvatureStrength: 0.5,
+                midpoint: 0.5,
+                edgeVisible: true,
+                edgeShowArrow: true,
+                nodeMaxWidth: 200,
+                nodeOffsetPadding: 8,
+            } as Partial<Options>,
+            nodes: [] as Array<FlowchartNode>,
+            flowchart: undefined as Flowchart | undefined,
+            ignoreOptionsUpdate: true,
+            selectedNodes: [] as Array<FlowchartNode>,
+        }
+    },
+    watch: {
+        "options": {
+            handler(){
+                if (this.ignoreOptionsUpdate) {
+                    return
+                }
+                
+                let newOptions = {} as any
+                const localStorageOptions = localStorage.getItem("options")
+                if (localStorageOptions) {
+                    newOptions = _.cloneDeep(JSON.parse(localStorageOptions))
+                }
+                _.forOwn(this.options, (value, key) => {
+                    if (_.isArray(value)) {
+                        // If the value is an array, copy it directly
+                        newOptions[key] = [...value]
+                    } else if (_.isObject(value)) {
+                        if (!_.isObject(newOptions[key])) {
+                            newOptions[key] = {}
+                        }
+                        // Recursively copy the object properties
+                        _.forOwn(value, (v, k) => {
+                            newOptions[key][k] = v
+                        })
+                    } else {
+                        newOptions[key] = value
+                    }
+                })
+                localStorage.setItem("options", JSON.stringify(newOptions))
+            },
+            deep: true
+        },
+    },  
+    mounted() {
+        if (this.$el && !this.flowchart) {
+            setTimeout(() => {
+                
+                const flowchartOptions = {
+                    edges: { 
+                        type: this.options.edgeType,
+                        curvatureStrength: this.options.curvatureStrength,
+                        midpoint: this.options.midpoint ,
+                        isVisible: this.options.edgeVisible,
+                        showArrow: this.options.edgeShowArrow,
+                    },
+                    nodes: {
+                        segments: this.options.segments,
+                        maxWidth: this.options.nodeMaxWidth,
+                        offsetPadding: this.options.nodeOffsetPadding,
+                    }
+                }
+
+                this.flowchart = markRaw(new Joffa("#segments-canvas", flowchartOptions))
+                const mainNode = new FlowchartNode("decision", { text: "Main node", flowchart: this.flowchart, x: "50%", y: "50%", class: "main-node", options: { maxWidth: 320 }})
+                const nodes = 2
+                for (let i = 0; i < nodes; i++) {
+                    const processNode = new FlowchartNode("process", { text: `Node ${i+1}`, parent: mainNode, x: `${i * 100/nodes + 100/nodes/2}%`, y: "10%", options: { maxWidth: 200 }})
+                }
+                
+                const selectTool = this.flowchart.getTool("select")
+                // if (selectTool && selectTool instanceof SelectTool) {
+                //     selectTool.onClick = (_e: MouseEvent) => {
+                //     }
+                // }
+            })
+        }
+
+        this.loadOptions()
+    },
+    unmounted() {
+        this.flowchart?.destroy()
+    },
+    methods: {
+        changeSelectedNode(selectedNode: FlowchartNode) {
+            if (!selectedNode) return
+            if (!this.flowchart) return
+
+
+            let target = {
+                text: selectedNode.text,
+                x: selectedNode.x,
+                y: selectedNode.y,
+                flowchart: this.flowchart,
+                options: selectedNode.options
+            } as Partial<FlowchartNodeOptions>
+            
+            
+            let newNode: FlowchartNode | undefined
+
+            const registeredNode = this.flowchart.registered.nodes.find(node => node.type === selectedNode.type)
+            if (!registeredNode) {
+                throw new Error(`Node no longer registered with flowchart: ${selectedNode.type}`)
+            }
+            
+            newNode = new FlowchartNode(registeredNode.type, target)
+
+
+            if (selectedNode) {
+                // this.selectedNode.x = target.x
+                this.flowchart.replaceNode(selectedNode, newNode)
+                const selectTool = this.flowchart.getTool("select")
+
+                if (selectTool instanceof SelectTool && selectTool.onClick) {
+                    selectedNode.mouseOver = true
+                    selectTool.onClick(new MouseEvent("click"))
+                }
+                // this.setMouseEvents(this.selectedNode)
+            }
+        },
+        updateNodeSegments() {
+            if (!this.flowchart) return
+            this.flowchart.options.nodes.segments = this.options.segments
+        },
+        updateEdgeCurvature() {
+            if (!this.flowchart) return
+            this.flowchart.options.edges.curvatureStrength = this.options.curvatureStrength
+        },
+        updateEdgeMidpoint() {
+            if (!this.flowchart) return
+            this.flowchart.options.edges.midpoint = this.options.midpoint
+        },
+        changeEdgeType() {
+            if (!this.flowchart) return
+
+            this.flowchart.options.edges.type = this.options.edgeType || "straight"
+        },
+        changeEdgeVisibility() {
+            if (!this.flowchart) return
+            this.flowchart.options.edges.isVisible = this.options.edgeVisible
+        },
+        changeEdgeShowArrow() {
+            if (!this.flowchart) return
+            this.flowchart.options.edges.showArrow = this.options.edgeShowArrow
+        },
+        updateNodeMaxWidth() {
+            if (!this.flowchart) return
+            this.flowchart.options.nodes.maxWidth = this.options.nodeMaxWidth
+        },
+        updateOffsetPadding() {
+            if (!this.flowchart) return
+            this.flowchart.options.nodes.offsetPadding = this.options.nodeOffsetPadding
+        },
+
+        resetPan(e:Event) {
+            e.preventDefault()
+            if (this.flowchart) {
+                // gsap.to(this.flowchart.pan, { x: 0, y: 0, duration: 0.5 })
+            }
+        },
+        resetZoom(e:Event) {
+            e.preventDefault()
+            if (this.flowchart) {
+                const zoom = this.flowchart.getTool("zoom")
+                zoom.fit()
+            }
+        },
+        loadOptions() {
+            this.ignoreOptionsUpdate = true
+            const optionsString = localStorage.getItem("options")
+            if (optionsString) {
+                const localOptions = JSON.parse(optionsString)
+                _.forOwn(this.options, (_value,key) => {
+                    const typedKey = key as keyof Options
+                    if (typeof localOptions[typedKey] !== "undefined") {
+                        this.options[typedKey] = localOptions[key]
+                    }
+                })
+            }
+            setTimeout(() => {
+                this.ignoreOptionsUpdate = false
+            })
+        },
+        resetOptions(e:Event) {
+            e.preventDefault()
+            this.options = {
+            }
+        },
+        updateSelectedNodes() {
+            if (!this.flowchart) return
+            this.selectedNodes = markRaw(this.flowchart.nodes.filter(n => n.isSelected))
+        },
+    }
+})
+</script>
+
+
+<style lang="scss">
+.node-events { 
+    .flowchart {
+        color: #333;
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .flowchart-chart {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        outline: 10px solid orange;
+        foreignObject {
+            pointer-events: none;
+            overflow: visible;
+        }
+    }
+
+    .flowchart-node {
+        transition-duration: .8s;
+        transition-property: scale;
+        transition-timing-function: linear(0, 0.002 0.5%, 0.008 1.1%, 0.019 1.7%, 0.034 2.3%, 0.052 2.9%, 0.073 3.5%, 0.102 4.2%, 0.134 4.9%, 0.191 6%, 0.264 7.3%, 0.556 12.1%, 0.683 14.3%, 0.742 15.4%, 0.797 16.5%, 0.848 17.6%, 0.89 18.6%, 0.932 19.7%, 0.967 20.7%, 0.997 21.7%, 1.027 22.8%, 1.052 23.9%, 1.073 25%, 1.09 26.1%, 1.104 27.3%, 1.117 28.9%, 1.123 30.6%, 1.124 32.4%, 1.119 34.3%, 1.112 35.9%, 1.101 37.7%, 1.043 45.5%, 1.018 49.5%, 1.007 51.7%, 0.998 54%, 0.992 56.3%, 0.988 58.6%, 0.985 61.7%, 0.985 65.2%, 1 84.5%, 1.002 91.4%, 1);
+        // Make text unselectable
+        -webkit-user-select: none; /* Safari */
+        -ms-user-select: none; /* IE 10 and IE 11 */
+        user-select: none; /* Standard syntax */
+
+        &.__isSelected {
+            scale: 1.2;
+        }
+    }
+
+    .flowchart-shape {
+
+        &.start-node {
+            stroke: #ffccff;
+            stroke-width: 4px;
+            fill: #fff;
+        }
+        
+        &.end-node {
+            stroke: #444;
+            stroke-width: 4px;
+            fill: #fff;
+        }
+
+        &.process-node {
+            stroke: #b2e0f9;
+            stroke-width: 4px;
+            fill: #fff;
+        }
+
+        &.decision-node {
+            stroke: #fffa88;
+            stroke-width: 4px;
+            fill: #fff;
+        }
+    }
+
+    .flowchart-edge {
+        stroke: #333;
+        stroke-width: 2px;
+        position: relative;
+        z-index: -1;
+    }
+}
+</style>
