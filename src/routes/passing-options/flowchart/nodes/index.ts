@@ -4,7 +4,7 @@ import FlowchartEdge from "../edges/index"
 import TextHelper from "../shapes/text-helper"
 import type FlowchartShape from "../shapes/index"
 
-export type FlowchartNodeEvent = "positionChange" | "segmentsChange" | "beforeTextChange" | "afterTextChange" | "mouseOver" | "mouseEntered" | "mouseLeft" | "show" | "hide"
+export type FlowchartNodeEvent = "positionChange" | "segmentsChange" | "beforeTextChange" | "afterTextChange" | "mouseOver" | "mouseEntered" | "mouseLeft" | "show" | "hide" | "dimensionChange"
 export type FlowchartTypeMethod = (node: FlowchartNode) => FlowchartShape
 
 export type FlowchartNodeOptions = {
@@ -311,6 +311,7 @@ export class FlowchartNode {
         this.textBox = textHelper.measure()
         textHelper.destroy()
         this.prevTextHelper = textHelper
+        this.triggerEvent("dimensionChange")
     }
 
 
