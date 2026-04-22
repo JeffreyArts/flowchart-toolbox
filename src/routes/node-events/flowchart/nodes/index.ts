@@ -29,14 +29,31 @@ export type FlowchartNodeStates = {
     [key: string]: any
 }
 
-
+export type FlowchartNodeTextBox = {
+    width: number
+    height: number
+    lines: string[]
+    lineHeight: number
+}
 
 export class FlowchartNode {
     prevTextHelper = undefined as TextHelper | undefined
+    id: string = crypto.randomUUID()
     type: string
     shape: FlowchartShape
+    flowchart: Flowchart | null = null
+    children: FlowchartNode[] = []
+    parents: FlowchartNode[] = []
+    textBox: FlowchartNodeTextBox = { width: 0, height: 0, lines: [], lineHeight: 0 }
+    svgGroup: SVGElement = document.createElementNS("http://www.w3.org/2000/svg", "g")
+    
+    events: Array<{ name: string, callback: () => void }> = []
 
-    options = new Proxy<FlowchartNodeOptions>({ maxWidth: "auto", segments: 0, offsetPadding: 0 }, {
+    options = new Proxy<FlowchartNodeOptions>({ 
+        maxWidth: "auto",
+        segments: 0,
+        offsetPadding: 0
+    }, {
         set: (target, prop, value) => {
 
             // Type forcing
@@ -103,20 +120,9 @@ export class FlowchartNode {
         }
     })
 
-
-    id: string = crypto.randomUUID()
-    flowchart: Flowchart | null = null
-    children: FlowchartNode[] = []
-    parents: FlowchartNode[] = []
-    textBox: { width: number, height: number, lines: string[], lineHeight: number } = { width: 0, height: 0, lines: [], lineHeight: 0 }
-    svgGroup: SVGElement = document.createElementNS("http://www.w3.org/2000/svg", "g")
-    
-    events: Array<{ name: string, callback: () => void }> = []
-
     private _x = "0"
     private _y = "0"
-    
-    private _text: string = ""
+    private _text = ""
 
     init?(): void
 
