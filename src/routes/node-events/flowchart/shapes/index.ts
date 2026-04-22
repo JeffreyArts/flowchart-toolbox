@@ -162,12 +162,12 @@ export abstract class FlowchartShape {
     private setMouseOver() {
         this.node.state.mouseOver = this.mouseInsideShape()
 
-        if (this.node.state.mouseOver && !this.node.state.mouseEnter) {
-            this.node.state.mouseEnter = true
-            this.node.state.mouseLeave = false
-        } else if (!this.node.state.mouseOver && this.node.state.mouseEnter) {
-            this.node.state.mouseEnter = false
-            this.node.state.mouseLeave = true
+        if (this.node.state.mouseOver && !this.node.state.mouseEntered) {
+            this.node.state.mouseEntered = true
+            this.node.state.mouseLeft = false
+        } else if (!this.node.state.mouseOver && this.node.state.mouseEntered) {
+            this.node.state.mouseEntered = false
+            this.node.state.mouseLeft = true
         }
     }
 

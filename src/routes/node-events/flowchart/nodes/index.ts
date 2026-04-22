@@ -4,7 +4,7 @@ import FlowchartEdge from "../edges/index"
 import TextHelper from "../shapes/text-helper"
 import type FlowchartShape from "../shapes/index"
 
-export type FlowchartNodeEvent = "positionChange" | "segmentsChange" | "beforeTextChange" | "afterTextChange" | "mouseOver" | "mouseEnter" | "mouseLeave" | "show" | "hide"
+export type FlowchartNodeEvent = "positionChange" | "segmentsChange" | "beforeTextChange" | "afterTextChange" | "mouseOver" | "mouseEntered" | "mouseLeft" | "show" | "hide"
 export type FlowchartTypeMethod = (node: FlowchartNode) => FlowchartShape
 
 export type FlowchartNodeOptions = {
@@ -64,8 +64,10 @@ export class FlowchartNode {
 
     state = new Proxy<FlowchartNodeStates>({
         mouseOver: false,
+        mouseLeft: false,
+        mouseEntered: false,
         selected: false,
-        visible: false
+        visible: false,
     }, {
         set: (target, prop, value) => {
             (target as Record<string, any>)[prop as string] = value
@@ -76,20 +78,19 @@ export class FlowchartNode {
                 }
             }
 
-            if (prop === "mouseEnter") {
+            if (prop === "mouseEntered") {
                 if (value === true) {
-                    this.triggerEvent("mouseEnter")
+                    this.triggerEvent("mouseEntered")
                 }
             }
 
-            if (prop === "mouseLeave") {
+            if (prop === "mouseLeft") {
                 if (value === true) {
-                    this.triggerEvent("mouseLeave")
+                    this.triggerEvent("mouseLeft")
                 }
             }
 
             if (prop === "visible") {
-                console.log("Setting visible to", value)
                 this.changeVisibility()
                 if (value === true) {
                     this.triggerEvent("show")
