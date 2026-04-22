@@ -74,7 +74,6 @@ export class FlowchartNode {
             }
 
             if (prop === "class") { 
-                console.log("Updating class to", value)
                 this.updateSVGGroupClass() 
             }
             if (prop === "segments") { this.triggerEvent("segmentsChange") }

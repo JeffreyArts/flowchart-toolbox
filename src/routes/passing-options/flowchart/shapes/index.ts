@@ -35,7 +35,7 @@ export abstract class FlowchartShape {
         this.processOptions(options)
 
         document.addEventListener("mousemove", this.boundSetMouseOver)
-        node.addEventListener("positionChange", this.boundUpdatePosition)
+        node.addEventListener("positionChange", this.boundUpdate)
     }
     
     #init() {
@@ -70,8 +70,8 @@ export abstract class FlowchartShape {
             tspan.textContent = line
             textEl.appendChild(tspan)
         })
-        this.updatePosition()
-        this.updateShape()
+        
+        this.update()
     }
     
     processOptions(options?: Partial<FlowchartShapeOptions >) {
@@ -131,8 +131,12 @@ export abstract class FlowchartShape {
     //     this.svgEl.setAttribute("x", this.node.x + "px")
     //     this.svgEl.setAttribute("y", this.node.y + "px")
     // }
-    
-    boundUpdatePosition = this.updatePosition.bind(this)
+    private update = () => {
+        this.updatePosition()
+        this.updateShape()
+    }
+
+    boundUpdate = this.update.bind(this)
 
     updateStyle() {
         if (this.updateStyleDelay) {
