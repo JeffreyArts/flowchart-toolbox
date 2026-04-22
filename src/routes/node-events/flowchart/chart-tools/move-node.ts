@@ -37,7 +37,7 @@ export class MoveNodeTool extends FlowchartTool {
         let selectedNode = undefined as FlowchartNode | undefined
         this.flowchart.nodes.filter(node => {
             if (!node.shape) return false
-            if (!node.isSelected) return false
+            if (!node.state.selected) return false
             this.selectedNodesStartPos.push({ x: Number(node.x), y: Number(node.y), node: node })
             if (node.shape.containsPoint(this.flowchart.events.mousePos.x, this.flowchart.events.mousePos.y)) {
                 selectedNode = node
