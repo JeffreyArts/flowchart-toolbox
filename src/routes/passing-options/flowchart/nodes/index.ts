@@ -171,12 +171,8 @@ export class FlowchartNode {
         // First load options from FLOWCHART DEFAULTS
         if (this.flowchart?.options.nodes) {
             const nodeOptions = this.flowchart.options.nodes
-            console.log("nodeOptions", nodeOptions)
             for (const key in nodeOptions) {
                 const k = key as keyof FlowchartNodeOptions
-                if (k == "options") {
-
-                }
                 (this.options as Record<string, any>)[k] = nodeOptions[k]
             }
         }

@@ -257,7 +257,7 @@ export default defineComponent ({
                 let nodes = []
                 const startNode = new FlowchartNode("start", { text: "Flowchart", flowchart: this.flowchart, x: (nodeWidth*names.length) /2 - nodeWidth/2 , y: "50", options: { maxWidth: 320 }})
                 names.forEach((text, i) => {
-                    nodes.push(new FlowchartNode("process", { text, parent: startNode, x: nodeWidth * i, y: "180" }))
+                    nodes.push(new FlowchartNode("process", { text, parent: startNode, x: nodeWidth * i, y: "180", options: { maxWidth: nodeWidth, class: "node-"+text.toLowerCase() }}))
                 })
                 
                 const zoomTool = this.flowchart.getTool("zoom")
