@@ -1,5 +1,5 @@
 <template>
-    <div class="refactor-tools" @click="updateSelectedNodes">
+    <div class="refactor-tools" @click="updateSelectedNodes" @mousemove="updateSelectedNodes">
         <header class="title">
             <h1>Refactor Tools</h1>
         </header>
