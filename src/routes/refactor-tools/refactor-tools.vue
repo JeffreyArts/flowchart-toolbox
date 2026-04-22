@@ -399,10 +399,6 @@ export default defineComponent ({
         &.__isSelected {
             scale: 1.2;
         }
-        
-        &.__isHover {
-            outline: 4px solid #88ff88;
-        }
     }
 
     .flowchart-shape {

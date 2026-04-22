@@ -68,7 +68,7 @@ export class FlowchartNode {
 
     private _x = "0"
     private _y = "0"
-    // private _segments = 0
+    
     private _mouseOver: boolean = false
     private _isVisible: boolean = false
     private _text: string = ""
