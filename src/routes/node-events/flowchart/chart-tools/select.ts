@@ -86,13 +86,13 @@ export class SelectTool extends FlowchartTool {
             const withinY = (nodeY + nodeHeight / 2 >= Math.min(startY, currentY)) && (nodeY - nodeHeight / 2 <= Math.max(startY, currentY))
 
             if (withinX && withinY) {
-                if (!node.isSelected) {
-                    node.isSelected = true
+                if (!node.state.selected) {
+                    node.state.selected = true
                     this.selectedNodes.push(node)
                 }
             } else {
-                if (node.isSelected) {
-                    node.isSelected = false
+                if (node.state.selected) {
+                    node.state.selected = false
                     this.selectedNodes = this.selectedNodes.filter(n => n !== node)
                 }
             }
@@ -115,19 +115,19 @@ export class SelectTool extends FlowchartTool {
 
             if (e.shiftKey && this.options.multipleClick) {
                 // Toggle: if already selected, deselect and remove; otherwise select and add
-                if (clickedNode.isSelected) {
-                    clickedNode.isSelected = false
+                if (clickedNode.state.selected) {
+                    clickedNode.state.selected = false
                     this.selectedNodes = this.selectedNodes.filter(n => n !== clickedNode)
                 } else {
-                    clickedNode.isSelected = true
+                    clickedNode.state.selected = true
                     this.selectedNodes.push(clickedNode)
                 }
             } else {
                 // If clicking an already-selected node, don't clear yet —
                 // wait for mouseUp to decide (allows dragging multi-selection)
-                if (!clickedNode.isSelected) {
+                if (!clickedNode.state.selected) {
                     this.clearSelection()
-                    clickedNode.isSelected = true
+                    clickedNode.state.selected = true
                     this.selectedNodes.push(clickedNode)
                 }
             }
@@ -163,7 +163,7 @@ export class SelectTool extends FlowchartTool {
             // Plain click on an already-selected node (part of multi-selection):
             // now narrow selection to just this node
             this.clearSelection()
-            clickedNode.isSelected = true
+            clickedNode.state.selected = true
             this.selectedNodes.push(clickedNode)
         }
     }
@@ -171,7 +171,7 @@ export class SelectTool extends FlowchartTool {
     clearSelection() {
         this.selectedNodes.length = 0
         this.flowchart.nodes.forEach(node => {
-            node.isSelected = false
+            node.state.selected = false
         })
     }
 

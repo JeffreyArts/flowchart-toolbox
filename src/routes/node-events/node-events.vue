@@ -28,19 +28,32 @@
                         </div>
                         
                         <div class="option" v-if="selectedNode">
-                            <pre>
-                                {{ selectedNode.state }}
-                            </pre>
-                            <label for="options-node-visible">Node Visible</label>
-                            <span>
-                                <input type="radio" id="options-node-visible-v0" :value="false" v-model="selectedNode.state.visible" @change="updateSelectedNodes">
-                                <label for="options-node-visible-v0"> false </label>
-                            </span>
+                            <div class="two">
+                                <div>
+                                    <label for="options-node-visible">Node Visible</label>
+                                    <span>
+                                        <input type="radio" :id="`${selectedNode.id}-node-visible-v0`" :value="false" v-model="selectedNode.state.visible" @change="updateSelectedNodes">
+                                        <label :for="`${selectedNode.id}-node-visible-v0`"> false </label>
+                                    </span>
 
-                            <span>
-                                <input type="radio" id="options-node-visible-v1" :value="true" v-model="selectedNode.state.visible" @change="updateSelectedNodes">
-                                <label for="options-node-visible-v1"> true </label>
-                            </span>
+                                    <span>
+                                        <input type="radio" :id="`${selectedNode.id}-node-visible-v1`" :value="true" v-model="selectedNode.state.visible" @change="updateSelectedNodes">
+                                        <label :for="`${selectedNode.id}-node-visible-v1`"> true </label>
+                                    </span>
+                                </div>
+                                <div>
+                                    <label for="options-node-selected">Node Selected</label>
+                                    <span>
+                                        <input type="radio" :id="`${selectedNode.id}-node-selected-v0`" :value="false" v-model="selectedNode.state.selected" @change="updateSelectedNodes">
+                                        <label :for="`${selectedNode.id}-node-selected-v0`"> false </label>
+                                    </span>
+
+                                    <span>
+                                        <input type="radio" :id="`${selectedNode.id}-node-selected-v1`" :value="true" v-model="selectedNode.state.selected" @change="updateSelectedNodes">
+                                        <label :for="`${selectedNode.id}-node-selected-v1`"> true </label>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="option" v-if="selectedNode">
@@ -288,7 +301,7 @@ export default defineComponent ({
                 const selectTool = this.flowchart.getTool("select")
 
                 if (selectTool instanceof SelectTool && selectTool.onClick) {
-                    selectedNode.mouseOver = true
+                    selectedNode.state.mouseOver = true
                     selectTool.onClick(new MouseEvent("click"))
                 }
                 // this.setMouseEvents(this.selectedNode)
@@ -364,7 +377,7 @@ export default defineComponent ({
         },
         updateSelectedNodes() {
             if (!this.flowchart) return
-            this.selectedNodes = markRaw(this.flowchart.nodes.filter(n => n.isSelected))
+            this.selectedNodes = markRaw(this.flowchart.nodes.filter(n => n.state.selected))
         },
     }
 })

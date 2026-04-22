@@ -152,6 +152,11 @@ src: url("/src/assets/fonts/fixed-sys.otf");
     }
 }
 
+.two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
 
 @keyframes fadeIn {
     0% {

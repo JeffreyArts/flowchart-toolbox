@@ -109,7 +109,6 @@ export class FlowchartNode {
     children: FlowchartNode[] = []
     parents: FlowchartNode[] = []
     textBox: { width: number, height: number, lines: string[], lineHeight: number } = { width: 0, height: 0, lines: [], lineHeight: 0 }
-    // isSelected: boolean = false
     svgGroup: SVGElement = document.createElementNS("http://www.w3.org/2000/svg", "g")
     
     events: Array<{ name: string, callback: () => void }> = []
