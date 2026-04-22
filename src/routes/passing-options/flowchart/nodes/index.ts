@@ -11,6 +11,7 @@ export type FlowchartNodeOptions = {
     maxWidth: number | string  
     segments: number
     offsetPadding: number
+    class: ""
 }
 
 export type FlowchartNodeConstructOptions = {
@@ -20,6 +21,9 @@ export type FlowchartNodeConstructOptions = {
     x?: number | string
     y?: number | string
     options?: Partial<FlowchartNodeOptions>
+    event?: { name: FlowchartNodeEvent, handler: (node: FlowchartNode) => void }
+    events?: { name: FlowchartNodeEvent, handler: (node: FlowchartNode) => void }[]
+    class?: string | string[]
 }
 
 export type FlowchartNodeStates = {
@@ -52,15 +56,14 @@ export class FlowchartNode {
     options = new Proxy<FlowchartNodeOptions>({ 
         maxWidth: "auto",
         segments: 0,
-        offsetPadding: 0
+        offsetPadding: 0,
+        class: ""
     }, {
         set: (target, prop, value) => {
-
             // Type forcing
             if (prop === "offsetPadding") {
                 value = Number(value) || 0
             }
-
             (target as Record<string, any>)[prop as string] = value
     
             if (prop === "maxWidth") {
@@ -70,6 +73,10 @@ export class FlowchartNode {
                 this.updatePosition()
             }
 
+            if (prop === "class") { 
+                console.log("Updating class to", value)
+                this.updateSVGGroupClass() 
+            }
             if (prop === "segments") { this.triggerEvent("segmentsChange") }
             if (prop === "offsetPadding") {
                 this.updatePosition()
@@ -161,21 +168,48 @@ export class FlowchartNode {
         if (options.x) { this.setX(options.x) }
         if (options.y) { this.setY(options.y) }
 
-        // First load default options from flowchart
+        // First load options from FLOWCHART DEFAULTS
         if (this.flowchart?.options.nodes) {
             const nodeOptions = this.flowchart.options.nodes
+            console.log("nodeOptions", nodeOptions)
+            for (const key in nodeOptions) {
+                const k = key as keyof FlowchartNodeOptions
+                if (k == "options") {
+
+                }
+                (this.options as Record<string, any>)[k] = nodeOptions[k]
+            }
+        }
+        
+        // Then load options from the CONSTRUCTOR options
+        if (options.options) {
+            const nodeOptions = options.options
             for (const key in nodeOptions) {
                 const k = key as keyof FlowchartNodeOptions
                 (this.options as Record<string, any>)[k] = nodeOptions[k]
             }
         }
         
-        // Then load options from the constructor options
-        if (options.options) {
-            const nodeOptions = options.options
-            for (const key in nodeOptions) {
-                const k = key as keyof FlowchartNodeOptions
-                (this.options as Record<string, any>)[k] = nodeOptions[k]
+        // Add event listeners via options
+        if (options.events) {
+            if (Array.isArray(options.events)) {
+                options.events.forEach(e => {
+                    if (e.name && e.handler) {
+                        this.addEventListener(e.name, e.handler)
+                    } else {
+                        console.warn("Invalid event in options.events, must have name and handler", e)
+                    }
+                })
+            }
+        }
+
+        // Add single event listener via options
+        if (options.event) {
+            const e = options.event
+            if (e.name && e.handler) {
+                this.addEventListener(e.name, e.handler)
+            } else {
+                console.warn("Invalid event in options.event, must have name and handler", e)
             }
         }
 
@@ -186,17 +220,6 @@ export class FlowchartNode {
         //         this.svgGroup.classList.add(options.class)
         //     }
         // }
-
-        // if (typeof options.options.maxWidth != "undefined") {
-        //     this.maxWidth = options.maxWidth 
-        // }
-
-        // if (typeof options.segments === "number") {
-        //     this._segments = options.segments
-        // } else {
-        //     this._segments = this.flowchart?.options.nodes?.segments || 0
-        // }
-
     }
     
     #init() {
@@ -252,6 +275,19 @@ export class FlowchartNode {
         })
     }
 
+    private updateSVGGroupClass() {
+        const classOption = this.options.class
+        this.svgGroup.classList.forEach(c => {
+            if (c !== "flowchart-node") {
+                this.svgGroup.classList.remove(c)
+            }
+        })
+
+        if (classOption) {
+            this.svgGroup.classList.add(classOption)
+        }
+    }
+        
     private updateTextBox() {
         const textHelperOptions = {
             padding: "20px"
@@ -285,8 +321,8 @@ export class FlowchartNode {
 
     /** Visible **/
     private changeVisibility() {
-        const showEvent = this.events.find(e => {e.name === "show"})
-        const hideEvent = this.events.find(e => {e.name === "hide"})
+        const showEvent = this.events.find(e => e.name === "show")
+        const hideEvent = this.events.find(e => e.name === "hide")
 
         if (this.state.visible && !showEvent) {
             this.svgGroup.style.opacity = "1"

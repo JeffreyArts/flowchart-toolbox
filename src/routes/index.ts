@@ -16,6 +16,7 @@ import Segments from "./segments/segments.vue"
 import CodeRefactor1 from "./code-refactor-1/code-refactor-1.vue"
 import RefactorTools from "./refactor-tools/refactor-tools.vue"
 import NodeState from "./node-state/node-state.vue"
+import PassingOptions from "./passing-options/passing-options.vue"
 import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
 import Cytoscape from "./cytoscape.vue"
@@ -121,6 +122,11 @@ const routes = [
         path: "/node-state",
         name: "18) Node State",
         component: NodeState
+    },
+    {
+        path: "/passing-options",
+        name: "19) Passing options",
+        component: PassingOptions
     },
     {
         path: "/options-overview",
