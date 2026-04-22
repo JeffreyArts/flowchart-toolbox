@@ -4,7 +4,7 @@ import FlowchartEdge from "../edges/index"
 import TextHelper from "../shapes/text-helper"
 import type FlowchartShape from "../shapes/index"
 
-export type FlowchartNodeEvent = "positionChange" | "segmentsChange" | "beforeTextChange" | "afterTextChange" | "mouseOver" | "mouseEntered" | "mouseLeft" | "show" | "hide" | "dimensionChange"
+export type FlowchartNodeEventType = "positionChange" | "segmentsChange" | "beforeTextChange" | "afterTextChange" | "mouseOver" | "mouseEntered" | "mouseLeft" | "show" | "hide" | "dimensionChange"
 export type FlowchartTypeMethod = (node: FlowchartNode) => FlowchartShape
 
 export type FlowchartNodeOptions = {
@@ -14,6 +14,8 @@ export type FlowchartNodeOptions = {
     class: ""
 }
 
+export type FlowchartNodeEvent = { name: FlowchartNodeEventType, handler: (node: FlowchartNode) => void }
+
 export type FlowchartNodeConstructOptions = {
     parent?: FlowchartNode
     text?: string
@@ -21,8 +23,8 @@ export type FlowchartNodeConstructOptions = {
     x?: number | string
     y?: number | string
     options?: Partial<FlowchartNodeOptions>
-    event?: { name: FlowchartNodeEvent, handler: (node: FlowchartNode) => void }
-    events?: { name: FlowchartNodeEvent, handler: (node: FlowchartNode) => void }[]
+    event?: FlowchartNodeEvent
+    events?: FlowchartNodeEvent[]
     class?: string | string[]
 }
 
@@ -172,6 +174,27 @@ export class FlowchartNode {
             const nodeOptions = this.flowchart.options.nodes
             for (const key in nodeOptions) {
                 const k = key as keyof FlowchartNodeOptions
+
+                if (key === "events" || key === "event") {
+                    
+                    if (Array.isArray(nodeOptions[k])) {
+                        nodeOptions[k].forEach(event => {
+                            if (!event.name || !event.handler) {
+                                console.warn("Invalid event in flowchart.nodes.events, must have name and handler", event)
+                                return
+                            }
+                            this.addEventListener(event.name, event.handler)
+                        })
+                    } else if (typeof nodeOptions[k] === "object" && nodeOptions[k] !== null) {
+                        const event = nodeOptions[k] as FlowchartNodeEvent
+                        if (event.name && event.handler) {
+                            this.addEventListener(event.name, event.handler)
+                        } else {
+                            console.warn("Invalid event in options.event, must have name and handler", event)
+                        }
+                    }
+                    return
+                }
                 (this.options as Record<string, any>)[k] = nodeOptions[k]
             }
         }
@@ -328,19 +351,19 @@ export class FlowchartNode {
     }
     
     /** Event listeners */
-    addEventListener(eventName: FlowchartNodeEvent, callback: (node: FlowchartNode) => void) {
+    addEventListener(eventName: FlowchartNodeEventType, callback: (node: FlowchartNode) => void) {
         this.events.push({ name: eventName, callback })
     }
 
-    removeEventListener(eventName: FlowchartNodeEvent, callback: () => void) {
+    removeEventListener(eventName: FlowchartNodeEventType, callback: () => void) {
         this.events = this.events.filter(e => e.name !== eventName || e.callback !== callback)
     }
 
-    removeAllEventListeners(eventName: FlowchartNodeEvent) {
+    removeAllEventListeners(eventName: FlowchartNodeEventType) {
         this.events = this.events.filter(e => e.name !== eventName)
     }
 
-    private triggerEvent(eventName: FlowchartNodeEvent) {
+    private triggerEvent(eventName: FlowchartNodeEventType) {
         this.events.forEach(e => {
             if (e.name === eventName) {
                 e.callback(this)

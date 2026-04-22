@@ -233,8 +233,8 @@ export default defineComponent ({
     },  
     mounted() {
         if (this.$el && !this.flowchart) {
+            // Timeout is for giving some time for processing this.options
             setTimeout(() => {
-                
                 const flowchartOptions = {
                     edges: { 
                         type: this.options.edgeType,
@@ -248,6 +248,9 @@ export default defineComponent ({
                         maxWidth: this.options.nodeMaxWidth,
                         offsetPadding: this.options.nodeOffsetPadding,
                         class: "node-default",
+                        events: [
+                            { name: "show", handler: (node) => { gsap.to(node.svgGroup.style, { opacity: 1, delay: Math.random() })} }
+                        ]
                     }
                 }
 
@@ -259,6 +262,8 @@ export default defineComponent ({
                 names.forEach((text, i) => {
                     nodes.push(new FlowchartNode("process", { text, parent: startNode, x: nodeWidth * i, y: "180", options: { maxWidth: nodeWidth, class: "node-"+text.toLowerCase() }}))
                 })
+
+                new FlowchartNode("process", { text: "Shape", x: nodeWidth, y: 360, parent: nodes[1] })
                 
                 const zoomTool = this.flowchart.getTool("zoom")
                 setTimeout(() => {
