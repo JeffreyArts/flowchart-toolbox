@@ -26,16 +26,23 @@
                                 {{ selectedNode.type }}<br>
                             </span>
                         </div>
+                        
+                        <div class="option" v-if="selectedNode">
+                            <pre>
+                                {{ selectedNode.state }}
+                            </pre>
+                            <label for="options-node-visible">Node Visible</label>
+                            <span>
+                                <input type="radio" id="options-node-visible-v0" :value="false" v-model="selectedNode.state.visible" @change="updateSelectedNodes">
+                                <label for="options-node-visible-v0"> false </label>
+                            </span>
 
-                        <div class="option">
-                            <label for="changeNode">Verander type node</label>
-                            <select name="changeNode" id="" v-model="selectedNode.type" @change="changeSelectedNode(selectedNode)">
-                                <option value="start">Start</option>
-                                <option value="end">End</option>
-                                <option value="process">Process</option>
-                                <option value="decision">Decision</option>
-                            </select>
+                            <span>
+                                <input type="radio" id="options-node-visible-v1" :value="true" v-model="selectedNode.state.visible" @change="updateSelectedNodes">
+                                <label for="options-node-visible-v1"> true </label>
+                            </span>
                         </div>
+                        
                         <div class="option" v-if="selectedNode">
                             <label for="node-text">Text</label>
                             <input type="text" id="node-text" v-model="selectedNode.text">

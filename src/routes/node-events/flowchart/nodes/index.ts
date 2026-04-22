@@ -4,7 +4,7 @@ import FlowchartEdge from "../edges/index"
 import TextHelper from "../shapes/text-helper"
 import type FlowchartShape from "../shapes/index"
 
-export type FlowchartNodeEvent = "positionChange" | "segmentsChange" | "beforeTextChange" | "afterTextChange" | "mouseOver" | "mouseEnter" | "mouseLeave"
+export type FlowchartNodeEvent = "positionChange" | "segmentsChange" | "beforeTextChange" | "afterTextChange" | "mouseOver" | "mouseEnter" | "mouseLeave" | "show" | "hide"
 export type FlowchartTypeMethod = (node: FlowchartNode) => FlowchartShape
 
 export type FlowchartNodeOptions = {
@@ -88,6 +88,16 @@ export class FlowchartNode {
                 }
             }
 
+            if (prop === "visible") {
+                console.log("Setting visible to", value)
+                this.changeVisibility()
+                if (value === true) {
+                    this.triggerEvent("show")
+                } 
+                if (value === false) {
+                    this.triggerEvent("hide")
+                }
+            }
             return true
         }
     })
@@ -106,7 +116,6 @@ export class FlowchartNode {
     private _x = "0"
     private _y = "0"
     
-    private _isVisible: boolean = false
     private _text: string = ""
 
     init?(): void
@@ -269,21 +278,15 @@ export class FlowchartNode {
 
 
     /** Visible **/
+    private changeVisibility() {
+        const showEvent = this.events.find(e => {e.name === "show"})
+        const hideEvent = this.events.find(e => {e.name === "hide"})
 
-    set isVisible(value: boolean) {
-        this._isVisible = value
-
-        if (!this.svgGroup) return
-
-        if (value) {
+        if (this.state.visible && !showEvent) {
             this.svgGroup.style.opacity = "1"
-        } else {
+        } else if (!hideEvent) {
             this.svgGroup.style.opacity = "0"
         }
-    }
-
-    get isVisible() {
-        return this._isVisible
     }
     
     /** Event listeners */
@@ -315,7 +318,7 @@ export class FlowchartNode {
         if (first) {
             return setTimeout(() => {
                 this.updatePosition(false)
-                this.isVisible = true
+                this.state.visible = true
             }, 0)
         } else {
             this.triggerEvent("positionChange")
