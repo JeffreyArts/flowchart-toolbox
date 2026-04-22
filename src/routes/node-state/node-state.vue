@@ -252,9 +252,15 @@ export default defineComponent ({
 
                 this.flowchart = markRaw(new Joffa("#segments-canvas", flowchartOptions))
                 const mainNode = new FlowchartNode("decision", { text: "Main node", flowchart: this.flowchart, x: "50%", y: "50%", class: "main-node", options: { maxWidth: 320 }})
+                
+                //  Manually trigger show/hide event to demonstrate transitions
+                mainNode.addEventListener("show", (node) => { gsap.to(node.svgGroup.style, { opacity: 1, duration: 0.64 }) })
+                mainNode.addEventListener("hide", (node) => { gsap.to(node.svgGroup.style, { opacity: 0, duration: 0.16 }) })
                 const nodes = 2
                 for (let i = 0; i < nodes; i++) {
                     const processNode = new FlowchartNode("process", { text: `Node ${i+1}`, parent: mainNode, x: `${i * 100/nodes + 100/nodes/2}%`, y: "10%", options: { maxWidth: 200 }})
+                    processNode.addEventListener("show", (node) => { gsap.to(node.svgGroup.style, { opacity: 1, duration: 0.64 }) })
+                    processNode.addEventListener("hide", (node) => { gsap.to(node.svgGroup.style, { opacity: 0, duration: 0.16 }) })
                 }
                 
                 const selectTool = this.flowchart.getTool("select")

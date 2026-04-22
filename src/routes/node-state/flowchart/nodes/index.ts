@@ -47,7 +47,7 @@ export class FlowchartNode {
     textBox: FlowchartNodeTextBox = { width: 0, height: 0, lines: [], lineHeight: 0 }
     svgGroup: SVGElement = document.createElementNS("http://www.w3.org/2000/svg", "g")
     
-    events: Array<{ name: string, callback: () => void }> = []
+    events: Array<{ name: string, callback: (node: FlowchartNode) => void }> = []
 
     options = new Proxy<FlowchartNodeOptions>({ 
         maxWidth: "auto",
@@ -285,8 +285,8 @@ export class FlowchartNode {
 
     /** Visible **/
     private changeVisibility() {
-        const showEvent = this.events.find(e => {e.name === "show"})
-        const hideEvent = this.events.find(e => {e.name === "hide"})
+        const showEvent = this.events.find(e => e.name === "show")
+        const hideEvent = this.events.find(e => e.name === "hide")
 
         if (this.state.visible && !showEvent) {
             this.svgGroup.style.opacity = "1"
@@ -296,7 +296,7 @@ export class FlowchartNode {
     }
     
     /** Event listeners */
-    addEventListener(eventName: FlowchartNodeEvent, callback: () => void) {
+    addEventListener(eventName: FlowchartNodeEvent, callback: (node: FlowchartNode) => void) {
         this.events.push({ name: eventName, callback })
     }
 
@@ -311,8 +311,7 @@ export class FlowchartNode {
     private triggerEvent(eventName: FlowchartNodeEvent) {
         this.events.forEach(e => {
             if (e.name === eventName) {
-                console.log(`Triggering "${eventName}" for node "${this.id}"`)
-                e.callback()
+                e.callback(this)
             }
         })
     }
