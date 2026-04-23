@@ -9,22 +9,9 @@ interface FlowchartDiamondShapeOptions extends FlowchartShapeOptions {
 
 export class DiamondShape extends FlowchartShape {
     name = "diamond"
-    textEl = undefined as SVGTextElement | undefined
 
     constructor(node: FlowchartNode, options?: Partial<FlowchartDiamondShapeOptions>) {
         super( node, options )
-            
-        this.textEl = this.createTextEl()
-        this.updateText()
-            
-        this.node.addEventListener("afterTextChange", this.boundUpdateText)
-    }
-
-    boundUpdateText = this.updateText.bind(this)
-
-    processOptions(options?: Partial<FlowchartDiamondShapeOptions>) {
-        if (!options) return
-        super.processOptions(options)
     }
 
     containsPoint(mouseX: number, mouseY: number) {
@@ -95,7 +82,6 @@ export class DiamondShape extends FlowchartShape {
     // Destroy
     destroy(): void {
         super.destroy()
-        this.node.removeEventListener("afterTextChange", this.boundUpdateText)
         if (this.svgEl) this.svgEl.remove()
     }
 }

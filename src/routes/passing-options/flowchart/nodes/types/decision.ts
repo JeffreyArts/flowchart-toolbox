@@ -8,6 +8,7 @@ export const DecisionNode = (node: FlowchartNode) => {
     } else {
         maxWidth = node.options.maxWidth
     }
+    
     return new DiamondShape(node, { 
         class: "decision-node",
         style: {

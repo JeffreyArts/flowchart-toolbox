@@ -33,9 +33,13 @@ export abstract class FlowchartShape {
         this.addSvgEl()
         this.updateStyle(options?.style)
 
+        this.textEl = this.createTextEl()
+        this.updateText()
+        
         document.addEventListener("mousemove", this.boundSetMouseOver)
         node.addEventListener("positionChange", this.boundUpdatePosition)
         node.addEventListener("dimensionChange", this.boundUpdateShape)
+        node.addEventListener("afterTextChange", this.boundUpdateText)
     }
     
     #init() {
@@ -121,9 +125,6 @@ export abstract class FlowchartShape {
     
 
     /** Position **/
-    boundUpdateShape = this.updateShape.bind(this)
-    boundUpdatePosition = this.updatePosition.bind(this)
-
     updateStyle(style?: Partial<CSSStyleDeclaration>) {
         if (!style) return
         if (!this.svgEl) return
@@ -162,8 +163,6 @@ export abstract class FlowchartShape {
         }
     }
 
-    boundSetMouseOver = this.setMouseOver.bind(this)
-
     getBorderDistance(targetPosition: { x: number, y: number }): number {
         const dx = targetPosition.x - this.node.x
         const dy = targetPosition.y - this.node.y
@@ -185,6 +184,11 @@ export abstract class FlowchartShape {
 
         return (low + high) / 2
     }
+
+    boundUpdateShape        = this.updateShape.bind(this)
+    boundUpdatePosition     = this.updatePosition.bind(this)
+    boundSetMouseOver       = this.setMouseOver.bind(this)
+    boundUpdateText         = this.updateText.bind(this)
 
     destroy() {
         if (this.node) {

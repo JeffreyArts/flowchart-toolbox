@@ -6,22 +6,9 @@ export interface RectangleShapeOptions extends FlowchartShapeOptions {
 
 export class RectangleShape extends FlowchartShape {
     name = "rectangle"
-    textEl = undefined as SVGTextElement | undefined
     
     constructor(node: FlowchartNode, options?: Partial<RectangleShapeOptions>) {
         super( node, options )
-        
-        this.textEl = this.createTextEl()
-        this.updateText()
-        
-        this.node.addEventListener("afterTextChange", this.boundUpdateText)
-    }
-
-    boundUpdateText = this.updateText.bind(this)
-
-    processOptions(options?: Partial<RectangleShapeOptions>) {
-        if (!options) return
-        super.processOptions(options)
     }
 
     containsPoint(px: number, py: number): boolean {
@@ -75,7 +62,6 @@ export class RectangleShape extends FlowchartShape {
     // Destroy
     destroy(): void {
         super.destroy()
-        this.node.removeEventListener("afterTextChange", this.boundUpdateText)
         if (this.svgEl) this.svgEl.remove()
     }
 }

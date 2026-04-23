@@ -248,7 +248,13 @@ export default defineComponent ({
                         maxWidth: this.options.nodeMaxWidth,
                         offsetPadding: this.options.nodeOffsetPadding,
                         class: "node-default",
-                        shape: { class: "🙈",style: { "stroke-dasharray": "1px 2px" }},
+                        shape: { style: { stroke:"lime" }},
+                        text: {
+                            style: {
+                                fontSize: "24px",
+                                fontFamily: "FixedSys"
+                            }
+                        },
                         events: [
                             { name: "show", handler: (node) => { gsap.to(node.svgGroup.style, { opacity: 1, delay: Math.random() })} }
                         ]
@@ -259,12 +265,21 @@ export default defineComponent ({
                 let names = ["Edges", "Nodes", "Tools"]
                 let nodeWidth = 200
                 let nodes = []
-                const startNode = new FlowchartNode("start", { shape: { class: "💀" }, text: "Flowchart", flowchart: this.flowchart, x: (nodeWidth*names.length) /2 - nodeWidth/2 , y: "50", options: { maxWidth: 320 }})
-                names.forEach((text, i) => {
-                    nodes.push(new FlowchartNode("process", { text, parent: startNode, x: nodeWidth * i, y: "180", options: { maxWidth: nodeWidth, class: "node-"+text.toLowerCase() }}))
+                const startNode = new FlowchartNode("start", {
+                    shape: { style: { stroke:"lime" }},
+                    text: "Flowchart",
+                    flowchart: this.flowchart,
+                    x: (nodeWidth*names.length) /2 - nodeWidth/2 ,
+                    y: "50",
+                    options: { maxWidth: 480 }
                 })
 
-                new FlowchartNode("process", { text: "Shape", x: nodeWidth, y: 360, parent: nodes[1] })
+                names.forEach((text, i) => {
+                    nodes.push(new FlowchartNode("process", { text: { value: text, style: { fontSize: "18px", fill: "#333" }, class: "🐛" }, shape: { style: { strokeWidth: "2px"  }}, parent: startNode, x: nodeWidth * i, y: "180", options: { maxWidth: nodeWidth, class: "node-"+text.toLowerCase() }}))
+                })
+
+                new FlowchartNode("process", { text: { value: "Shape", style: { fontSize: "16px", fill: "#777" }}, shape: { style: { strokeWidth: "1px"  }}, x: nodeWidth/2, y: 360, parent: nodes[1] })
+                new FlowchartNode("process", { text: { value: "Text", style: { fontSize: "16px", fill: "#777" }}, shape: { style: { strokeWidth: "1px"  }}, x: nodeWidth*1.5, y: 360, parent: nodes[1] })
                 
                 const zoomTool = this.flowchart.getTool("zoom")
                 setTimeout(() => {

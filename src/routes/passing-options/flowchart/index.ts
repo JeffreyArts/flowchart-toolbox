@@ -367,8 +367,6 @@ export class Flowchart {
         this.edges = []
         this.chart.remove()
 
-        // this.registered.tools.forEach(t => t.object ?.destroy())
-
         this.registered.edges = []
         this.registered.nodes = []
         this.registered.tools = []

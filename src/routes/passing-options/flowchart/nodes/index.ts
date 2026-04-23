@@ -15,6 +15,10 @@ export type FlowchartNodeOptions = {
     shape?: {
         style: Partial<CSSStyleDeclaration>
         class: string | string[]
+    },
+    text?: {
+        style: Partial<CSSStyleDeclaration>
+        class: string | string[]
     }
 }
 
@@ -22,7 +26,6 @@ export type FlowchartNodeEvent = { name: FlowchartNodeEventType, handler: (node:
 
 export type FlowchartNodeConstructOptions = {
     parent?: FlowchartNode
-    text?: string
     flowchart?: Flowchart
     x?: number | string
     y?: number | string
@@ -34,6 +37,11 @@ export type FlowchartNodeConstructOptions = {
         style?: Partial<CSSStyleDeclaration>
         class?: string | string[]
     }
+    text?: {
+        style?: Partial<CSSStyleDeclaration>
+        class?: string | string[]
+        value?: string
+    } | string
 }
 
 export type FlowchartNodeStates = {
@@ -48,6 +56,8 @@ export type FlowchartNodeTextBox = {
     height: number
     lines: string[]
     lineHeight: number
+    style?: Partial<CSSStyleDeclaration>
+    class?: string
 }
 
 export class FlowchartNode {
@@ -58,7 +68,7 @@ export class FlowchartNode {
     flowchart: Flowchart | null = null
     children: FlowchartNode[] = []
     parents: FlowchartNode[] = []
-    textBox: FlowchartNodeTextBox = { width: 0, height: 0, lines: [], lineHeight: 0 }
+    textBox: FlowchartNodeTextBox = { width: 0, height: 0, lines: [], lineHeight: 0, class: "", style: {}}
     svgGroup: SVGElement = document.createElementNS("http://www.w3.org/2000/svg", "g")
     
     events: Array<{ name: string, callback: (node: FlowchartNode) => void }> = []
@@ -72,8 +82,9 @@ export class FlowchartNode {
         set: (target, prop, value) => {
             // Type forcing
             if (prop === "offsetPadding") {
-                value = Number(value) || 0
+                value = parseFloat(value) || 0
             }
+
             (target as Record<string, any>)[prop as string] = value
     
             if (prop === "maxWidth") {
@@ -83,13 +94,9 @@ export class FlowchartNode {
                 this.updatePosition()
             }
 
-            if (prop === "class") { 
-                this.updateSVGGroupClass() 
-            }
+            if (prop === "class") { this.updateSVGGroupClass() }
             if (prop === "segments") { this.triggerEvent("segmentsChange") }
-            if (prop === "offsetPadding") {
-                this.updatePosition()
-            }
+            if (prop === "offsetPadding") { this.updatePosition() }
 
             return true
         }
@@ -161,17 +168,76 @@ export class FlowchartNode {
         this.type = type
         this.shape = matchedType.shape(this)
         this.parseShapeOptions(options)
+        this.parseTextOptions(options)
 
         if (typeof options.text === "string") {
             this.text = options.text
+        } else if (typeof options.text === "object" && typeof options.text.value === "string") {
+            this.text = options.text.value
         }
-            
+
         this.flowchart.addNode(this)
         this.updatePosition()
     }
 
+    parseTextOptions(options: Partial<FlowchartNodeConstructOptions>) {
+        const flowchartTextOptions = this.flowchart?.options.nodes?.text
+        if (flowchartTextOptions) {
+            if (flowchartTextOptions.style) {
+                this.textBox.style = { ...this.textBox.style, ...flowchartTextOptions.style }
+                
+                for (const key in flowchartTextOptions.style) {
+                    const value = flowchartTextOptions.style[key] || ""
+                    const cssKey = key.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase() // camelCase to kebab-case
+                    
+
+                    if (this.shape.textEl) {
+                        this.shape.textEl.style.setProperty(cssKey, value)
+                    }
+                }
+            }
+
+            if (flowchartTextOptions.class && this.shape.textEl) {
+                if (Array.isArray(flowchartTextOptions.class)) {
+                    flowchartTextOptions.class.forEach(c => {
+                        if (!this.shape.textEl) return
+                        this.shape.textEl.classList.add(c)
+                        this.textBox.class += " " + c            
+                    })
+                } else {
+                    this.textBox.class += " " + flowchartTextOptions.class            
+                    this.shape.textEl.classList.add(flowchartTextOptions.class)
+                }
+            }
+        }
+
+
+        if (typeof options.text === "object") {
+            if (options.text.style) {
+                for (const key in options.text.style) {
+                    const value = options.text.style[key] || ""
+                    const cssKey = key.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase() // camelCase to kebab-case
+                    
+                    if (this.shape.textEl) {
+                        this.shape.textEl.style.setProperty(cssKey, value)
+                    }
+                }
+            }
+            
+            if (options.text.class && this.shape.textEl) {
+                if (Array.isArray(options.text.class)) {
+                    options.text.class.forEach(c => {
+                        if (!this.shape.textEl) return
+                        this.shape.textEl.classList.add(c)
+                    })
+                } else {
+                    this.shape.textEl.classList.add(options.text.class)
+                }
+            }
+        }
+    }
+
     parseShapeOptions(options: Partial<FlowchartNodeConstructOptions>) {
-        
         const flowchartShapeOptions = this.flowchart?.options.nodes?.shape
         if (flowchartShapeOptions) {
             if (flowchartShapeOptions.style) {
@@ -287,14 +353,6 @@ export class FlowchartNode {
                 console.warn("Invalid event in options.event, must have name and handler", e)
             }
         }
-
-        // if (options.class) {
-        //     if (Array.isArray(options.class)) {
-        //         this.svgGroup.classList.add(...options.class)
-        //     } else {
-        //         this.svgGroup.classList.add(options.class)
-        //     }
-        // }
     }
     
     #init() {
@@ -364,17 +422,18 @@ export class FlowchartNode {
     }
         
     private updateTextBox() {
-        const textHelperOptions = {
-            padding: "20px"
+        const textHelperStyle = {
+            padding: "20px",
+            ...this.textBox.style
         } as Partial<CSSStyleDeclaration> 
         
         if (typeof this.options.maxWidth != "undefined") {
             if (typeof this.options.maxWidth === "number") {
-                textHelperOptions["maxWidth"] = this.options.maxWidth + "px"
+                textHelperStyle["maxWidth"] = this.options.maxWidth + "px"
             } else if (!isNaN(Number(this.options.maxWidth))) {
-                textHelperOptions["maxWidth"] = this.options.maxWidth + "px"
+                textHelperStyle["maxWidth"] = this.options.maxWidth + "px"
             } else {
-                textHelperOptions["maxWidth"] = this.options.maxWidth
+                textHelperStyle["maxWidth"] = this.options.maxWidth
             }
         }
         
@@ -387,8 +446,8 @@ export class FlowchartNode {
             return
         }
 
-        const textHelper = new TextHelper(this._text, this.shape, textHelperOptions)
-        this.textBox = textHelper.measure()
+        const textHelper = new TextHelper(this._text, this.shape, textHelperStyle)
+        this.textBox = { ...this.textBox, ...textHelper.measure() }
         textHelper.destroy()
         this.prevTextHelper = textHelper
         this.triggerEvent("dimensionChange")

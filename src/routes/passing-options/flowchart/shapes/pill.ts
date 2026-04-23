@@ -9,27 +9,14 @@ interface FlowchartPillShapeOptions extends FlowchartShapeOptions {
 
 export class PillShape extends FlowchartShape {
     name = "pill"
-    textEl = undefined as SVGTextElement | undefined
 
     constructor(node: FlowchartNode, options?: Partial<FlowchartPillShapeOptions>) {
         super( node, options )
-            
-        this.textEl = this.createTextEl()
-        this.updateText()
-            
-        this.node.addEventListener("afterTextChange", this.boundUpdateText)
     }
-
-    boundUpdateText = this.updateText.bind(this)
 
     private get r()  { return this.height / 2 }
     private get lx() { return this.node.x - this.width / 2 + this.r }  // middelpunt linker cirkel
     private get rx() { return this.node.x + this.width / 2 - this.r }  // middelpunt rechter cirkel
-
-    processOptions(options?: Partial<FlowchartPillShapeOptions>) {
-        if (!options) return
-        super.processOptions(options)
-    }
 
     containsPoint(mouseX: number, mouseY: number) {
         const { r, lx, rx } = this
@@ -97,7 +84,6 @@ export class PillShape extends FlowchartShape {
     // Destroy
     destroy(): void {
         super.destroy()
-        this.node.removeEventListener("afterTextChange", this.boundUpdateText)
         if (this.svgEl) this.svgEl.remove()
     }
 }
