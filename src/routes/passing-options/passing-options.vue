@@ -15,7 +15,7 @@
 
         <aside class="sidebar">
             <div class="options">
-                <div class="option-group" name="Selected node" >
+                <div class="option-group" name="Selected node(s)" >
                     <div v-for="selectedNode in selectedNodes" :key="selectedNode.id">
                         <div class="option">
                             <span>
