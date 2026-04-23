@@ -12,7 +12,7 @@ export abstract class FlowchartShape {
     abstract createSvgEl(): SVGElement
     abstract updatePosition(): void
     abstract updateShape(): void
-    abstract containsPoint(x: number, y: number): boolean
+    abstract containsPoint(point: { x: number, y: number }, offset?: number): boolean
 
     id: string = crypto.randomUUID()
     node: FlowchartNode
@@ -141,13 +141,12 @@ export abstract class FlowchartShape {
         if (!flowchart || !flowchart.chart) {
             return false
         }
-        const { x,y } = flowchart.events.mousePos
 
         if (!this.node.shape) {
             throw new Error("Shape is not defined for this node")
         }
 
-        return this.node.shape.containsPoint(x, y)
+        return this.node.shape.containsPoint(flowchart.events.mousePos)
     }
 
     /** Shape */
@@ -175,7 +174,7 @@ export abstract class FlowchartShape {
         
         for (let i = 0; i < 16; i++) {
             const mid = (low + high) / 2
-            if (this.containsPoint(this.node.x + nx * mid, this.node.y + ny * mid)) {
+            if (this.containsPoint({ x: this.node.x + nx * mid, y: this.node.y + ny * mid })) {
                 low = mid
             } else {
                 high = mid

@@ -18,14 +18,14 @@ export class PillShape extends FlowchartShape {
     private get lx() { return this.node.x - this.width / 2 + this.r }  // middelpunt linker cirkel
     private get rx() { return this.node.x + this.width / 2 - this.r }  // middelpunt rechter cirkel
 
-    containsPoint(mouseX: number, mouseY: number) {
+    containsPoint(point: { x: number, y: number }, offset = 0): boolean {
         const { r, lx, rx } = this
         const y = this.node.y
 
-        // Get distance between mouse and each circle center
-        const distToRx = Math.hypot(mouseX - rx, mouseY - y)
-        const distToLx = Math.hypot(mouseX - lx, mouseY - y)
-        return ( distToRx <= r || distToLx <= r || (mouseX >= lx && mouseX <= rx && Math.abs(mouseY - y) <= r))
+        // Get distance between point and each circle center
+        const distToRx = Math.hypot(point.x - rx - offset, point.y - y - offset)
+        const distToLx = Math.hypot(point.x - lx - offset, point.y - y - offset)
+        return ( distToRx <= r || distToLx <= r || (point.x >= lx && point.x <= rx && Math.abs(point.y - y - offset) <= r))
     }
 
     // Create 

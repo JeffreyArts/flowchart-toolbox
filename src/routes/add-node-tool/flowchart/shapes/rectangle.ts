@@ -11,14 +11,14 @@ export class RectangleShape extends FlowchartShape {
         super( node, options )
     }
 
-    containsPoint(px: number, py: number): boolean {
+    containsPoint(point: { x: number, y: number }, offset = 0): boolean {
 
-        const x1 = this.node.x - this.width / 2
-        const y1 = this.node.y - this.height / 2
-        const x2 = this.node.x + this.width / 2
-        const y2 = this.node.y + this.height / 2
+        const x1 = this.node.x - this.width / 2 + offset
+        const y1 = this.node.y - this.height / 2 + offset
+        const x2 = this.node.x + this.width / 2 - offset
+        const y2 = this.node.y + this.height / 2 - offset
         
-        return px >= x1 && px <= x2 && py >= y1 && py <= y2
+        return point.x >= x1 && point.x <= x2 && point.y >= y1 && point.y <= y2
     }
     
     // Create 

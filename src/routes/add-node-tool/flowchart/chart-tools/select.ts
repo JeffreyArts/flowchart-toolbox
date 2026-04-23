@@ -33,8 +33,7 @@ export class SelectTool extends FlowchartTool {
 
     // Extract the repeated hit-test
     private findNodeAtMouse() {
-        const { x, y } = this.flowchart.events.mousePos
-        return this.flowchart.nodes.find(node => node.shape.containsPoint(x, y))
+        return this.flowchart.nodes.find(node => node.shape.containsPoint(this.flowchart.events.mousePos))
     }
 
     private createSelectionBox = (fec: FlowchartEventContext) => {
