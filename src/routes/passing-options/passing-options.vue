@@ -248,6 +248,7 @@ export default defineComponent ({
                         maxWidth: this.options.nodeMaxWidth,
                         offsetPadding: this.options.nodeOffsetPadding,
                         class: "node-default",
+                        shape: { class: "🙈",style: { "stroke-dasharray": "1px 2px" }},
                         events: [
                             { name: "show", handler: (node) => { gsap.to(node.svgGroup.style, { opacity: 1, delay: Math.random() })} }
                         ]
@@ -258,7 +259,7 @@ export default defineComponent ({
                 let names = ["Edges", "Nodes", "Tools"]
                 let nodeWidth = 200
                 let nodes = []
-                const startNode = new FlowchartNode("start", { text: "Flowchart", flowchart: this.flowchart, x: (nodeWidth*names.length) /2 - nodeWidth/2 , y: "50", options: { maxWidth: 320 }})
+                const startNode = new FlowchartNode("start", { shape: { class: "💀" }, text: "Flowchart", flowchart: this.flowchart, x: (nodeWidth*names.length) /2 - nodeWidth/2 , y: "50", options: { maxWidth: 320 }})
                 names.forEach((text, i) => {
                     nodes.push(new FlowchartNode("process", { text, parent: startNode, x: nodeWidth * i, y: "180", options: { maxWidth: nodeWidth, class: "node-"+text.toLowerCase() }}))
                 })

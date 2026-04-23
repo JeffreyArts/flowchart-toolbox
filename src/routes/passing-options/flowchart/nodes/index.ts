@@ -12,6 +12,10 @@ export type FlowchartNodeOptions = {
     segments: number
     offsetPadding: number
     class: ""
+    shape?: {
+        style: Partial<CSSStyleDeclaration>
+        class: string | string[]
+    }
 }
 
 export type FlowchartNodeEvent = { name: FlowchartNodeEventType, handler: (node: FlowchartNode) => void }
@@ -26,6 +30,10 @@ export type FlowchartNodeConstructOptions = {
     event?: FlowchartNodeEvent
     events?: FlowchartNodeEvent[]
     class?: string | string[]
+    shape?: {
+        style?: Partial<CSSStyleDeclaration>
+        class?: string | string[]
+    }
 }
 
 export type FlowchartNodeStates = {
@@ -152,7 +160,8 @@ export class FlowchartNode {
             
         this.type = type
         this.shape = matchedType.shape(this)
-            
+        this.parseShapeOptions(options)
+
         if (typeof options.text === "string") {
             this.text = options.text
         }
@@ -161,44 +170,91 @@ export class FlowchartNode {
         this.updatePosition()
     }
 
+    parseShapeOptions(options: Partial<FlowchartNodeConstructOptions>) {
+        
+        const flowchartShapeOptions = this.flowchart?.options.nodes?.shape
+        if (flowchartShapeOptions) {
+            if (flowchartShapeOptions.style) {
+                for (const key in flowchartShapeOptions.style) {
+                    const value = flowchartShapeOptions.style[key] || ""
+                    const cssKey = key.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase() // camelCase to kebab-case
+                    
+                    if (this.shape) {
+                        this.shape.style.setProperty(cssKey, value)
+                    }
+                }
+            }
+
+            if (flowchartShapeOptions.class) {
+                if (Array.isArray(flowchartShapeOptions.class)) {
+                    flowchartShapeOptions.class.forEach(c => this.shape.svgEl.classList.add(c))
+                } else {
+                    this.shape.svgEl.classList.add(flowchartShapeOptions.class)
+                }
+            }
+        }
+        
+        if (options.shape) {
+            if (options.shape.style) {
+                for (const key in options.shape.style) {
+                    const value = options.shape.style[key] || ""
+                    const cssKey = key.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase() // camelCase to kebab-case
+                    
+                    if (this.shape) {
+                        this.shape.style.setProperty(cssKey, value)
+                    }
+                }
+            }
+            
+            if (options.shape.class) {
+                if (Array.isArray(options.shape.class)) {
+                    options.shape.class.forEach(c => this.shape.svgEl.classList.add(c))
+                } else {
+                    this.shape.svgEl.classList.add(options.shape.class)
+                }
+            }
+        }
+    }
+
     parseOptions(options: Partial<FlowchartNodeConstructOptions>) {
         if (!options) return
-
+        
         if (options.flowchart) { this.flowchart = options.flowchart}
         if (options.parent) { this.addParent(options.parent) }
         if (options.x) { this.setX(options.x) }
         if (options.y) { this.setY(options.y) }
-
+        
+        
         // First load options from FLOWCHART DEFAULTS
-        if (this.flowchart?.options.nodes) {
-            const nodeOptions = this.flowchart.options.nodes
-            for (const key in nodeOptions) {
+        const flowchartNodeOptions = this.flowchart?.options.nodes
+        if (flowchartNodeOptions) {
+            for (const key in flowchartNodeOptions) {
                 const k = key as keyof FlowchartNodeOptions
 
                 if (key === "events" || key === "event") {
                     
-                    if (Array.isArray(nodeOptions[k])) {
-                        nodeOptions[k].forEach(event => {
+                    if (Array.isArray(flowchartNodeOptions[k])) {
+                        flowchartNodeOptions[k].forEach(event => {
                             if (!event.name || !event.handler) {
                                 console.warn("Invalid event in flowchart.nodes.events, must have name and handler", event)
                                 return
                             }
                             this.addEventListener(event.name, event.handler)
                         })
-                    } else if (typeof nodeOptions[k] === "object" && nodeOptions[k] !== null) {
-                        const event = nodeOptions[k] as FlowchartNodeEvent
+                    } else if (typeof flowchartNodeOptions[k] === "object" && flowchartNodeOptions[k] !== null) {
+                        const event = flowchartNodeOptions[k] as FlowchartNodeEvent
                         if (event.name && event.handler) {
                             this.addEventListener(event.name, event.handler)
                         } else {
                             console.warn("Invalid event in options.event, must have name and handler", event)
                         }
                     }
-                    return
+                    break
                 }
-                (this.options as Record<string, any>)[k] = nodeOptions[k]
+                (this.options as Record<string, any>)[k] = flowchartNodeOptions[k]
             }
         }
-        
+
         // Then load options from the CONSTRUCTOR options
         if (options.options) {
             const nodeOptions = options.options
@@ -208,6 +264,7 @@ export class FlowchartNode {
             }
         }
         
+
         // Add event listeners via options
         if (options.events) {
             if (Array.isArray(options.events)) {

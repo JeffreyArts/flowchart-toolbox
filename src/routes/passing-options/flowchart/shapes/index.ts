@@ -17,7 +17,6 @@ export abstract class FlowchartShape {
     id: string = crypto.randomUUID()
     node: FlowchartNode
     textEl: SVGTextElement | undefined = undefined
-    style = this.#makeReactive({} as CSSStyleDeclaration, () => this.updateStyle())
     class = ""
     updateStyleDelay = undefined as ReturnType<typeof setTimeout> | undefined
     
@@ -32,7 +31,7 @@ export abstract class FlowchartShape {
 
         this.svgEl = this.createSvgEl()
         this.addSvgEl()
-        this.updateStyle()
+        this.updateStyle(options?.style)
 
         document.addEventListener("mousemove", this.boundSetMouseOver)
         node.addEventListener("positionChange", this.boundUpdatePosition)
@@ -44,7 +43,7 @@ export abstract class FlowchartShape {
 
     addSvgEl() {
         if (this.class) {
-            this.svgEl.classList.add(...this.class.split(" "))
+            this.svgEl.classList.add(this.class)
         }
         
         if (!this.node.flowchart?.nodesGroup) {
@@ -87,17 +86,17 @@ export abstract class FlowchartShape {
         this.updatePosition()
         this.updateShape()
     }
-    
+
+    get style(): CSSStyleDeclaration {
+        if (!this.svgEl) {
+            console.warn("SVG element is not created yet. Cannot access style.")
+            return {} as CSSStyleDeclaration
+        }
+        return this.svgEl.style
+    }
+
     processOptions(options?: Partial<FlowchartShapeOptions >) {
         if (!options) return
-
-        if (options.style) {
-            for (const [key, value] of Object.entries(options.style)) {
-                const compiledKey = key.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase() as keyof CSSStyleDeclaration
-                (this.style as any)[compiledKey] = value
-
-            }
-        }
 
         if (options.class) {
             if (Array.isArray(options.class)) {
@@ -125,14 +124,15 @@ export abstract class FlowchartShape {
     boundUpdateShape = this.updateShape.bind(this)
     boundUpdatePosition = this.updatePosition.bind(this)
 
-    updateStyle() {
-        if (this.updateStyleDelay) {
-            clearTimeout(this.updateStyleDelay)
-        }
+    updateStyle(style?: Partial<CSSStyleDeclaration>) {
+        if (!style) return
+        if (!this.svgEl) return
 
-        this.updateStyleDelay = setTimeout(() => {
-            this.svgEl.style = Object.entries(this.style).map(([key, value]) => `${key}: ${value};`).join(" ")
-        })
+        for (const key in style) {
+            const value = style[key] || ""
+            const cssKey = key.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase() // camelCase to kebab-case
+            this.svgEl.style.setProperty(cssKey, value )
+        }
     }
 
     private mouseInsideShape = () => {
@@ -184,16 +184,6 @@ export abstract class FlowchartShape {
         }
 
         return (low + high) / 2
-    }
-
-    #makeReactive<T extends object>(obj: T, onChange: () => void): T {
-        return new Proxy(obj, {
-            set(target, prop, value) {
-                target[prop as keyof T] = value
-                onChange()
-                return true
-            }
-        })
     }
 
     destroy() {
