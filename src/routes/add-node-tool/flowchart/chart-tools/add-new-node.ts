@@ -56,10 +56,8 @@ export class AddNodeTool extends FlowchartTool {
     updateButtonPosition(node: FlowchartNode) {
         if (!this.addButton) return
         const mousePos = this.flowchart.events.mousePos
-        const buttonOffset = 0//this.offset + 16
-        const x = mousePos.x - this.button.diameter/2
-        const y = mousePos.y - this.button.diameter/2
-        this.addButton.setAttribute("transform", `translate(${x}, ${y})`)
+        const { x,y } = node.calculateEdgeStart(mousePos, 20)
+        this.addButton.setAttribute("transform", `translate(${x-this.button.diameter/2}, ${y-this.button.diameter/2})`)
     }
 
     private createButton() {

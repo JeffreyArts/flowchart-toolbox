@@ -162,19 +162,19 @@ export abstract class FlowchartShape {
         }
     }
 
-    getBorderDistance(targetPosition: { x: number, y: number }): number {
+    getBorderDistance(targetPosition: { x: number, y: number }, offset = 0): number {
         const dx = targetPosition.x - this.node.x
         const dy = targetPosition.y - this.node.y
         const length = Math.hypot(dx, dy)
-        const nx = dx / length  // genormaliseerde richting
+        const nx = dx / length // genormaliseerde richting
         const ny = dy / length
 
         let low = 0
-        let high = Math.max(this.node.width, this.node.height)
-        
+        let high = Math.max(this.node.width, this.node.height) + offset
+    
         for (let i = 0; i < 16; i++) {
             const mid = (low + high) / 2
-            if (this.containsPoint({ x: this.node.x + nx * mid, y: this.node.y + ny * mid })) {
+            if (this.containsPoint({ x: this.node.x + nx * mid, y: this.node.y + ny * mid }, offset)) {
                 low = mid
             } else {
                 high = mid

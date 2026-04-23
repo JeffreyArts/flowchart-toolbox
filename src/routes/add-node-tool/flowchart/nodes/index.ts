@@ -550,14 +550,14 @@ export class FlowchartNode {
         this.updatePosition(false)
     }
 
-    calculateEdgeStart(targetNode: FlowchartNode) {
+    calculateEdgeStart(point: { x: number, y: number }, offset = 0): { x: number, y: number } {
         if (!this.shape) {
             throw new Error("Cannot calculate edge start position without a shape defined for the node.")
         }
         const startNode = this
         let targetPosition = {
-            x: targetNode.x,
-            y: targetNode.y
+            x: point.x,
+            y: point.y
         }
 
         let degrees = Math.atan2(targetPosition.y - startNode.y, targetPosition.x - startNode.x) * (180 / Math.PI) + 90
@@ -572,7 +572,7 @@ export class FlowchartNode {
         }
 
         const rad = (degrees - 90) * (Math.PI / 180)
-        const dist = this.shape.getBorderDistance(targetPosition) + startNode.options.offsetPadding
+        const dist = this.shape.getBorderDistance(targetPosition, offset) + startNode.options.offsetPadding
         return {
             x: this.x + Math.cos(rad) * dist,
             y: this.y + Math.sin(rad) * dist,

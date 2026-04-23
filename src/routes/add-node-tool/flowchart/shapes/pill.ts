@@ -28,7 +28,7 @@ export class PillShape extends FlowchartShape {
         return ( 
             distToRx - offset <= r || 
             distToLx - offset <= r || 
-            (point.x >= lx  && point.x <= rx  && Math.abs(point.y - y + offset) <= r)
+            (point.x >= lx && point.x <= rx && Math.abs(point.y - y) <= r + offset)
         )
     }
 

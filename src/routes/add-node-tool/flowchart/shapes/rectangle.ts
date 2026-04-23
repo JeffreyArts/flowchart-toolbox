@@ -13,10 +13,10 @@ export class RectangleShape extends FlowchartShape {
 
     containsPoint(point: { x: number, y: number }, offset = 0): boolean {
 
-        const x1 = this.node.x - this.width / 2 + offset
-        const y1 = this.node.y - this.height / 2 + offset
-        const x2 = this.node.x + this.width / 2 - offset
-        const y2 = this.node.y + this.height / 2 - offset
+        const x1 = this.node.x - this.width / 2 - offset
+        const y1 = this.node.y - this.height / 2 - offset
+        const x2 = this.node.x + this.width / 2 + offset
+        const y2 = this.node.y + this.height / 2 + offset
         
         return point.x >= x1 && point.x <= x2 && point.y >= y1 && point.y <= y2
     }

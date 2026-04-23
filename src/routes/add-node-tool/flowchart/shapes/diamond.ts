@@ -15,10 +15,12 @@ export class DiamondShape extends FlowchartShape {
     }
 
     containsPoint(pos: { x: number, y: number }, offset = 0): boolean {
-        return (
-            Math.abs(pos.x - this.node.x - offset) / (this.width /2) +
-            Math.abs(pos.y - this.node.y - offset) / (this.height /2) <= 1
-        )
+        const a = this.width / 2
+        const b = this.height / 2
+        const dx = Math.abs(pos.x - this.node.x)
+        const dy = Math.abs(pos.y - this.node.y)
+        const hypot = Math.hypot(a, b)
+        return dx * b + dy * a <= a * b + offset * hypot
     }
 
     // Create 
