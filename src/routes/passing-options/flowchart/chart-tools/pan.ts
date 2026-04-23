@@ -43,7 +43,11 @@ export class PanTool extends FlowchartTool {
     onKeyDown = (fec: FlowchartEventContext) => {
         const e = fec.originalEvent as KeyboardEvent
 
-        if (this.options.spaceBarPanning) {
+        // If an input or textarea is focused, ignore events for panning
+        const activeElement = document.activeElement
+        if (activeElement && (activeElement.nodeName == "INPUT" || activeElement.nodeName == "TEXTAREA" )) return
+
+        if (this.options.spaceBarPanning && this.flowchart.events.isWithinChart) {    
             if (e.code.toLowerCase() === "space") {
                 e.preventDefault()
                 if (this.spaceBarDown) return

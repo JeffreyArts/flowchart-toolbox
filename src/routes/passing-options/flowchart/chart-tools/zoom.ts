@@ -153,7 +153,11 @@ export class ZoomTool extends FlowchartTool {
 
     onKeyDown = (fec: FlowchartEventContext) => {
         const e = fec.originalEvent as KeyboardEvent
-        
+
+        // If an input or textarea is focused, ignore events for zooming
+        const activeElement = document.activeElement
+        if (activeElement && (activeElement.nodeName == "INPUT" || activeElement.nodeName == "TEXTAREA" )) return
+
         // Zoom with cmd/ctrl + +/-
         if (this.options.cmdZooming) {
             if ((e.ctrlKey || e.metaKey) && (e.code === "Equal" || e.code === "NumpadAdd")) {
