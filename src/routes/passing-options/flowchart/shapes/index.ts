@@ -15,9 +15,7 @@ export abstract class FlowchartShape {
     abstract containsPoint(x: number, y: number): boolean
 
     
-    private _isVisible: boolean = false
     updateStyleDelay = undefined as ReturnType<typeof setTimeout> | undefined
-    
     
     id: string = crypto.randomUUID()
     node: FlowchartNode
@@ -96,24 +94,6 @@ export abstract class FlowchartShape {
     }
     get flowchart() {   
         return this.node?.flowchart
-    }
-
-    /** Visible **/
-
-    set isVisible(value: boolean) {
-        this._isVisible = value
-
-        if (!this.svgEl) return
-
-        if (value) {
-            this.svgEl.style.opacity = "1"
-        } else {
-            this.svgEl.style.opacity = "0"
-        }
-    }
-
-    get isVisible() {
-        return this._isVisible
     }
 
     // Width & height
