@@ -1,13 +1,13 @@
 import type { Flowchart } from "../index"
 import type { FlowchartEventContext } from "../events"
 import FlowchartTool from "./index"
-import type { FlowchartNode } from "../nodes"
+import { FlowchartNode } from "../nodes"
 
 export class AddNodeTool extends FlowchartTool {
     name = "add-node"
     keyDown = false
     offset = 32
-    selectedNodesStartPos = [] as { x: number, y: number, node: FlowchartNode }[]
+    selectedNode = undefined as FlowchartNode | undefined
     addButton: SVGElement | undefined
     button = {
         diameter: 25,
@@ -26,38 +26,72 @@ export class AddNodeTool extends FlowchartTool {
         this.flowchart.events.add("mouseMove", this.onMouseMove)
     }
 
-    moveNodeMouseDown = (fec: FlowchartEventContext) => {  
+    private moveNodeMouseDown = () => {  
+        if (!this.addButton) return
+        if (!this.selectedNode) return
+        const mousePos = this.flowchart.events.mousePos
+
+        const transformProp = this.addButton.getAttribute("transform")
+        if (transformProp === null) return
+        const [x, y] = transformProp.match(/-?\d+\.?\d*/g)!.map(Number)
+        const point = { x, y }
+        if (!point.x || !point.y) {
+            console.warn("Could not parse add button position from transform attribute:", transformProp)
+            return
+        }
+        const distance = Math.sqrt((mousePos.x - point.x) ** 2 + (mousePos.y - point.y) ** 2)
+        if (distance < this.button.diameter) {
+            this.addNewNode()
+        }
     }
         
 
-    onMouseMove = (fec: FlowchartEventContext) => {
-        const e = fec.originalEvent as MouseEvent
-        const mouseDown = this.flowchart.events.mouseDown
-        const mouseStartPos = this.flowchart.events.mouseStartPos
+    private onMouseMove = () => {
         const mousePos = this.flowchart.events.mousePos
 
         let matchedNode = false
         this.flowchart.nodes.forEach(node => {
-            if (node.shape.containsPoint(mousePos, this.offset)) {
+            if (node.shape.containsPoint(mousePos, this.offset) && !node.shape.containsPoint(mousePos)) {
                 matchedNode = true
+                this.selectedNode = node
                 this.createButton()
                 this.updateButtonPosition(node)
             }
         })
 
         if (!matchedNode) {
-            if (this.addButton) {
-                this.addButton.remove()
-                this.addButton = undefined
-            }
+            this.selectedNode = undefined
+            this.removeButton()
         }
     }
 
-    updateButtonPosition(node: FlowchartNode) {
+    private addNewNode() {
+        if (!this.selectedNode) return
+        const mousePos = this.flowchart.events.mousePos
+        const borderDistance = this.selectedNode.calculateEdgeStart(mousePos, 100)
+        const newNode = new FlowchartNode("process", {
+            text: "New node",
+            parent: this.selectedNode,
+            x: borderDistance.x,
+            y: borderDistance.y,
+            options: { maxWidth: 200 }
+        })
+        this.flowchart.addNode(newNode)
+        this.removeButton()
+    }
+
+    private updateButtonPosition(node: FlowchartNode) {
         if (!this.addButton) return
         const mousePos = this.flowchart.events.mousePos
-        const { x,y } = node.calculateEdgeStart(mousePos, 20)
+        const { x,y } = node.calculateEdgeStart(mousePos, this.button.diameter/2)
         this.addButton.setAttribute("transform", `translate(${x-this.button.diameter/2}, ${y-this.button.diameter/2})`)
+    }
+
+    private removeButton() {
+        if (this.addButton) {
+            this.addButton.remove()
+            this.addButton = undefined
+        }
     }
 
     private createButton() {
@@ -101,6 +135,7 @@ export class AddNodeTool extends FlowchartTool {
     }
 
     destroy() {
+        this.removeButton()
         if (this.flowchart?.parentElement) {
             this.flowchart.parentElement.classList.remove("__toolMoveNode")
         }
