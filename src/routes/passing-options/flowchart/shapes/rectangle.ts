@@ -6,24 +6,12 @@ export interface RectangleShapeOptions extends FlowchartShapeOptions {
 
 export class RectangleShape extends FlowchartShape {
     name = "rectangle"
-    svgEl: SVGElement
     textEl = undefined as SVGTextElement | undefined
     
     constructor(node: FlowchartNode, options?: Partial<RectangleShapeOptions>) {
         super( node, options )
-
-        this.processOptions(options)
-
-        const svgEl = this.createSvgEl()
+        
         this.textEl = this.createTextEl()
-        
-        if (svgEl) {
-            this.svgEl = svgEl
-        } else {
-            throw new Error("Failed to create SVG element for RectangleShape.")
-        }
-        
-        this.updateStyle()
         this.updateText()
         
         this.node.addEventListener("afterTextChange", this.boundUpdateText)
@@ -51,17 +39,6 @@ export class RectangleShape extends FlowchartShape {
         const rectangle = document.createElementNS("http://www.w3.org/2000/svg", "rect")
         rectangle.classList.add("flowchart-shape")
         rectangle.classList.add("__isRectangle")
-
-        if (this.className) {
-            rectangle.classList.add(...this.className.split(" "))
-        }
-        
-        if (!this.node.flowchart?.nodesGroup) {
-            console.warn("Node is not attached to a flowchart yet. Cannot add shape to SVG.")
-            return
-        }
-
-        this.node.svgGroup.appendChild(rectangle)
         return rectangle
     }
 

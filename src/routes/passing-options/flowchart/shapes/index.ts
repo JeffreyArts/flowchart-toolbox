@@ -8,20 +8,18 @@ export interface FlowchartShapeOptions {
 
 export abstract class FlowchartShape {
     abstract name: string
-    abstract svgEl: SVGElement
-    abstract createSvgEl(): SVGElement | undefined
+    svgEl: SVGElement
+    abstract createSvgEl(): SVGElement
     abstract updatePosition(): void
     abstract updateShape(): void
     abstract containsPoint(x: number, y: number): boolean
 
-    
-    updateStyleDelay = undefined as ReturnType<typeof setTimeout> | undefined
-    
     id: string = crypto.randomUUID()
     node: FlowchartNode
     textEl: SVGTextElement | undefined = undefined
     style = this.#makeReactive({} as CSSStyleDeclaration, () => this.updateStyle())
-    className = ""
+    class = ""
+    updateStyleDelay = undefined as ReturnType<typeof setTimeout> | undefined
     
     init?(): void
     afterTextHelperCreated?(textHelper: TextHelper): void
@@ -32,12 +30,29 @@ export abstract class FlowchartShape {
 
         this.processOptions(options)
 
+        this.svgEl = this.createSvgEl()
+        this.addSvgEl()
+        this.updateStyle()
+
         document.addEventListener("mousemove", this.boundSetMouseOver)
         node.addEventListener("positionChange", this.boundUpdatePosition)
         node.addEventListener("dimensionChange", this.boundUpdateShape)
     }
     
     #init() {
+    }
+
+    addSvgEl() {
+        if (this.class) {
+            this.svgEl.classList.add(...this.class.split(" "))
+        }
+        
+        if (!this.node.flowchart?.nodesGroup) {
+            console.warn("Node is not attached to a flowchart yet. Cannot add shape to SVG.")
+            return
+        }
+
+        this.node.svgGroup.appendChild(this.svgEl)
     }
 
     createTextEl() {
@@ -86,9 +101,9 @@ export abstract class FlowchartShape {
 
         if (options.class) {
             if (Array.isArray(options.class)) {
-                this.className = options.class.join(" ")
+                this.class = options.class.join(" ")
             } else {
-                this.className = options.class
+                this.class = options.class
             }
         }
     }
@@ -107,12 +122,6 @@ export abstract class FlowchartShape {
     
 
     /** Position **/
-    // #updatePosition() {
-    //     if (!this.svgEl || !this.node) return
-    //     this.svgEl.setAttribute("x", this.node.x + "px")
-    //     this.svgEl.setAttribute("y", this.node.y + "px")
-    // }
-    
     boundUpdateShape = this.updateShape.bind(this)
     boundUpdatePosition = this.updatePosition.bind(this)
 

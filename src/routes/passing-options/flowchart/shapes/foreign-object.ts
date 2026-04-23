@@ -5,6 +5,7 @@ export interface ForeignObjectShapeOptions extends FlowchartShapeOptions {
     maxWidth?: number;
 }
 
+/** THIS NO LONGER WORKS */
 export class ForeignObjectShape extends FlowchartShape {
     name = "foreign-object"
     textEl = undefined as HTMLDivElement | undefined

@@ -9,26 +9,14 @@ interface FlowchartDiamondShapeOptions extends FlowchartShapeOptions {
 
 export class DiamondShape extends FlowchartShape {
     name = "diamond"
-    svgEl: SVGElement
     textEl = undefined as SVGTextElement | undefined
 
     constructor(node: FlowchartNode, options?: Partial<FlowchartDiamondShapeOptions>) {
         super( node, options )
-        
-        this.processOptions(options)
-
-        const svgEl = this.createSvgEl()
+            
         this.textEl = this.createTextEl()
-        
-        if (svgEl) {
-            this.svgEl = svgEl
-        } else {
-            throw new Error("Failed to create SVG element for DiamondShape.")
-        }
-        
-        this.updateStyle()
         this.updateText()
-        
+            
         this.node.addEventListener("afterTextChange", this.boundUpdateText)
     }
 
@@ -51,17 +39,6 @@ export class DiamondShape extends FlowchartShape {
         const diamond = document.createElementNS("http://www.w3.org/2000/svg", "polygon")
         diamond.classList.add("flowchart-shape")
         diamond.classList.add("__isDiamond")
-
-        if (this.className) {
-            diamond.classList.add(...this.className.split(" "))
-        }
-
-        if (!this.node.flowchart?.nodesGroup) {
-            console.warn("Node is not attached to a flowchart yet. Cannot add shape to SVG.")
-            return
-        }
-
-        this.node.svgGroup.appendChild(diamond)
         return diamond
     }
 
