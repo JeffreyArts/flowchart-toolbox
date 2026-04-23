@@ -23,9 +23,13 @@ export class PillShape extends FlowchartShape {
         const y = this.node.y
 
         // Get distance between point and each circle center
-        const distToRx = Math.hypot(point.x - rx - offset, point.y - y - offset)
-        const distToLx = Math.hypot(point.x - lx - offset, point.y - y - offset)
-        return ( distToRx <= r || distToLx <= r || (point.x >= lx && point.x <= rx && Math.abs(point.y - y - offset) <= r))
+        const distToRx = Math.hypot(point.x - rx, point.y - y)
+        const distToLx = Math.hypot(point.x - lx, point.y - y)
+        return ( 
+            distToRx - offset <= r || 
+            distToLx - offset <= r || 
+            (point.x >= lx  && point.x <= rx  && Math.abs(point.y - y + offset) <= r)
+        )
     }
 
     // Create 
