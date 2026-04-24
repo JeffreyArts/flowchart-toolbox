@@ -62,10 +62,10 @@ export class ZoomTool extends FlowchartTool {
         if (nodes.length === 0) return
 
         const padding = this.options.fitPadding
-        const minX = (Math.min(...nodes.map(n => Number(n.x - n.width * this.flowchart.zoom / 2)))) - padding
-        const maxX = Math.max(...nodes.map(n => Number(n.x + n.width * this.flowchart.zoom / 2))) + padding
-        const minY = Math.min(...nodes.map(n => Number(n.y - n.height * this.flowchart.zoom / 2))) - padding
-        const maxY = Math.max(...nodes.map(n => Number(n.y + n.height * this.flowchart.zoom / 2))) + padding
+        const minX = (Math.min(...nodes.map(n => Number(n.x - n.width / 2)))) - padding
+        const maxX = Math.max(...nodes.map(n => Number(n.x + n.width / 2))) + padding
+        const minY = Math.min(...nodes.map(n => Number(n.y - n.height / 2))) - padding
+        const maxY = Math.max(...nodes.map(n => Number(n.y + n.height / 2))) + padding
 
         const chartWidth = this.flowchart.parentElement?.clientWidth || 1
         const chartHeight = this.flowchart.parentElement?.clientHeight || 1
