@@ -369,11 +369,7 @@ export class FlowchartNode {
             return 0
         }
 
-        let w = this.shape.width
-        if (this.flowchart) {
-            w = w / this.flowchart.zoom
-        }
-        return w
+        return this.shape.width
     }
 
     get height(): number {
@@ -381,11 +377,7 @@ export class FlowchartNode {
             return 0
         }
 
-        let h = this.shape.height
-        if (this.flowchart) {
-            h = h / this.flowchart.zoom
-        }
-        return  h
+        return this.shape.height
     }
 
     /** Text **/

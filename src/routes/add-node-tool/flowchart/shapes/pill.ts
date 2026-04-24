@@ -26,8 +26,8 @@ export class PillShape extends FlowchartShape {
         const distToRx = Math.hypot(point.x - rx, point.y - y)
         const distToLx = Math.hypot(point.x - lx, point.y - y)
         return ( 
-            distToRx - offset <= r || 
-            distToLx - offset <= r || 
+            distToRx <= r + offset || 
+            distToLx <= r + offset || 
             (point.x >= lx && point.x <= rx && Math.abs(point.y - y) <= r + offset)
         )
     }
