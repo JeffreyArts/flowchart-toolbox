@@ -24,6 +24,14 @@ export class AddNodeTool extends FlowchartTool {
 
         this.flowchart.events.add("mouseDown", this.moveNodeMouseDown)
         this.flowchart.events.add("mouseMove", this.onMouseMove)
+        this.flowchart.events.add("keyDown", this.resetNodeSelectionOnKeyDown)
+    }
+
+    private resetNodeSelectionOnKeyDown = (_fec: FlowchartEventContext) => {
+
+        if (this.selectedNode) {
+            this.selectedNode = undefined
+        }
     }
 
     private moveNodeMouseDown = () => {  
