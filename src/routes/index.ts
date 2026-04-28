@@ -18,6 +18,7 @@ import RefactorTools from "./refactor-tools/refactor-tools.vue"
 import NodeState from "./node-state/node-state.vue"
 import PassingOptions from "./passing-options/passing-options.vue"
 import AddNodeTool from "./add-node-tool/add-node-tool.vue"
+import PassRegisterOptions from "./pass-register-options/pass-register-options.vue"
 import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
 import Cytoscape from "./cytoscape.vue"
@@ -133,6 +134,11 @@ const routes = [
         path: "/add-node-tool",
         name: "20) Add Node Tool",
         component: AddNodeTool
+    },
+    {
+        path: "/pass-register-options",
+        name: "21) Pass register options",
+        component: PassRegisterOptions
     },
     {
         path: "/options-overview",
