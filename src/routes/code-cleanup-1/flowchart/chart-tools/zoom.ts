@@ -31,7 +31,30 @@ export class ZoomTool extends FlowchartTool {
         this.flowchart.events.add("mouseDown", this.onMouseDown)
     }
 
-    private zoomAtCenter(factor: number) {
+    // █████▄ ▄▄▄▄  ▄▄ ▄▄ ▄▄  ▄▄▄ ▄▄▄▄▄▄ ▄▄▄▄▄ 
+    // ██▄▄█▀ ██▄█▄ ██ ██▄██ ██▀██  ██   ██▄▄  
+    // ██     ██ ██ ██  ▀█▀  ██▀██  ██   ██▄▄▄ 
+
+    private set isZooming(value: boolean) {
+        if (this.flowchart?.parentElement) {
+            if (value) {
+                this.flowchart.parentElement.classList.add("__isZooming")
+            } else {
+                this.flowchart.parentElement.classList.remove("__isZooming")
+            }
+        }
+        this._isZooming = value
+    }
+
+    private get isZooming() {
+        return this._isZooming
+    }
+
+    // █████▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄    ▄▄  ▄▄▄▄ 
+    // ██▄▄█▀ ██ ██ ██▄██ ██    ██ ██▀▀▀ 
+    // ██     ▀███▀ ██▄█▀ ██▄▄▄ ██ ▀████  
+
+    zoomAtCenter(factor: number) {
         if (!this.flowchart?.parentElement) return
 
         const width = this.flowchart.parentElement.clientWidth
@@ -40,7 +63,7 @@ export class ZoomTool extends FlowchartTool {
         this.zoomAt(width / 2, height / 2, factor)
     }
 
-    private zoomAt(x: number, y: number, factor: number) {
+    zoomAt(x: number, y: number, factor: number) {
         if (!this.flowchart) return
 
         const currentZoom = this.flowchart.zoom
@@ -106,23 +129,11 @@ export class ZoomTool extends FlowchartTool {
         this.zoomAt(x, y, 1 / factor)
     }
 
-    set isZooming(value: boolean) {
-        if (this.flowchart?.parentElement) {
-            if (value) {
-                this.flowchart.parentElement.classList.add("__isZooming")
-            } else {
-                this.flowchart.parentElement.classList.remove("__isZooming")
-            }
-        }
-        this._isZooming = value
-    }
+    // ██████ ▄▄ ▄▄ ▄▄▄▄▄ ▄▄  ▄▄ ▄▄▄▄▄▄ ▄▄▄▄ 
+    // ██▄▄   ██▄██ ██▄▄  ███▄██   ██  ███▄▄ 
+    // ██▄▄▄▄  ▀█▀  ██▄▄▄ ██ ▀██   ██  ▄▄██▀ 
 
-    get isZooming() {
-        return this._isZooming
-    }
-    
-
-    onWheel = (fec: FlowchartEventContext) => {
+    private onWheel = (fec: FlowchartEventContext) => {
         const e = fec.originalEvent as WheelEvent
         if (!this.flowchart?.parentElement) return
         if (this.flowchart.events.isWithinChart) {
@@ -151,7 +162,7 @@ export class ZoomTool extends FlowchartTool {
         }
     }
 
-    onKeyDown = (fec: FlowchartEventContext) => {
+    private onKeyDown = (fec: FlowchartEventContext) => {
         const e = fec.originalEvent as KeyboardEvent
 
         // If an input or textarea is focused, ignore events for zooming
@@ -209,7 +220,7 @@ export class ZoomTool extends FlowchartTool {
         }
     }
     
-    onKeyUp = (fec: FlowchartEventContext) => {
+    private onKeyUp = (fec: FlowchartEventContext) => {
         const e = fec.originalEvent as KeyboardEvent
         if (this.options.zHotkeyZooming) { 
             if (!this.flowchart.parentElement) return
@@ -226,7 +237,7 @@ export class ZoomTool extends FlowchartTool {
         }
     }
 
-    onMouseDown = (fec: FlowchartEventContext) => {
+    private onMouseDown = (fec: FlowchartEventContext) => {
         const e = fec.originalEvent as MouseEvent
         if (!this.flowchart.events.isWithinChart) return
 
@@ -241,7 +252,7 @@ export class ZoomTool extends FlowchartTool {
         }
     }
 
-    onPinch = (_fec: FlowchartEventContext) => {
+    private onPinch = (_fec: FlowchartEventContext) => {
         if (!this.flowchart.events.isWithinChart) return
         
         if (this.options.pinchZooming) {

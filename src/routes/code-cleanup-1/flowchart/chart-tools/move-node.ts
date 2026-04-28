@@ -19,19 +19,23 @@ export class MoveNodeTool extends FlowchartTool {
 
         this.flowchart.events.add("keyDown", this.onKeyDown)
         this.flowchart.events.add("keyUp", this.onKeyUp)
-        this.flowchart.events.add("mouseDown", this.moveNodeMouseDown)
+        this.flowchart.events.add("mouseDown", this.onMouseDown)
         this.flowchart.events.add("mouseMove", this.onMouseMove)
     }
+    
+    // ██████ ▄▄ ▄▄ ▄▄▄▄▄ ▄▄  ▄▄ ▄▄▄▄▄▄ ▄▄▄▄ 
+    // ██▄▄   ██▄██ ██▄▄  ███▄██   ██  ███▄▄ 
+    // ██▄▄▄▄  ▀█▀  ██▄▄▄ ██ ▀██   ██  ▄▄██▀ 
 
-    onKeyDown = () => {
+    private onKeyDown = () => {
         this.keyDown = true
     }
 
-    onKeyUp = () => {
+    private onKeyUp = () => {
         this.keyDown = false
     }
 
-    moveNodeMouseDown = (fec: FlowchartEventContext) => {  
+    private onMouseDown = (_fec: FlowchartEventContext) => {  
         this.selectedNodesStartPos = []
         if (!this.flowchart.events.isWithinChart) return
         let selectedNode = undefined as FlowchartNode | undefined
@@ -52,9 +56,8 @@ export class MoveNodeTool extends FlowchartTool {
         
         return
     }
-        
 
-    onMouseMove = (fec: FlowchartEventContext) => {
+    private onMouseMove = (fec: FlowchartEventContext) => {
         const e = fec.originalEvent as MouseEvent
         const mouseDown = this.flowchart.events.mouseDown
         const mouseStartPos = this.flowchart.events.mouseStartPos
@@ -79,12 +82,6 @@ export class MoveNodeTool extends FlowchartTool {
             pos.node.x = pos.x + deltaX
             pos.node.y = pos.y + deltaY
         })
-    }
-
-    destroy() {
-        if (this.flowchart?.parentElement) {
-            this.flowchart.parentElement.classList.remove("__toolMoveNode")
-        }
     }
 }
 

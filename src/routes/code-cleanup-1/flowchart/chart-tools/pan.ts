@@ -38,9 +38,23 @@ export class PanTool extends FlowchartTool {
         this.flowchart.events.add("mouseDown", this.onMouseDown)
         this.flowchart.events.add("mouseMove", this.onMouseMove)
         this.flowchart.events.add("mouseUp", this.onMouseUp)
+        this.flowchart.events.add("swipe", this.onSwipe)
+    }
+    
+    // █████▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄    ▄▄  ▄▄▄▄ 
+    // ██▄▄█▀ ██ ██ ██▄██ ██    ██ ██▀▀▀ 
+    // ██     ▀███▀ ██▄█▀ ██▄▄▄ ██ ▀████  
+
+    deactivate(): void {
+        super.deactivate()
+        this.mouseStartPos = undefined
     }
 
-    onKeyDown = (fec: FlowchartEventContext) => {
+    // ██████ ▄▄ ▄▄ ▄▄▄▄▄ ▄▄  ▄▄ ▄▄▄▄▄▄ ▄▄▄▄ 
+    // ██▄▄   ██▄██ ██▄▄  ███▄██   ██  ███▄▄ 
+    // ██▄▄▄▄  ▀█▀  ██▄▄▄ ██ ▀██   ██  ▄▄██▀ 
+
+    private onKeyDown = (fec: FlowchartEventContext) => {
         const e = fec.originalEvent as KeyboardEvent
 
         // If an input or textarea is focused, ignore events for panning
@@ -59,7 +73,7 @@ export class PanTool extends FlowchartTool {
         }
     }
 
-    onKeyUp = (fec: FlowchartEventContext) => {
+    private onKeyUp = (fec: FlowchartEventContext) => {
         const e = fec.originalEvent as KeyboardEvent
         if (this.options.spaceBarPanning) {
             if (e.code.toLowerCase() === "space") {
@@ -70,15 +84,14 @@ export class PanTool extends FlowchartTool {
         }
     }
 
-    onSwipe = (fec: FlowchartEventContext) => {        
+    private onSwipe = (_fec: FlowchartEventContext) => {
         if (this.options.touchSwipePanning) {
             this.flowchart.pan.x += this.flowchart.events.touchDelta.x
             this.flowchart.pan.y += this.flowchart.events.touchDelta.y
         }
     }
     
-    
-    onWheel = (fec: FlowchartEventContext) => {
+    private onWheel = (fec: FlowchartEventContext) => {
         const e = fec.originalEvent as WheelEvent
         if (e.ctrlKey || e.metaKey) return
         if (!this.flowchart.events.isWithinChart) return
@@ -91,7 +104,7 @@ export class PanTool extends FlowchartTool {
         }
     }
 
-    onMouseDown = (fec: FlowchartEventContext) => {  
+    private onMouseDown = (fec: FlowchartEventContext) => {  
         const e = fec.originalEvent as MouseEvent
         if (!this.flowchart.events.isWithinChart) return
         this.mouseStartPos = { ...this.flowchart.events.mousePos }
@@ -114,7 +127,7 @@ export class PanTool extends FlowchartTool {
         }
     }
     
-    onMouseMove = (fec: FlowchartEventContext) => {  
+    private onMouseMove = (fec: FlowchartEventContext) => {  
         const e = fec.originalEvent as MouseEvent
         const mouseStartPos = this.flowchart.events.mouseStartPos
         if (!this.spaceBarDown) return
@@ -138,7 +151,7 @@ export class PanTool extends FlowchartTool {
         }
     }
 
-    onMouseUp = (fec: FlowchartEventContext) => {  
+    private onMouseUp = (fec: FlowchartEventContext) => {  
         const e = fec.originalEvent as MouseEvent
         this.mouseStartPos = undefined
 
@@ -158,17 +171,6 @@ export class PanTool extends FlowchartTool {
             }
         }
     }   
-
-    deactivate(): void {
-        this.mouseStartPos = undefined
-    }
-
-    destroy() {
-        if (this.flowchart?.parentElement) {
-            this.flowchart.parentElement.classList.remove("__toolPan")
-            this.flowchart.parentElement.classList.remove("__isPanning")
-        }
-    }
 }
 
 export default PanTool

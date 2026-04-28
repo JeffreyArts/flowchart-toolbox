@@ -47,56 +47,14 @@ export class AddNodeTool extends FlowchartTool {
             }
         }
 
-        this.flowchart.events.add("mouseDown", this.moveNodeMouseDown)
         this.flowchart.events.add("mouseMove", this.onMouseMove)
-        this.flowchart.events.add("keyDown", this.resetNodeSelectionOnKeyDown)
+        this.flowchart.events.add("mouseDown", this.onMouseDown)
+        this.flowchart.events.add("keyDown", this.onKeyDown)
     }
-
-    private resetNodeSelectionOnKeyDown = (_fec: FlowchartEventContext) => {
-
-        if (this.selectedNode) {
-            this.selectedNode = undefined
-        }
-    }
-
-    private moveNodeMouseDown = () => {  
-        if (!this.addButton) return
-        if (!this.selectedNode) return
-        const mousePos = this.flowchart.events.mousePos
-
-        const transformProp = this.addButton.getAttribute("transform")
-        if (transformProp === null) return
-        const [x, y] = transformProp.match(/-?\d+\.?\d*/g)!.map(Number)
-        const point = { x, y }
-        if (!point.x || !point.y) {
-            console.warn("Could not parse add button position from transform attribute:", transformProp)
-            return
-        }
-        const distance = Math.sqrt((mousePos.x - point.x) ** 2 + (mousePos.y - point.y) ** 2)
-        if (distance < this.options.buttonDiameter) {
-            this.addNewNode()
-        }
-    }
-        
-
-    private onMouseMove = () => {
-        const mousePos = this.flowchart.events.mousePos
-
-        let matchedNode = false
-        this.flowchart.nodes.forEach(node => {
-            if (node.shape.containsPoint(mousePos, this.offset) && !node.shape.containsPoint(mousePos)) {
-                matchedNode = true
-                this.selectedNode = node
-                this.createButton()
-                this.updateButtonPosition(node)
-            }
-        })
-
-        if (!matchedNode) {
-            this.selectedNode = undefined
-            this.removeButton()
-        }
-    }
+                                        
+    // █████▄ ▄▄▄▄  ▄▄ ▄▄ ▄▄  ▄▄▄ ▄▄▄▄▄▄ ▄▄▄▄▄ 
+    // ██▄▄█▀ ██▄█▄ ██ ██▄██ ██▀██  ██   ██▄▄  
+    // ██     ██ ██ ██  ▀█▀  ██▀██  ██   ██▄▄▄ 
 
     private addNewNode() {
         if (!this.selectedNode) return
@@ -192,10 +150,53 @@ export class AddNodeTool extends FlowchartTool {
         this.addButton = el
     }
 
-    destroy() {
-        this.removeButton()
-        if (this.flowchart?.parentElement) {
-            this.flowchart.parentElement.classList.remove("__toolMoveNode")
+
+    // ██████ ▄▄ ▄▄ ▄▄▄▄▄ ▄▄  ▄▄ ▄▄▄▄▄▄ ▄▄▄▄ 
+    // ██▄▄   ██▄██ ██▄▄  ███▄██   ██  ███▄▄ 
+    // ██▄▄▄▄  ▀█▀  ██▄▄▄ ██ ▀██   ██  ▄▄██▀ 
+
+    private onMouseDown = (_fec: FlowchartEventContext) => {  
+        if (!this.addButton) return
+        if (!this.selectedNode) return
+        const mousePos = this.flowchart.events.mousePos
+
+        const transformProp = this.addButton.getAttribute("transform")
+        if (transformProp === null) return
+        const [x, y] = transformProp.match(/-?\d+\.?\d*/g)!.map(Number)
+        const point = { x, y }
+        if (!point.x || !point.y) {
+            console.warn("Could not parse add button position from transform attribute:", transformProp)
+            return
+        }
+        const distance = Math.sqrt((mousePos.x - point.x) ** 2 + (mousePos.y - point.y) ** 2)
+        if (distance < this.options.buttonDiameter) {
+            this.addNewNode()
+        }
+    } 
+
+    private onMouseMove = (_fec: FlowchartEventContext) => {
+        const mousePos = this.flowchart.events.mousePos
+
+        let matchedNode = false
+        this.flowchart.nodes.forEach(node => {
+            if (node.shape.containsPoint(mousePos, this.offset) && !node.shape.containsPoint(mousePos)) {
+                matchedNode = true
+                this.selectedNode = node
+                this.createButton()
+                this.updateButtonPosition(node)
+            }
+        })
+
+        if (!matchedNode) {
+            this.selectedNode = undefined
+            this.removeButton()
+        }
+    }
+
+    private onKeyDown = (_fec: FlowchartEventContext) => {
+
+        if (this.selectedNode) {
+            this.selectedNode = undefined
         }
     }
 }

@@ -28,7 +28,7 @@ export default class Joffa extends Flowchart {
         this.register("tool","zoom", ZoomTool)
         this.register("tool","move-node", MoveNodeTool)
         this.register("tool","add-node", AddNodeTool, { segments: 0, defaultDistance: 320 })
-        this.register("tool","pan", PanTool, { spaceBarPanning: false })
+        this.register("tool","pan", PanTool)
         
         // Default Nodes
         this.register("node", "process", ProcessNode, { shape: { class: "process-node" }})
