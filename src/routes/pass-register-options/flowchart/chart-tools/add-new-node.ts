@@ -2,6 +2,7 @@ import type { Flowchart } from "../index"
 import type { FlowchartEventContext } from "../events"
 import FlowchartTool from "./index"
 import { FlowchartNode } from "../nodes"
+import type { ZoomTool } from "./zoom"
 
 export type AddNodeToolOptions = {
     buttonDiameter: number
@@ -28,6 +29,8 @@ export class AddNodeTool extends FlowchartTool {
         buttonDiameter: 25,
         segments: 8,
         defaultNodeType: "end",
+        defaultDistance: 100,
+        autoFit: true,
         smartNodes: {
             start: "start",
             normal: "process",
@@ -37,7 +40,9 @@ export class AddNodeTool extends FlowchartTool {
     }
     
     constructor(flowchart: Flowchart, options?: AddNodeToolOptions) {
-        super(flowchart, options)
+        super(flowchart)
+        
+        this.parseOptions(options)
 
         this.newNodeType = this.options.defaultNodeType
 
@@ -50,6 +55,26 @@ export class AddNodeTool extends FlowchartTool {
         this.flowchart.events.add("mouseDown", this.moveNodeMouseDown)
         this.flowchart.events.add("mouseMove", this.onMouseMove)
         this.flowchart.events.add("keyDown", this.resetNodeSelectionOnKeyDown)
+    }
+
+    private parseOptions(options?: Partial<AddNodeToolOptions>) {
+        if (!options) return
+        this.options = { ...this.options, ...options }
+
+        if (this.options.smartNodes) {
+            if (!this.options.smartNodes.start) { 
+                console.warn("AddNodeTool: smartNodes option is missing 'start' type. Could cause problems")
+            }
+            if (!this.options.smartNodes.end) { 
+                console.warn("AddNodeTool: smartNodes option is missing 'end' type. Could cause problems")
+            }
+            if (!this.options.smartNodes.decision) { 
+                console.warn("AddNodeTool: smartNodes option is missing 'decision' type. Could cause problems")
+            }
+            if (!this.options.smartNodes.normal) {
+                console.warn("AddNodeTool: smartNodes option is missing 'normal' type. Could cause problems")
+            }
+        }
     }
 
     private resetNodeSelectionOnKeyDown = (_fec: FlowchartEventContext) => {
@@ -101,7 +126,7 @@ export class AddNodeTool extends FlowchartTool {
     private addNewNode() {
         if (!this.selectedNode) return
         const mousePos = this.flowchart.events.mousePos
-        const borderDistance = this.selectedNode.calculateEdgeStart(mousePos, 100)
+        const borderDistance = this.selectedNode.calculateEdgeStart(mousePos, this.options.defaultDistance)
 
         const newNode = new FlowchartNode(this.newNodeType, {
             text: "New node",
@@ -133,7 +158,14 @@ export class AddNodeTool extends FlowchartTool {
             }
         }
         
-        
+        if (this.options.autoFit) {
+            const zoomTool = this.flowchart.getTool("zoom") as unknown as ZoomTool | undefined
+            if (zoomTool) {
+                zoomTool.fit()
+            } else {
+                console.warn("Auto-fit is enabled for AddNodeTool but ZoomTool is not registered. Could not update zoom.")
+            }
+        }
 
         this.removeButton()
     }

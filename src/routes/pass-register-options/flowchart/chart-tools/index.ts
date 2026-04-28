@@ -6,9 +6,8 @@ export abstract class FlowchartTool {
     isActive = true
     options?: { [key: string]: any }
 
-    constructor(flowchart: Flowchart, options?: { [key: string]: any }) {
+    constructor(flowchart: Flowchart) {
         this.flowchart = flowchart
-        this.options = { ...this.options, ...options }
     }
 
     activate() {

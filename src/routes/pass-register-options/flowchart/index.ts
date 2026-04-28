@@ -139,14 +139,14 @@ export class Flowchart {
         }
     }
 
-    register(registrationType: "node" | "edge" | "tool", type: string, value: FlowchartTypeMethod | DrawEdgeType | FlowchartToolConstructor) {
+    register(registrationType: "node" | "edge" | "tool", type: string, value: FlowchartTypeMethod | DrawEdgeType | FlowchartToolConstructor, options?: { [key: string]: any }) {
         if (registrationType === "node") {
             this.registered.nodes.push({ type: type, shape: value as FlowchartTypeMethod })
         } else if (registrationType === "edge") {
             this.registered.edges.push({ type: type, draw: value as DrawEdgeType })
         } else if (registrationType === "tool") {
             const o = value as FlowchartToolConstructor
-            this.registered.tools.push({ type: type, object: new o(this) })
+            this.registered.tools.push({ type: type, object: new o(this, options) })
         }
     }
 
