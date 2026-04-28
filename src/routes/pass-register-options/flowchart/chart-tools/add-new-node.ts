@@ -106,18 +106,20 @@ export class AddNodeTool extends FlowchartTool {
 
     private onMouseMove = () => {
         const mousePos = this.flowchart.events.mousePos
+        let matchedNodes = 0
 
-        let matchedNode = false
         this.flowchart.nodes.forEach(node => {
-            if (node.shape.containsPoint(mousePos, this.offset) && !node.shape.containsPoint(mousePos)) {
-                matchedNode = true
-                this.selectedNode = node
-                this.createButton()
-                this.updateButtonPosition(node)
-            }
+            if (node.shape.containsPoint(mousePos, this.offset)) {
+                matchedNodes++
+                if (!node.shape.containsPoint(mousePos)) {
+                    this.selectedNode = node
+                    this.createButton()
+                    this.updateButtonPosition(node)
+                }
+            }  
         })
 
-        if (!matchedNode) {
+        if (matchedNodes === 0 || matchedNodes > 1) {
             this.selectedNode = undefined
             this.removeButton()
         }
