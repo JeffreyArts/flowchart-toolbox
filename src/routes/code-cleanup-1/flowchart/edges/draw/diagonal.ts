@@ -2,7 +2,7 @@ import { type DrawEdgeType } from "../index"
 
 export const drawDiagonalEdge: DrawEdgeType = (start, end, edge) => {
     
-    const strength = edge.options.curvatureStrength ?? 0.5
+    const strength = edge.options.curvatureStrength * 0.99
     
     let endPointHor = false
     if (edge.endNode.shape?.width) {
@@ -16,6 +16,10 @@ export const drawDiagonalEdge: DrawEdgeType = (start, end, edge) => {
     const diagOffset = Math.min(Math.abs(remainX), Math.abs(remainY))
     const signX = remainX > 0 ? 1 : -1
     const signY = remainY > 0 ? 1 : -1
+
+    if (diagOffset < 10) {
+        return `M${start.x} ${start.y} L${end.x} ${end.y}`
+    }
 
     let midPoint = {
         x: start.x,
