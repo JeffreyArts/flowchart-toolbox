@@ -234,50 +234,51 @@ export default defineComponent ({
     mounted() {
         if (this.$el && !this.flowchart) {
             // Timeout is for giving some time for processing this.options
-
-            const flowchartOptions = {
-                edges: { 
-                    type: this.options.edgeType,
-                    curvatureStrength: this.options.curvatureStrength,
-                    midpoint: this.options.midpoint ,
-                    isVisible: this.options.edgeVisible,
-                    showArrow: this.options.edgeShowArrow,
-                },
-                nodes: {
-                    segments: this.options.segments,
-                    maxWidth: this.options.nodeMaxWidth,
-                    offsetPadding: this.options.nodeOffsetPadding,
-                    class: ["flowchart-node"],
-                    shape: { 
-                        style: { fill:"rgba(255, 255, 255, 0.2)" }
-                    },
-                    text: {
-                        style: {
-                            fontSize: "24px",
-                            fontFamily: "FixedSys"
-                        }
-                    },
-                    events: [
-                        { name: "show", handler: (node) => { gsap.to(node.svgGroup.style, { opacity: 1, delay: Math.random() })} }
-                    ]
-                }
-            }
-
-            this.flowchart = markRaw(new Joffa("#segments-canvas", flowchartOptions))
-            let names = ["Edges", "Nodes", "Tools"]
-            let nodeWidth = 200
-            let nodes = []
-            const startNode = new FlowchartNode("start", {
-                text: "Start",
-                flowchart: this.flowchart,
-                x: (nodeWidth*names.length) /2 - nodeWidth/2 ,
-                y: "50",
-                options: { maxWidth: 480 }
-            })
-
-            const zoomTool = this.flowchart.getTool("zoom")
             setTimeout(() => {
-                zoomTool.fit()
+                const flowchartOptions = {
+                    edges: { 
+                        type: this.options.edgeType,
+                        curvatureStrength: this.options.curvatureStrength,
+                        midpoint: this.options.midpoint ,
+                        isVisible: this.options.edgeVisible,
+                        showArrow: this.options.edgeShowArrow,
+                    },
+                    nodes: {
+                        segments: this.options.segments,
+                        maxWidth: this.options.nodeMaxWidth,
+                        offsetPadding: this.options.nodeOffsetPadding,
+                        class: ["flowchart-node"],
+                        shape: { 
+                            style: { fill:"rgba(255, 255, 255, 0.2)" }
+                        },
+                        text: {
+                            style: {
+                                fontSize: "24px",
+                                fontFamily: "FixedSys"
+                            }
+                        },
+                        events: [
+                            { name: "show", handler: (node) => { gsap.to(node.svgGroup.style, { opacity: 1, delay: Math.random() })} }
+                        ]
+                    }
+                }
+
+                this.flowchart = markRaw(new Joffa("#segments-canvas", flowchartOptions))
+                let names = ["Edges", "Nodes", "Tools"]
+                let nodeWidth = 200
+                let nodes = []
+                const startNode = new FlowchartNode("start", {
+                    text: "Start",
+                    flowchart: this.flowchart,
+                    x: (nodeWidth*names.length) /2 - nodeWidth/2 ,
+                    y: "50",
+                    options: { maxWidth: 480 }
+                })
+
+                const zoomTool = this.flowchart.getTool("zoom")
+                setTimeout(() => {
+                    zoomTool.fit()
+                })
             })
         }
 
