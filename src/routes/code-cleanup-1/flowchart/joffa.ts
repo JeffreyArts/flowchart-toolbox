@@ -4,7 +4,7 @@ import Flowchart, { type FlowchartOptions } from "."
 import { PanTool } from "./chart-tools/pan"
 import { ZoomTool } from "./chart-tools/zoom"
 import { MoveNodeTool } from "./chart-tools/move-node"
-import { AddNodeTool } from "./chart-tools/add-new-node"
+import { AddNodeTool } from "./chart-tools/add-node"
 
 // Nodes
 import StartNode from "./nodes/types/start"

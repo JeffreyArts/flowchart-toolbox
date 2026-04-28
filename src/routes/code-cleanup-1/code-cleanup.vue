@@ -164,7 +164,7 @@ import gsap from "gsap"
 import Joffa from "./flowchart/joffa"
 import { FlowchartNode, type FlowchartNodeOptions } from "./flowchart/nodes"
 import { type EdgeType } from "./flowchart/edge"
-import SelectTool from "./flowchart/chart-tools/select"
+import SelectTool from "./flowchart/chart-tools/select-node"
 
 interface Options {
     segments: number
@@ -315,7 +315,7 @@ export default defineComponent ({
             if (selectedNode) {
                 // this.selectedNode.x = target.x
                 this.flowchart.replaceNode(selectedNode, newNode)
-                const selectTool = this.flowchart.getTool("select")
+                const selectTool = this.flowchart.getTool("select-node")
 
                 if (selectTool instanceof SelectTool && selectTool.onClick) {
                     selectedNode.state.mouseOver = true

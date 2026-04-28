@@ -2,7 +2,6 @@ import type Flowchart from "../index"
 import type FlowchartNode from "../nodes/index"
 import type { FlowchartEventContext } from "../events"
 import FlowchartTool from "./index"
-import type { K } from "vue-router/dist/index-DFCq6eJK.js"
 
 export class ZoomTool extends FlowchartTool {
     name = "zoom"

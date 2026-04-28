@@ -8,6 +8,8 @@ export type AddNodeToolOptions = {
     buttonDiameter: number
     segments: number
     defaultNodeType: string
+    defaultDistance: number
+    autoFit: boolean
     smartNodes?: {
         start: string
         normal: string
@@ -30,14 +32,8 @@ export class AddNodeTool extends FlowchartTool {
         segments: 8,
         defaultNodeType: "end",
         defaultDistance: 100,
-        autoFit: true,
-        smartNodes: {
-            start: "start",
-            normal: "process",
-            decision: "decision",
-            end: "end",
-        }
-    }
+        autoFit: true
+    } as AddNodeToolOptions
     
     constructor(flowchart: Flowchart, options?: AddNodeToolOptions) {
         super(flowchart)
@@ -106,13 +102,28 @@ export class AddNodeTool extends FlowchartTool {
                 y: this.selectedNode.y,
                 options: this.selectedNode.options
             }
+            let newNodeType = this.options.defaultNodeType
+            let addNode = false
 
             if (parentCount === 0 && this.selectedNode.type !== this.options.smartNodes.start) {
-                this.flowchart.replaceNode(this.selectedNode, new FlowchartNode(this.options.smartNodes.start, newNodeOptions))
+                if (this.options.smartNodes.start) {
+                    newNodeType = this.options.smartNodes.start
+                }
+                addNode = true
             } else if (childCount === 1 && parentCount > 0 && this.selectedNode.type !== this.options.smartNodes.normal) {
-                this.flowchart.replaceNode(this.selectedNode, new FlowchartNode(this.options.smartNodes.normal, newNodeOptions))
+                if (this.options.smartNodes.normal) {
+                    newNodeType = this.options.smartNodes.normal
+                }
+                addNode = true
             } else if (childCount > 1 && parentCount > 0 && this.selectedNode.type !== this.options.smartNodes.decision) {
-                this.flowchart.replaceNode(this.selectedNode, new FlowchartNode(this.options.smartNodes.decision, newNodeOptions))
+                if (this.options.smartNodes.decision) {
+                    newNodeType = this.options.smartNodes.decision
+                }
+                addNode = true
+            }
+
+            if (addNode) {
+                this.flowchart.replaceNode(this.selectedNode, new FlowchartNode(newNodeType, newNodeOptions))
             }
         }
         

@@ -5,7 +5,6 @@ import type { FlowchartNode } from "../nodes"
 
 export class MoveNodeTool extends FlowchartTool {
     name = "move-node"
-    keyDown = false
     selectedNodesStartPos = [] as { x: number, y: number, node: FlowchartNode }[]
     
     constructor(flowchart: Flowchart) {
@@ -17,8 +16,6 @@ export class MoveNodeTool extends FlowchartTool {
             }
         }
 
-        this.flowchart.events.add("keyDown", this.onKeyDown)
-        this.flowchart.events.add("keyUp", this.onKeyUp)
         this.flowchart.events.add("mouseDown", this.onMouseDown)
         this.flowchart.events.add("mouseMove", this.onMouseMove)
     }
@@ -26,14 +23,6 @@ export class MoveNodeTool extends FlowchartTool {
     // ██████ ▄▄ ▄▄ ▄▄▄▄▄ ▄▄  ▄▄ ▄▄▄▄▄▄ ▄▄▄▄ 
     // ██▄▄   ██▄██ ██▄▄  ███▄██   ██  ███▄▄ 
     // ██▄▄▄▄  ▀█▀  ██▄▄▄ ██ ▀██   ██  ▄▄██▀ 
-
-    private onKeyDown = () => {
-        this.keyDown = true
-    }
-
-    private onKeyUp = () => {
-        this.keyDown = false
-    }
 
     private onMouseDown = (_fec: FlowchartEventContext) => {  
         this.selectedNodesStartPos = []

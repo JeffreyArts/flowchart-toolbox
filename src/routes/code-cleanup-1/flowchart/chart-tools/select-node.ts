@@ -4,7 +4,7 @@ import FlowchartNode from "../nodes/index"
 import type { FlowchartEventContext } from "../events"
 
 export class SelectTool extends FlowchartTool {
-    name = "select"
+    name = "select-node"
     mouseStartPos = undefined as { x: number, y: number } | undefined
     startPan = { x: 0, y: 0 } 
     selectedNodes = [] as FlowchartNode[]

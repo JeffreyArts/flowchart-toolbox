@@ -15,7 +15,6 @@ export class PanTool extends FlowchartTool {
     options = {
         spaceBarPanning: true,
         middleMousePanning: true,
-        touchSwipePanning: true,
         scrollPanning: true,
     }
     
@@ -38,7 +37,6 @@ export class PanTool extends FlowchartTool {
         this.flowchart.events.add("mouseDown", this.onMouseDown)
         this.flowchart.events.add("mouseMove", this.onMouseMove)
         this.flowchart.events.add("mouseUp", this.onMouseUp)
-        this.flowchart.events.add("swipe", this.onSwipe)
     }
     
     // █████▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄    ▄▄  ▄▄▄▄ 
@@ -84,13 +82,6 @@ export class PanTool extends FlowchartTool {
         }
     }
 
-    private onSwipe = (_fec: FlowchartEventContext) => {
-        if (this.options.touchSwipePanning) {
-            this.flowchart.pan.x += this.flowchart.events.touchDelta.x
-            this.flowchart.pan.y += this.flowchart.events.touchDelta.y
-        }
-    }
-    
     private onWheel = (fec: FlowchartEventContext) => {
         const e = fec.originalEvent as WheelEvent
         if (e.ctrlKey || e.metaKey) return
