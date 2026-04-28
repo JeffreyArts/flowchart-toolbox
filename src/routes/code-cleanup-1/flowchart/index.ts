@@ -168,9 +168,7 @@ export class Flowchart {
         this.chart.appendChild(this.nodesGroup)
         this.parentElement.appendChild(this.chart)
         
-        setTimeout(() => {
-            this.updateChartSize()
-        })
+        this.updateChartSize()
         return this.chart
     }
 
