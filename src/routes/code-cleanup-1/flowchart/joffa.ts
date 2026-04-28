@@ -27,7 +27,15 @@ export default class Joffa extends Flowchart {
         // Default tools
         this.register("tool","zoom", ZoomTool)
         this.register("tool","move-node", MoveNodeTool)
-        this.register("tool","add-node", AddNodeTool, { segments: 32 })
+        this.register("tool","add-node", AddNodeTool, { 
+            segments: 16, 
+            smartNodes: {
+                start: "start",
+                normal: "process",
+                decision: "decision",
+                end: "end",
+            }
+        })
         this.register("tool","pan", PanTool)
         
         // Default Nodes
