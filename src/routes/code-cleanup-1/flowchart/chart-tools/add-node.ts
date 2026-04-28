@@ -235,6 +235,9 @@ export class AddNodeTool extends FlowchartTool {
                     this.selectedNode = node
                     this.createButton()
                     this.updateButtonPosition(node)
+                } else if (this.selectedNode) {
+                    this.selectedNode = undefined
+                    this.removeButton()
                 }
             }  
         })
