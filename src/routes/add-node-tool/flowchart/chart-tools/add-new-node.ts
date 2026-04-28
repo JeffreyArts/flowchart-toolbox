@@ -8,11 +8,13 @@ export class AddNodeTool extends FlowchartTool {
     keyDown = false
     offset = 32
     selectedNode = undefined as FlowchartNode | undefined
+    newNodeType = "process"
     addButton: SVGElement | undefined
     
 
     options = {
-        buttonDiameter: 25
+        buttonDiameter: 25,
+        segments: 8
     }
     
     constructor(flowchart: Flowchart) {
@@ -79,7 +81,7 @@ export class AddNodeTool extends FlowchartTool {
         if (!this.selectedNode) return
         const mousePos = this.flowchart.events.mousePos
         const borderDistance = this.selectedNode.calculateEdgeStart(mousePos, 100)
-        const newNode = new FlowchartNode("process", {
+        const newNode = new FlowchartNode(this.newNodeType, {
             text: "New node",
             parent: this.selectedNode,
             x: borderDistance.x,
@@ -93,7 +95,7 @@ export class AddNodeTool extends FlowchartTool {
     private updateButtonPosition(node: FlowchartNode) {
         if (!this.addButton) return
         const mousePos = this.flowchart.events.mousePos
-        const { x,y } = node.calculateEdgeStart(mousePos, this.options.buttonDiameter/2)
+        const { x,y } = node.calculateEdgeStart(mousePos, this.options.buttonDiameter/2, this.options.segments)
         this.addButton.setAttribute("transform", `translate(${x-this.options.buttonDiameter/2}, ${y-this.options.buttonDiameter/2})`)
     }
 

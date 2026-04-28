@@ -542,19 +542,23 @@ export class FlowchartNode {
         this.updatePosition(false)
     }
 
-    calculateEdgeStart(point: { x: number, y: number }, offset = 0): { x: number, y: number } {
+    calculateEdgeStart(point: { x: number, y: number }, offset = 0, segments?: number): { x: number, y: number } {
         if (!this.shape) {
             throw new Error("Cannot calculate edge start position without a shape defined for the node.")
         }
         const startNode = this
+
+        if (!segments) {
+            segments = startNode.options.segments
+        }
         let targetPosition = {
             x: point.x,
             y: point.y
         }
 
         let degrees = Math.atan2(targetPosition.y - startNode.y, targetPosition.x - startNode.x) * (180 / Math.PI) + 90
-        if (startNode.options.segments > 0) {
-            const anglePerSegment = 360 / startNode.options.segments
+        if (segments > 0) {
+            const anglePerSegment = 360 / segments
             degrees = Math.round(degrees / anglePerSegment) * anglePerSegment            
             const rad = (degrees - 90) * (Math.PI / 180)
             targetPosition = {
