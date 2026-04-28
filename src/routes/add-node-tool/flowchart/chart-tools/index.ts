@@ -1,14 +1,14 @@
-import type { st } from "vue-router/dist/index-DFCq6eJK.js"
 import type Flowchart  from "../index"
 
 export abstract class FlowchartTool {
     abstract name: string
     flowchart: Flowchart
     isActive = true
-    options?: { [key: string]: string | number | boolean }
+    options?: { [key: string]: any }
 
-    constructor(flowchart: Flowchart) {
+    constructor(flowchart: Flowchart, options?: { [key: string]: any }) {
         this.flowchart = flowchart
+        this.options = { ...this.options, ...options }
     }
 
     activate() {

@@ -3,22 +3,43 @@ import type { FlowchartEventContext } from "../events"
 import FlowchartTool from "./index"
 import { FlowchartNode } from "../nodes"
 
+export type AddNodeToolOptions = {
+    buttonDiameter: number
+    segments: number
+    defaultNodeType: string
+    smartNodes?: {
+        start: string
+        normal: string
+        decision: string
+        end: string
+    }
+}
+
 export class AddNodeTool extends FlowchartTool {
     name = "add-node"
     keyDown = false
     offset = 32
     selectedNode = undefined as FlowchartNode | undefined
-    newNodeType = "process"
+    newNodeType = ""
     addButton: SVGElement | undefined
     
 
     options = {
         buttonDiameter: 25,
-        segments: 8
+        segments: 8,
+        defaultNodeType: "end",
+        smartNodes: {
+            start: "start",
+            normal: "process",
+            decision: "decision",
+            end: "end",
+        }
     }
     
-    constructor(flowchart: Flowchart) {
-        super(flowchart)
+    constructor(flowchart: Flowchart, options?: AddNodeToolOptions) {
+        super(flowchart, options)
+
+        this.newNodeType = this.options.defaultNodeType
 
         if (flowchart.parentElement) {
             if (!flowchart.parentElement.classList.contains("__toolAddNode")) {
@@ -81,6 +102,7 @@ export class AddNodeTool extends FlowchartTool {
         if (!this.selectedNode) return
         const mousePos = this.flowchart.events.mousePos
         const borderDistance = this.selectedNode.calculateEdgeStart(mousePos, 100)
+
         const newNode = new FlowchartNode(this.newNodeType, {
             text: "New node",
             parent: this.selectedNode,
@@ -89,6 +111,30 @@ export class AddNodeTool extends FlowchartTool {
             options: { maxWidth: 200 }
         })
         this.flowchart.addNode(newNode)
+
+
+
+        if (this.options.smartNodes) {
+            const parentCount = this.selectedNode.parents.length
+            const childCount = this.selectedNode.children.length
+            const newNodeOptions = {
+                flowchart: this.flowchart,
+                x: this.selectedNode.x,
+                y: this.selectedNode.y,
+                options: this.selectedNode.options
+            }
+
+            if (parentCount === 0 && this.selectedNode.type !== this.options.smartNodes.start) {
+                this.flowchart.replaceNode(this.selectedNode, new FlowchartNode(this.options.smartNodes.start, newNodeOptions))
+            } else if (childCount === 1 && parentCount > 0 && this.selectedNode.type !== this.options.smartNodes.normal) {
+                this.flowchart.replaceNode(this.selectedNode, new FlowchartNode(this.options.smartNodes.normal, newNodeOptions))
+            } else if (childCount > 1 && parentCount > 0 && this.selectedNode.type !== this.options.smartNodes.decision) {
+                this.flowchart.replaceNode(this.selectedNode, new FlowchartNode(this.options.smartNodes.decision, newNodeOptions))
+            }
+        }
+        
+        
+
         this.removeButton()
     }
 
