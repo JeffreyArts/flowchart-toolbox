@@ -9,6 +9,7 @@ export const StartNode = (node: FlowchartNode) => {
         maxWidth = node.options.maxWidth
     }
     return new PillShape(node, { 
+        class: "start-node",
         style: {
             maxWidth
         }

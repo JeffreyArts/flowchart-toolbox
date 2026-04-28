@@ -31,10 +31,10 @@ export default class Joffa extends Flowchart {
         this.register("tool","pan", PanTool)
         
         // Default Nodes
-        this.register("node", "process", ProcessNode, { shape: { class: "process-node" }})
-        this.register("node", "start", StartNode, { shape: { class: "start-node" }})
-        this.register("node", "end", EndNode, { shape: { class: ["💊", "end-node"] }})
-        this.register("node", "decision", DecisionNode, { shape: { class: "decision-node" }})
+        this.register("node", "process", ProcessNode, { shape: { class: "▭" }})
+        this.register("node", "start", StartNode, { shape: { class: "💊" }})
+        this.register("node", "end", EndNode, { shape: { class: ["💊"] }})
+        this.register("node", "decision", DecisionNode, { shape: { class: "🔶" }})
 
         // Default edges
         this.register("edge", "straight", drawStraightEdge)

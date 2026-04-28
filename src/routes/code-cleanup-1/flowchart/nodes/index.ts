@@ -181,8 +181,12 @@ export class FlowchartNode {
         this.flowchart.addNode(this)
         this.updatePosition()
     }
+    
+    // █████▄ ▄▄▄▄  ▄▄ ▄▄ ▄▄  ▄▄▄ ▄▄▄▄▄▄ ▄▄▄▄▄ 
+    // ██▄▄█▀ ██▄█▄ ██ ██▄██ ██▀██  ██   ██▄▄  
+    // ██     ██ ██ ██  ▀█▀  ██▀██  ██   ██▄▄▄ 
 
-    parseTextOptions(options: Partial<FlowchartNodeConstructOptions>) {
+    private parseTextOptions(options: Partial<FlowchartNodeConstructOptions>) {
         const flowchartTextOptions = this.flowchart?.options.nodes?.text
         if (flowchartTextOptions) {
             if (flowchartTextOptions.style) {
@@ -239,7 +243,7 @@ export class FlowchartNode {
         }
     }
 
-    parseShapeOptions(options: Partial<FlowchartNodeConstructOptions>) {
+    private parseShapeOptions(options: Partial<FlowchartNodeConstructOptions>) {
         const flowchartShapeOptions = this.flowchart?.options.nodes?.shape
         if (flowchartShapeOptions) {
             if (flowchartShapeOptions.style) {
@@ -284,7 +288,7 @@ export class FlowchartNode {
         }
     }
 
-    parseOptions(options: Partial<FlowchartNodeConstructOptions>) {
+    private parseOptions(options: Partial<FlowchartNodeConstructOptions>) {
         if (!options) return
         
         if (options.flowchart) { this.flowchart = options.flowchart}
@@ -309,7 +313,7 @@ export class FlowchartNode {
                             this.addEventListener(event.name, event.handler)
                         })
                     } else if (typeof flowchartNodeOptions[k] === "object" && flowchartNodeOptions[k] !== null) {
-                        const event = flowchartNodeOptions[k] as FlowchartNodeEvent
+                        const event = flowchartNodeOptions[k] as unknown as FlowchartNodeEvent
                         if (event.name && event.handler) {
                             this.addEventListener(event.name, event.handler)
                         } else {
@@ -376,42 +380,6 @@ export class FlowchartNode {
         }
         this.updateSVGGroupClass()
     }
-    
-    get width(): number {
-        if (!this.shape) {
-            return 0
-        }
-
-        return this.shape.width
-    }
-
-    get height(): number {
-        if (!this.shape) {
-            return 0
-        }
-
-        return this.shape.height
-    }
-
-    /** Text **/
-
-    get text(): string {
-        return this._text
-    }
-
-    set text(value: string) {
-        this.triggerEvent("beforeTextChange")
-        this._text = value
-        
-        this.updateTextBox()
-
-        // Update position after text change to adjust for new size
-        this.updatePosition()
-
-        setTimeout(() => {
-            this.triggerEvent("afterTextChange")
-        })
-    }
 
     private updateSVGGroupClass() {
         const classOption = this.options.class
@@ -454,8 +422,6 @@ export class FlowchartNode {
         this.triggerEvent("dimensionChange")
     }
 
-
-    /** Visible **/
     private changeVisibility() {
         const showEvent = this.events.find(e => e.name === "show")
         const hideEvent = this.events.find(e => e.name === "hide")
@@ -466,19 +432,6 @@ export class FlowchartNode {
             this.svgGroup.style.opacity = "0"
         }
     }
-    
-    /** Event listeners */
-    addEventListener(eventName: FlowchartNodeEventType, callback: (node: FlowchartNode) => void) {
-        this.events.push({ name: eventName, callback })
-    }
-
-    removeEventListener(eventName: FlowchartNodeEventType, callback: () => void) {
-        this.events = this.events.filter(e => e.name !== eventName || e.callback !== callback)
-    }
-
-    removeAllEventListeners(eventName: FlowchartNodeEventType) {
-        this.events = this.events.filter(e => e.name !== eventName)
-    }
 
     private triggerEvent(eventName: FlowchartNodeEventType) {
         this.events.forEach(e => {
@@ -488,7 +441,6 @@ export class FlowchartNode {
         })
     }
 
-    /** Position **/
     private updatePosition(first = true) {
         if (!this.svgGroup) return
 
@@ -502,14 +454,6 @@ export class FlowchartNode {
         }
     }
 
-    get x(): number {
-        return parseFloat(this._x)
-    }
-
-    set x (value: number | string) {
-        this.setX(value)
-    }
-    
     private setX(value: number | string) {
         if (!this.flowchart) return
         // if (!this.foreignObject) return
@@ -525,14 +469,6 @@ export class FlowchartNode {
 
         this._x = res
         this.updatePosition(false)
-    }
-
-    get y(): number {
-        return parseFloat(this._y)
-    }
-
-    set y (value: number | string) {
-        this.setY(value)
     }
 
     private setY(value: number | string) {
@@ -551,37 +487,73 @@ export class FlowchartNode {
         this.updatePosition(false)
     }
 
-    calculateEdgeStart(point: { x: number, y: number }, offset = 0, segments?: number): { x: number, y: number } {
+    // █████▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄    ▄▄  ▄▄▄▄ 
+    // ██▄▄█▀ ██ ██ ██▄██ ██    ██ ██▀▀▀ 
+    // ██     ▀███▀ ██▄█▀ ██▄▄▄ ██ ▀████  
+
+    /** Text **/
+    get text(): string {
+        return this._text
+    }
+
+    set text(value: string) {
+        this.triggerEvent("beforeTextChange")
+        this._text = value
+        
+        this.updateTextBox()
+
+        // Update position after text change to adjust for new size
+        this.updatePosition()
+
+        setTimeout(() => {
+            this.triggerEvent("afterTextChange")
+        })
+    }
+
+    /** Event listeners */
+    addEventListener(eventName: FlowchartNodeEventType, callback: (node: FlowchartNode) => void) {
+        this.events.push({ name: eventName, callback })
+    }
+
+    removeEventListener(eventName: FlowchartNodeEventType, callback: () => void) {
+        this.events = this.events.filter(e => e.name !== eventName || e.callback !== callback)
+    }
+
+    removeAllEventListeners(eventName: FlowchartNodeEventType) {
+        this.events = this.events.filter(e => e.name !== eventName)
+    }
+
+    /** Position & dimensions **/
+    get x(): number {
+        return parseFloat(this._x)
+    }
+
+    set x (value: number | string) {
+        this.setX(value)
+    }
+    
+    get y(): number {
+        return parseFloat(this._y)
+    }
+
+    set y (value: number | string) {
+        this.setY(value)
+    }
+
+    get width(): number {
         if (!this.shape) {
-            throw new Error("Cannot calculate edge start position without a shape defined for the node.")
-        }
-        const startNode = this
-
-        if (!segments) {
-            segments = startNode.options.segments
-        }
-        let targetPosition = {
-            x: point.x,
-            y: point.y
+            return 0
         }
 
-        let degrees = Math.atan2(targetPosition.y - startNode.y, targetPosition.x - startNode.x) * (180 / Math.PI) + 90
-        if (segments > 0) {
-            const anglePerSegment = 360 / segments
-            degrees = Math.round(degrees / anglePerSegment) * anglePerSegment            
-            const rad = (degrees - 90) * (Math.PI / 180)
-            targetPosition = {
-                x: this.x + Math.cos(rad) * 1000,
-                y: this.y + Math.sin(rad) * 1000,
-            }
+        return this.shape.width
+    }
+
+    get height(): number {
+        if (!this.shape) {
+            return 0
         }
 
-        const rad = (degrees - 90) * (Math.PI / 180)
-        const dist = this.shape.getBorderDistance(targetPosition, offset) + startNode.options.offsetPadding
-        return {
-            x: this.x + Math.cos(rad) * dist,
-            y: this.y + Math.sin(rad) * dist,
-        }
+        return this.shape.height
     }
 
     /** Parents */
@@ -661,15 +633,47 @@ export class FlowchartNode {
         return !!this.children.find(n => n.id === node.id)
     }
 
-    /** Lifecycle Hooks **/
+    /** General public methods **/
+    calculateEdgeStart(point: { x: number, y: number }, offset = 0, segments?: number): { x: number, y: number } {
+        if (!this.shape) {
+            throw new Error("Cannot calculate edge start position without a shape defined for the node.")
+        }
+        const startNode = this
+
+        if (!segments) {
+            segments = startNode.options.segments
+        }
+        let targetPosition = {
+            x: point.x,
+            y: point.y
+        }
+
+        let degrees = Math.atan2(targetPosition.y - startNode.y, targetPosition.x - startNode.x) * (180 / Math.PI) + 90
+        if (segments > 0) {
+            const anglePerSegment = 360 / segments
+            degrees = Math.round(degrees / anglePerSegment) * anglePerSegment            
+            const rad = (degrees - 90) * (Math.PI / 180)
+            targetPosition = {
+                x: this.x + Math.cos(rad) * 1000,
+                y: this.y + Math.sin(rad) * 1000,
+            }
+        }
+
+        const rad = (degrees - 90) * (Math.PI / 180)
+        const dist = this.shape.getBorderDistance(targetPosition, offset) + startNode.options.offsetPadding
+        return {
+            x: this.x + Math.cos(rad) * dist,
+            y: this.y + Math.sin(rad) * dist,
+        }
+    }
 
     destroy() {
         // document.removeEventListener("mousemove", this.boundSetIsHover)
         // if (this.flowchart)
         // if (this.foreignObject) { this.foreignObject.remove()}
         if (this.svgGroup) { this.svgGroup.remove() }
+        if (this.shape) { this.shape.destroy() }
     }
-
 }
 
 export default FlowchartNode
