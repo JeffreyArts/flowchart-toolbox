@@ -27,7 +27,6 @@ export class DiamondShape extends FlowchartShape {
     createSvgEl() {
         const diamond = document.createElementNS("http://www.w3.org/2000/svg", "polygon")
         diamond.classList.add("flowchart-shape")
-        diamond.classList.add("__isDiamond")
         return diamond
     }
 

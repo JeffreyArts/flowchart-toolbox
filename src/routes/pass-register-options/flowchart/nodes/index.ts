@@ -11,7 +11,7 @@ export type FlowchartNodeOptions = {
     maxWidth: number | string  
     segments: number
     offsetPadding: number
-    class: ""
+    class: string[]
     shape?: {
         style: Partial<CSSStyleDeclaration>
         class: string | string[]
@@ -77,7 +77,7 @@ export class FlowchartNode {
         maxWidth: "auto",
         segments: 0,
         offsetPadding: 0,
-        class: ""
+        class: []
     }, {
         set: (target, prop, value) => {
             // Type forcing
@@ -167,6 +167,11 @@ export class FlowchartNode {
             
         this.type = type
         this.shape = matchedType.shape(this)
+        if (matchedType.options) {
+            options = { ...options, ...matchedType.options }
+        }
+        
+        this.parseOptions(options)
         this.parseShapeOptions(options)
         this.parseTextOptions(options)
 
@@ -289,7 +294,7 @@ export class FlowchartNode {
         if (options.parent) { this.addParent(options.parent) }
         if (options.x) { this.setX(options.x) }
         if (options.y) { this.setY(options.y) }
-        
+        if (options.class) { this.updateOptionClass(options.class) }
         
         // First load options from FLOWCHART DEFAULTS
         const flowchartNodeOptions = this.flowchart?.options.nodes
@@ -298,7 +303,6 @@ export class FlowchartNode {
                 const k = key as keyof FlowchartNodeOptions
 
                 if (key === "events" || key === "event") {
-                    
                     if (Array.isArray(flowchartNodeOptions[k])) {
                         flowchartNodeOptions[k].forEach(event => {
                             if (!event.name || !event.handler) {
@@ -314,6 +318,14 @@ export class FlowchartNode {
                         } else {
                             console.warn("Invalid event in options.event, must have name and handler", event)
                         }
+                    }
+                    break
+                }
+
+                if (key === "class") {
+                    const newClass = flowchartNodeOptions[k] as string | string[]
+                    if (newClass) {
+                        this.updateOptionClass(newClass)
                     }
                     break
                 }
@@ -355,6 +367,19 @@ export class FlowchartNode {
         }
     }
     
+    private updateOptionClass(newClass: string | string[]) {
+        if (Array.isArray(newClass)) {
+            newClass.forEach(c => this.options.class.push(c))
+        } else if (typeof newClass === "string") {
+            this.options.class.push(newClass)
+        }
+
+        if (!newClass) {
+            return
+        }
+        this.updateSVGGroupClass()
+    }
+
     #init() {
         setTimeout(() => {
             // Need to add event Listener in setTimeout to ensure child classes have the proper binding in setIsHover
@@ -402,15 +427,11 @@ export class FlowchartNode {
 
     private updateSVGGroupClass() {
         const classOption = this.options.class
-        this.svgGroup.classList.forEach(c => {
-            if (c !== "flowchart-node") {
-                this.svgGroup.classList.remove(c)
-            }
-        })
+        this.svgGroup.classList = ""
 
-        if (classOption) {
-            this.svgGroup.classList.add(classOption)
-        }
+        classOption.forEach(c => {
+            this.svgGroup.classList.add(c)
+        })
     }
         
     private updateTextBox() {

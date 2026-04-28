@@ -25,7 +25,6 @@ export class RectangleShape extends FlowchartShape {
     createSvgEl() {
         const rectangle = document.createElementNS("http://www.w3.org/2000/svg", "rect")
         rectangle.classList.add("flowchart-shape")
-        rectangle.classList.add("__isRectangle")
         return rectangle
     }
 

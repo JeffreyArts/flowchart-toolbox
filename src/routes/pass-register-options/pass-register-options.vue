@@ -247,7 +247,7 @@ export default defineComponent ({
                         segments: this.options.segments,
                         maxWidth: this.options.nodeMaxWidth,
                         offsetPadding: this.options.nodeOffsetPadding,
-                        class: "node-default",
+                        class: ["flowchart-node"],
                         shape: { 
                             style: { fill:"rgba(255, 255, 255, 0.2)" }
                         },

@@ -62,7 +62,7 @@ export class Flowchart {
     }
 
     registered = {
-        nodes: [] as Array<{ type: string, shape: FlowchartTypeMethod }>,
+        nodes: [] as Array<{ type: string, shape: FlowchartTypeMethod, options?: Partial<FlowchartNodeOptions> }>,
         edges: [] as Array<{ type: string, draw: DrawEdgeType }>,
         tools: [] as Array<{ type: string, object: FlowchartTool }>
     }
@@ -141,7 +141,7 @@ export class Flowchart {
 
     register(registrationType: "node" | "edge" | "tool", type: string, value: FlowchartTypeMethod | DrawEdgeType | FlowchartToolConstructor, options?: { [key: string]: any }) {
         if (registrationType === "node") {
-            this.registered.nodes.push({ type: type, shape: value as FlowchartTypeMethod })
+            this.registered.nodes.push({ type: type, shape: value as FlowchartTypeMethod, options: options as unknown as FlowchartNodeOptions | undefined })
         } else if (registrationType === "edge") {
             this.registered.edges.push({ type: type, draw: value as DrawEdgeType })
         } else if (registrationType === "tool") {
