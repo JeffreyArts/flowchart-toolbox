@@ -35,9 +35,6 @@ export class FlowchartEvents {
     touchScale = 1
     touchDelta = { x: 0, y: 0 }
 
-    readonly PINCH_THRESHOLD = 0.02  // minimum scale change
-    readonly SWIPE_THRESHOLD = 2     // minimum pixels moved
-
     list = [] as FlowchartEvent[]
 
     ignore = {
@@ -71,24 +68,16 @@ export class FlowchartEvents {
         document.addEventListener("touchmove", this.onTouchMove, { passive: false })
         document.addEventListener("touchend", this.onTouchEnd)
     }
-
-    add(eventType: FlowchartEventType, handler: (e: FlowchartEventContext) => void, priority = 0) {
-        if (this.get(eventType).find(event => event.priority === priority)) {
-            this.add(eventType, handler, priority + 1)
-            return
-        }
-        this.list.push({ eventType, handler, priority })
-    }
-
-    get(eventType: FlowchartEventType) {
-        return this.list.filter(ev => ev.eventType === eventType).sort((a, b) => a.priority - b.priority)
-    }
-
-    #dispatch(eventType: FlowchartEventType, e: Event) {
+                                        
+    // █████▄ ▄▄▄▄  ▄▄ ▄▄ ▄▄  ▄▄▄ ▄▄▄▄▄▄ ▄▄▄▄▄ 
+    // ██▄▄█▀ ██▄█▄ ██ ██▄██ ██▀██  ██   ██▄▄  
+    // ██     ██ ██ ██  ▀█▀  ██▀██  ██   ██▄▄▄ 
+                             
+    private dispatch(eventType: FlowchartEventType, e: Event) {
         if (this.ignore[eventType]) return
         const handlers = this.get(eventType)
         if (handlers.length === 0) return
-        const ctx = this.#createContext(e)
+        const ctx = this.createContext(e)
         for (const event of handlers) {
             // if (eventType === "mouseDown") {
             //     console.log("mouse down", eventType, event)
@@ -98,7 +87,7 @@ export class FlowchartEvents {
         }
     }
 
-    #createContext = (originalEvent: Event): FlowchartEventContext =>{
+    private createContext = (originalEvent: Event): FlowchartEventContext =>{
         return {
             originalEvent,
             stopped: false,
@@ -108,7 +97,7 @@ export class FlowchartEvents {
         }
     }
 
-    #setWithinChart = (e: MouseEvent) => {
+    private setWithinChart = (e: MouseEvent) => {
         if (!this.flowchart?.parentElement) return false
 
         const rect = this.flowchart.parentElement.getBoundingClientRect()
@@ -121,7 +110,7 @@ export class FlowchartEvents {
         return this.isWithinChart
     }                      
     
-    #setMousePos = (e: MouseEvent) => {
+    private setMousePos = (e: MouseEvent) => {
         if (!this.flowchart?.chart) return
 
         const rect = this.flowchart.chart.getBoundingClientRect()
@@ -139,7 +128,7 @@ export class FlowchartEvents {
         }
     }
 
-    #setTouch = (e: TouchEvent) => {
+    private setTouch = (e: TouchEvent) => {
         const touches = Array.from(e.touches)
         if (touches.length < 2) {
             return false
@@ -187,90 +176,20 @@ export class FlowchartEvents {
         return true
     }
 
+    // █████▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄    ▄▄  ▄▄▄▄ 
+    // ██▄▄█▀ ██ ██ ██▄██ ██    ██ ██▀▀▀ 
+    // ██     ▀███▀ ██▄█▀ ██▄▄▄ ██ ▀████                                   
 
-    //   ______               _       
-    //  |  ____|             | |      
-    //  | |____   _____ _ __ | |_ ___ 
-    //  |  __\ \ / / _ \ '_ \| __/ __|
-    //  | |___\ V /  __/ | | | |_\__ \
-    //  |______\_/ \___|_| |_|\__|___/
-                               
-
-    private onMouseDown = (e: MouseEvent) => {
-        this.#setMousePos(e)
-        
-        this.mouseDown = true
-        this.mouseStartPos = { ...this.mousePos }
-        this.globalMouseStartPos = { ...this.globalMousePos }
-
-        this.#dispatch("mouseDown", e)
-    }
-
-    private onMouseMove = (e: MouseEvent) => {
-        this.#setMousePos(e)
-        this.#setWithinChart(e)
-
-        this.#dispatch("mouseMove", e)
-    }
-
-    private onMouseUp = (e: MouseEvent) => {
-        this.#setMousePos(e)
-        
-        this.mouseStartPos = undefined
-        this.globalMouseStartPos = undefined
-        this.mouseDown = false
-        
-        this.#dispatch("mouseUp", e)
-    }
-
-    private onClick = (e: MouseEvent) => {
-        this.#setMousePos(e)
-
-        this.#dispatch("click", e)
-    }
-    
-    private onKeyDown = (e: KeyboardEvent) => {
-        this.#dispatch("keyDown", e)
-    }
-
-    private onKeyUp = (e: KeyboardEvent) => {
-        this.#dispatch("keyUp", e)
-    }
-
-    private onWheel = (e: WheelEvent) => {
-        // Check if within chart bounds
-        this.#setWithinChart(e)
-
-        this.#dispatch("wheel", e)
-    }
-
-    private onTouchStart = (e: TouchEvent) => {
-        this.#setTouch(e)
-
-        // Reset start values
-        this.touchDelta = { x: 0, y: 0 } // For swipe
-        this.touchScale = 1 // For pinch
-        this.#dispatch("touchStart", e)
-    }
-
-    private onTouchMove = (e: TouchEvent) => {
-        this.#setTouch(e)
-
-        if (Math.abs(this.touchScale - 1) > this.PINCH_THRESHOLD) {
-            this.#dispatch("pinch", e)
+    add(eventType: FlowchartEventType, handler: (e: FlowchartEventContext) => void, priority = 0) {
+        if (this.get(eventType).find(event => event.priority === priority)) {
+            this.add(eventType, handler, priority + 1)
+            return
         }
-
-        if (Math.abs(this.touchDelta.x) > this.SWIPE_THRESHOLD || Math.abs(this.touchDelta.y) > this.SWIPE_THRESHOLD) {
-            this.#dispatch("swipe", e)
-        }
-
-        this.#dispatch("touchMove", e)
+        this.list.push({ eventType, handler, priority })
     }
 
-    private onTouchEnd = (e: TouchEvent) => { 
-        this.#setTouch(e)
-        
-        this.#dispatch("touchEnd", e)
+    get(eventType: FlowchartEventType) {
+        return this.list.filter(ev => ev.eventType === eventType).sort((a, b) => a.priority - b.priority)
     }
 
     destroy() {
@@ -286,6 +205,90 @@ export class FlowchartEvents {
         document.removeEventListener("touchend", this.onTouchEnd)
 
         this.list = []
+    }
+                                      
+    // ██████ ▄▄ ▄▄ ▄▄▄▄▄ ▄▄  ▄▄ ▄▄▄▄▄▄ ▄▄▄▄ 
+    // ██▄▄   ██▄██ ██▄▄  ███▄██   ██  ███▄▄ 
+    // ██▄▄▄▄  ▀█▀  ██▄▄▄ ██ ▀██   ██  ▄▄██▀ 
+
+    private onMouseDown = (e: MouseEvent) => {
+        this.setMousePos(e)
+        
+        this.mouseDown = true
+        this.mouseStartPos = { ...this.mousePos }
+        this.globalMouseStartPos = { ...this.globalMousePos }
+
+        this.dispatch("mouseDown", e)
+    }
+
+    private onMouseMove = (e: MouseEvent) => {
+        this.setMousePos(e)
+        this.setWithinChart(e)
+
+        this.dispatch("mouseMove", e)
+    }
+
+    private onMouseUp = (e: MouseEvent) => {
+        this.setMousePos(e)
+        
+        this.mouseStartPos = undefined
+        this.globalMouseStartPos = undefined
+        this.mouseDown = false
+        
+        this.dispatch("mouseUp", e)
+    }
+
+    private onClick = (e: MouseEvent) => {
+        this.setMousePos(e)
+
+        this.dispatch("click", e)
+    }
+    
+    private onKeyDown = (e: KeyboardEvent) => {
+        this.dispatch("keyDown", e)
+    }
+
+    private onKeyUp = (e: KeyboardEvent) => {
+        this.dispatch("keyUp", e)
+    }
+
+    private onWheel = (e: WheelEvent) => {
+        // Check if within chart bounds
+        this.setWithinChart(e)
+
+        this.dispatch("wheel", e)
+    }
+
+    private onTouchStart = (e: TouchEvent) => {
+        this.setTouch(e)
+
+        // Reset start values
+        this.touchDelta = { x: 0, y: 0 } // For swipe
+        this.touchScale = 1 // For pinch
+        this.dispatch("touchStart", e)
+    }
+
+    private onTouchMove = (e: TouchEvent) => {
+        const pinchTreshold = 0.02  // minimum scale change
+        const swipeTreshold = 2     // minimum pixels moved to trigger swipe
+
+        this.setTouch(e)
+
+        if (Math.abs(this.touchScale - 1) > pinchTreshold) {
+            this.dispatch("pinch", e)
+        }
+
+        if (Math.abs(this.touchDelta.x) > swipeTreshold || Math.abs(this.touchDelta.y) > swipeTreshold) {
+            this.dispatch("swipe", e)
+        }
+
+        this.dispatch("touchMove", e)
+    }
+
+    private onTouchEnd = (e: TouchEvent) => { 
+        this.setTouch(e)
+        
+        this.dispatch("touchEnd", e)
     }
 }
 
