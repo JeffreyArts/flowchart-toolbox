@@ -1,6 +1,6 @@
-import { FlowchartShape, type FlowchartShapeOptions } from "."
-import { type FlowchartNode } from "../nodes"
-import type TextHelper from "./text-helper"
+import { FlowchartShape, type FlowchartShapeOptions } from ".."
+import { type FlowchartNode } from "../../nodes"
+import type TextHelper from "../text-helper"
 
 interface FlowchartPillShapeOptions extends FlowchartShapeOptions {
     
@@ -13,33 +13,18 @@ export class PillShape extends FlowchartShape {
     constructor(node: FlowchartNode, options?: Partial<FlowchartPillShapeOptions>) {
         super( node, options )
     }
-
-    private get r()  { return this.height / 2 }
-    private get lx() { return this.node.x - this.width / 2 + this.r }  // middelpunt linker cirkel
-    private get rx() { return this.node.x + this.width / 2 - this.r }  // middelpunt rechter cirkel
-
-    containsPoint(point: { x: number, y: number }, offset = 0): boolean {
-        const { r, lx, rx } = this
-        const y = this.node.y
-
-        // Get distance between point and each circle center
-        const distToRx = Math.hypot(point.x - rx, point.y - y)
-        const distToLx = Math.hypot(point.x - lx, point.y - y)
-        return ( 
-            distToRx <= r + offset || 
-            distToLx <= r + offset || 
-            (point.x >= lx && point.x <= rx && Math.abs(point.y - y) <= r + offset)
-        )
-    }
-
-    // Create 
-    createSvgEl() {
+    
+    // █████▄ ▄▄▄▄  ▄▄ ▄▄ ▄▄  ▄▄▄ ▄▄▄▄▄▄ ▄▄▄▄▄ 
+    // ██▄▄█▀ ██▄█▄ ██ ██▄██ ██▀██  ██   ██▄▄  
+    // ██     ██ ██ ██  ▀█▀  ██▀██  ██   ██▄▄▄ 
+   
+    override createSvgEl() {
         const rectangle = document.createElementNS("http://www.w3.org/2000/svg", "rect")
         rectangle.classList.add("flowchart-shape")
         return rectangle
     }
 
-    updateShape() {
+    override updateShape() {
         if (!this.svgEl) return
         this.svgEl.setAttribute("width", this.width + "px")
         this.svgEl.setAttribute("height", this.height + "px")
@@ -47,7 +32,7 @@ export class PillShape extends FlowchartShape {
         this.svgEl.setAttribute("ry", this.r + "px")
     }
 
-    updatePosition() {
+    override updatePosition() {
         if (!this.svgEl || !this.node) return
         this.svgEl.setAttribute("x", this.node.x - this.width / 2 + "px")
         this.svgEl.setAttribute("y",this.node.y - this.height / 2 + "px")
@@ -70,6 +55,28 @@ export class PillShape extends FlowchartShape {
         const y = parseFloat(this.svgEl.getAttribute("y") || "0")
         this.node.svgGroup.style.transformOrigin = `${x + this.width/2 }px ${y + this.height/2 }px`
     }
+    
+    private get r()  { return this.height / 2 }
+    private get lx() { return this.node.x - this.width / 2 + this.r }  // middelpunt linker cirkel
+    private get rx() { return this.node.x + this.width / 2 - this.r }  // middelpunt rechter cirkel
+
+    // █████▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄    ▄▄  ▄▄▄▄ 
+    // ██▄▄█▀ ██ ██ ██▄██ ██    ██ ██▀▀▀ 
+    // ██     ▀███▀ ██▄█▀ ██▄▄▄ ██ ▀████  
+
+    containsPoint(point: { x: number, y: number }, offset = 0): boolean {
+        const { r, lx, rx } = this
+        const y = this.node.y
+
+        // Get distance between point and each circle center
+        const distToRx = Math.hypot(point.x - rx, point.y - y)
+        const distToLx = Math.hypot(point.x - lx, point.y - y)
+        return ( 
+            distToRx <= r + offset || 
+            distToLx <= r + offset || 
+            (point.x >= lx && point.x <= rx && Math.abs(point.y - y) <= r + offset)
+        )
+    }
 
     afterTextHelperCreated(textHelper: TextHelper): void {
         const leftEl = textHelper.leftEl 
@@ -84,7 +91,6 @@ export class PillShape extends FlowchartShape {
         rightEl.style.shapeOutside = "polygon(100% 0%, 50% 0%, 50% 0%, 55.06% 0.26%, 60.06% 1.02%, 64.97% 2.29%, 69.72% 4.05%, 74.27% 6.28%, 78.56% 8.96%, 82.57% 12.06%, 86.24% 15.55%, 89.54% 19.39%, 92.43% 23.55%, 94.89% 27.98%, 96.89% 32.63%, 98.40% 37.47%, 99.42% 42.43%, 99.94% 47.47%, 99.94% 52.53%, 99.42% 57.57%, 98.40% 62.53%, 96.89% 67.37%, 94.89% 72.02%, 92.43% 76.45%, 89.54% 80.61%, 86.24% 84.45%, 82.57% 87.94%, 78.56% 91.04%, 74.27% 93.72%, 69.72% 95.95%, 64.97% 97.71%, 60.06% 98.98%, 55.06% 99.74%, 50% 100%, 50% 100%, 100% 100%)"
     }
 
-    // Destroy
     destroy(): void {
         super.destroy()
         if (this.svgEl) this.svgEl.remove()

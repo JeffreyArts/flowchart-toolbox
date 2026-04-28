@@ -8,20 +8,18 @@ export interface FlowchartShapeOptions {
 
 export abstract class FlowchartShape {
     abstract name: string
-    svgEl: SVGElement
-    abstract createSvgEl(): SVGElement
-    abstract updatePosition(): void
-    abstract updateShape(): void
     abstract containsPoint(point: { x: number, y: number }, offset?: number): boolean
-
+    protected abstract createSvgEl(): SVGElement
+    protected abstract updatePosition(): void
+    protected abstract updateShape(): void
+    
     id: string = crypto.randomUUID()
     node: FlowchartNode
+    svgEl: SVGElement
     textEl: SVGTextElement | undefined = undefined
-    class = ""
+    class = [] as string[]
     updateStyleDelay = undefined as ReturnType<typeof setTimeout> | undefined
-    
-    afterTextHelperCreated?(textHelper: TextHelper): void
-    
+
     constructor(node: FlowchartNode, options?: Partial<FlowchartShapeOptions>) {
         this.node = node
 
@@ -34,15 +32,31 @@ export abstract class FlowchartShape {
         this.textEl = this.createTextEl()
         this.updateText()
         
-        document.addEventListener("mousemove", this.boundSetMouseOver)
-        node.addEventListener("positionChange", this.boundUpdatePosition)
-        node.addEventListener("dimensionChange", this.boundUpdateShape)
-        node.addEventListener("afterTextChange", this.boundUpdateText)
+        document.addEventListener("mousemove", this.onDocumentMouseMove)
+        node.addEventListener("positionChange", this.onPositionChange)
+        node.addEventListener("dimensionChange", this.onDimensionChange)
+        node.addEventListener("afterTextChange", this.onAfterTextChange)
     }
-    
-    addSvgEl() {
+                                        
+    // █████▄ ▄▄▄▄  ▄▄ ▄▄ ▄▄  ▄▄▄ ▄▄▄▄▄▄ ▄▄▄▄▄ 
+    // ██▄▄█▀ ██▄█▄ ██ ██▄██ ██▀██  ██   ██▄▄  
+    // ██     ██ ██ ██  ▀█▀  ██▀██  ██   ██▄▄▄  
+
+    private processOptions(options?: Partial<FlowchartShapeOptions >) {
+        if (!options) return
+
+        if (options.class) {
+            if (Array.isArray(options.class)) {
+                options.class.forEach(c => this.class.push(c))
+            } else {
+                this.class.push(options.class)
+            }
+        }
+    }
+
+    private addSvgEl() {
         if (this.class) {
-            this.svgEl.classList.add(this.class)
+            this.svgEl.classList.add(...this.class)
         }
         
         if (!this.node.flowchart?.nodesGroup) {
@@ -53,7 +67,7 @@ export abstract class FlowchartShape {
         this.node.svgGroup.appendChild(this.svgEl)
     }
 
-    createTextEl() {
+    private createTextEl() {
         const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text")
         textEl.setAttribute("text-anchor", "middle")
         textEl.setAttribute("dominant-baseline", "middle")
@@ -68,7 +82,7 @@ export abstract class FlowchartShape {
         return textEl
     }
 
-    updateText() {
+    private updateText() {
         if (!this.textEl) return
         const textEl = this.textEl
         textEl.innerHTML = ""
@@ -86,41 +100,7 @@ export abstract class FlowchartShape {
         this.updateShape()
     }
 
-    get style(): CSSStyleDeclaration {
-        if (!this.svgEl) {
-            console.warn("SVG element is not created yet. Cannot access style.")
-            return {} as CSSStyleDeclaration
-        }
-        return this.svgEl.style
-    }
-
-    processOptions(options?: Partial<FlowchartShapeOptions >) {
-        if (!options) return
-
-        if (options.class) {
-            if (Array.isArray(options.class)) {
-                this.class = options.class.join(" ")
-            } else {
-                this.class = options.class
-            }
-        }
-    }
-    get flowchart() {   
-        return this.node?.flowchart
-    }
-
-    // Width & height
-    get width() {
-        return this.node.textBox.width 
-    }
-    
-    get height() {
-        return this.node.textBox.height 
-    }
-    
-
-    /** Position **/
-    updateStyle(style?: Partial<CSSStyleDeclaration>) {
+    private updateStyle(style?: Partial<CSSStyleDeclaration>) {
         if (!style) return
         if (!this.svgEl) return
 
@@ -143,8 +123,37 @@ export abstract class FlowchartShape {
 
         return this.node.shape.containsPoint(flowchart.events.mousePos)
     }
+                            
+    // █████▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄    ▄▄  ▄▄▄▄ 
+    // ██▄▄█▀ ██ ██ ██▄██ ██    ██ ██▀▀▀ 
+    // ██     ▀███▀ ██▄█▀ ██▄▄▄ ██ ▀████    
 
-    /** Shape */
+    get style(): CSSStyleDeclaration {
+        if (!this.svgEl) {
+            console.warn("SVG element is not created yet. Cannot access style.")
+            return {} as CSSStyleDeclaration
+        }
+        return this.svgEl.style
+    }
+    
+    get flowchart() {   
+        return this.node?.flowchart
+    }
+
+    get width() {
+        return this.node.textBox.width 
+    }
+    
+    get height() {
+        return this.node.textBox.height 
+    }
+
+    afterTextHelperCreated?(textHelper: TextHelper): void // Replaced by method in child classes when/if needed
+    
+    // ██████ ▄▄ ▄▄ ▄▄▄▄▄ ▄▄  ▄▄ ▄▄▄▄▄▄ ▄▄▄▄ 
+    // ██▄▄   ██▄██ ██▄▄  ███▄██   ██  ███▄▄ 
+    // ██▄▄▄▄  ▀█▀  ██▄▄▄ ██ ▀██   ██  ▄▄██▀ 
+
     private setMouseOver() {
         this.node.state.mouseOver = this.mouseInsideShape()
 
@@ -179,15 +188,21 @@ export abstract class FlowchartShape {
         return (low + high) / 2
     }
 
-    boundUpdateShape        = this.updateShape.bind(this)
-    boundUpdatePosition     = this.updatePosition.bind(this)
-    boundSetMouseOver       = this.setMouseOver.bind(this)
-    boundUpdateText         = this.updateText.bind(this)
+    onDimensionChange       = this.updateShape.bind(this)
+    onPositionChange        = this.updatePosition.bind(this)
+    onAfterTextChange       = this.updateText.bind(this)
+    
+    onDocumentMouseMove     = this.setMouseOver.bind(this)
 
     destroy() {
         if (this.node) {
-            this.node.removeEventListener("positionChange", this.boundUpdatePosition)
+            this.node.removeEventListener("afterTextChange", this.onAfterTextChange)
+            this.node.removeEventListener("dimensionChange", this.onDimensionChange)
+            this.node.removeEventListener("positionChange", this.onPositionChange)
         }
+
+        document.removeEventListener("mousemove", this.onDocumentMouseMove)
+
         if (this.svgEl) { this.svgEl.remove()}
     }
 

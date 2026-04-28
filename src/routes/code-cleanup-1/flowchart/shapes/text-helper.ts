@@ -5,7 +5,6 @@ class TextHelper {
     el: HTMLDivElement
     leftEl = undefined as  HTMLDivElement | undefined
     rightEl = undefined as  HTMLDivElement | undefined
-    private text: string = ""
 
     constructor(text: string = "", shape: FlowchartShape, style?: Partial<CSSStyleDeclaration>) {
         this.text = text
@@ -29,10 +28,6 @@ class TextHelper {
         // Plaats de helper off-screen en onzichtbaar zodat het geen invloed heeft op de layout
         Object.assign(this.parentEl.style, {
             position: "fixed",
-            // pointerEvents: "none",
-            // visibility: "hidden",
-            // right: "-100vw",
-            // bottom: "-100vh",
             right: "0vw",
             bottom: "0vh",
             textAlign: "center",
@@ -51,6 +46,16 @@ class TextHelper {
         
         document.body.appendChild(this.parentEl)
     }
+                                        
+    // █████▄ ▄▄▄▄  ▄▄ ▄▄ ▄▄  ▄▄▄ ▄▄▄▄▄▄ ▄▄▄▄▄ 
+    // ██▄▄█▀ ██▄█▄ ██ ██▄██ ██▀██  ██   ██▄▄  
+    // ██     ██ ██ ██  ▀█▀  ██▀██  ██   ██▄▄▄ 
+    
+    private text: string = "" 
+
+    // █████▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄    ▄▄  ▄▄▄▄ 
+    // ██▄▄█▀ ██ ██ ██▄██ ██    ██ ██▀▀▀ 
+    // ██     ▀███▀ ██▄█▀ ██▄▄▄ ██ ▀████   
 
     get lines() {
         const lines = []

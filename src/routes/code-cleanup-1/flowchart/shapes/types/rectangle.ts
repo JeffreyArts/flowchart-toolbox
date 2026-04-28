@@ -1,5 +1,5 @@
-import { FlowchartShape, type FlowchartShapeOptions } from "."
-import { type FlowchartNode } from "../nodes"
+import { FlowchartShape, type FlowchartShapeOptions } from ".."
+import { type FlowchartNode } from "../../nodes"
 
 export interface RectangleShapeOptions extends FlowchartShapeOptions {
 }
@@ -11,30 +11,23 @@ export class RectangleShape extends FlowchartShape {
         super( node, options )
     }
 
-    containsPoint(point: { x: number, y: number }, offset = 0): boolean {
-
-        const x1 = this.node.x - this.width / 2 - offset
-        const y1 = this.node.y - this.height / 2 - offset
-        const x2 = this.node.x + this.width / 2 + offset
-        const y2 = this.node.y + this.height / 2 + offset
-        
-        return point.x >= x1 && point.x <= x2 && point.y >= y1 && point.y <= y2
-    }
+    // █████▄ ▄▄▄▄  ▄▄ ▄▄ ▄▄  ▄▄▄ ▄▄▄▄▄▄ ▄▄▄▄▄ 
+    // ██▄▄█▀ ██▄█▄ ██ ██▄██ ██▀██  ██   ██▄▄  
+    // ██     ██ ██ ██  ▀█▀  ██▀██  ██   ██▄▄▄ 
     
-    // Create 
-    createSvgEl() {
+    override createSvgEl() {
         const rectangle = document.createElementNS("http://www.w3.org/2000/svg", "rect")
         rectangle.classList.add("flowchart-shape")
         return rectangle
     }
 
-    updateShape() {
+    override updateShape() {
         if (!this.svgEl) return
         this.svgEl.setAttribute("width", this.width + "px")
         this.svgEl.setAttribute("height", this.height + "px")
     }
 
-    updatePosition() {
+    override updatePosition() {
         if (!this.svgEl || !this.node) return
         this.svgEl.setAttribute("x", this.node.x - this.width / 2 + "px")
         this.svgEl.setAttribute("y",this.node.y - this.height / 2 + "px")
@@ -56,9 +49,21 @@ export class RectangleShape extends FlowchartShape {
         const x = parseFloat(this.svgEl.getAttribute("x") || "0")
         const y = parseFloat(this.svgEl.getAttribute("y") || "0")
         this.node.svgGroup.style.transformOrigin = `${x + this.width/2 }px ${y + this.height/2 }px`
-    }
+    }                      
+    // █████▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄    ▄▄  ▄▄▄▄ 
+    // ██▄▄█▀ ██ ██ ██▄██ ██    ██ ██▀▀▀ 
+    // ██     ▀███▀ ██▄█▀ ██▄▄▄ ██ ▀████  
 
-    // Destroy
+    containsPoint(point: { x: number, y: number }, offset = 0): boolean {
+
+        const x1 = this.node.x - this.width / 2 - offset
+        const y1 = this.node.y - this.height / 2 - offset
+        const x2 = this.node.x + this.width / 2 + offset
+        const y2 = this.node.y + this.height / 2 + offset
+        
+        return point.x >= x1 && point.x <= x2 && point.y >= y1 && point.y <= y2
+    }
+    
     destroy(): void {
         super.destroy()
         if (this.svgEl) this.svgEl.remove()

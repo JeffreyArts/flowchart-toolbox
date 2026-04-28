@@ -1,5 +1,5 @@
 import { FlowchartNode } from "../index"
-import DiamondShape from "../../shapes/diamond"
+import DiamondShape from "../../shapes/types/diamond"
 
 export const DecisionNode = (node: FlowchartNode) => {
     let maxWidth = "360px"

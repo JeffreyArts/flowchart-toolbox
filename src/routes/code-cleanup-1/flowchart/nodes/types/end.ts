@@ -1,5 +1,5 @@
 import { FlowchartNode } from "../index"
-import PillShape from "../../shapes/pill"
+import PillShape from "../../shapes/types/pill"
 
 export const EndNode = (node: FlowchartNode) => {
     let maxWidth = "360px"

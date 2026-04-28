@@ -1,6 +1,6 @@
-import { FlowchartShape, type FlowchartShapeOptions } from "."
-import { type FlowchartNode } from "../nodes"
-import type TextHelper from "./text-helper"
+import { FlowchartShape, type FlowchartShapeOptions } from ".."
+import { type FlowchartNode } from "../../nodes"
+import type TextHelper from "../text-helper"
 
 interface FlowchartDiamondShapeOptions extends FlowchartShapeOptions {
     
@@ -14,23 +14,17 @@ export class DiamondShape extends FlowchartShape {
         super( node, options )
     }
 
-    containsPoint(pos: { x: number, y: number }, offset = 0): boolean {
-        const a = this.width / 2
-        const b = this.height / 2
-        const dx = Math.abs(pos.x - this.node.x)
-        const dy = Math.abs(pos.y - this.node.y)
-        const hypot = Math.hypot(a, b)
-        return dx * b + dy * a <= a * b + offset * hypot
-    }
-
-    // Create 
-    createSvgEl() {
+    // █████▄ ▄▄▄▄  ▄▄ ▄▄ ▄▄  ▄▄▄ ▄▄▄▄▄▄ ▄▄▄▄▄ 
+    // ██▄▄█▀ ██▄█▄ ██ ██▄██ ██▀██  ██   ██▄▄  
+    // ██     ██ ██ ██  ▀█▀  ██▀██  ██   ██▄▄▄ 
+                             
+    override createSvgEl() {
         const diamond = document.createElementNS("http://www.w3.org/2000/svg", "polygon")
         diamond.classList.add("flowchart-shape")
         return diamond
     }
 
-    updateShape() {
+    override updateShape() {
         if (!this.svgEl) return
 
         const cx = this.node.x
@@ -42,7 +36,7 @@ export class DiamondShape extends FlowchartShape {
         this.svgEl.setAttribute("points", points)
     }
 
-    updatePosition() {
+    override updatePosition() {
         if (!this.svgEl || !this.node) return
         this.svgEl.setAttribute("x", this.node.x - this.width / 2 + "px")
         this.svgEl.setAttribute("y",this.node.y - this.height / 2 + "px")
@@ -66,6 +60,19 @@ export class DiamondShape extends FlowchartShape {
         this.updateShape()
     }
 
+    // █████▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄    ▄▄  ▄▄▄▄ 
+    // ██▄▄█▀ ██ ██ ██▄██ ██    ██ ██▀▀▀ 
+    // ██     ▀███▀ ██▄█▀ ██▄▄▄ ██ ▀████  
+
+    containsPoint(pos: { x: number, y: number }, offset = 0): boolean {
+        const a = this.width / 2
+        const b = this.height / 2
+        const dx = Math.abs(pos.x - this.node.x)
+        const dy = Math.abs(pos.y - this.node.y)
+        const hypot = Math.hypot(a, b)
+        return dx * b + dy * a <= a * b + offset * hypot
+    }
+
     afterTextHelperCreated(textHelper: TextHelper): void {
         textHelper.parentEl.style.aspectRatio = "1"
         const leftEl = textHelper.leftEl 
@@ -80,7 +87,6 @@ export class DiamondShape extends FlowchartShape {
         rightEl.style.shapeOutside = "polygon(100% 0, 100% 100%, 0 100%, 100% 50%, 0 0)"
     }
 
-    // Destroy
     destroy(): void {
         super.destroy()
         if (this.svgEl) this.svgEl.remove()

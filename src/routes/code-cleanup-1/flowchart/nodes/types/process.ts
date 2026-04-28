@@ -1,5 +1,5 @@
 import { FlowchartNode } from "../index"
-import RectangleShape from "../../shapes/rectangle"
+import RectangleShape from "../../shapes/types/rectangle"
 
 export const ProcessNode = (node: FlowchartNode) => {
     let maxWidth = "360px"
