@@ -9,8 +9,10 @@ export class AddNodeTool extends FlowchartTool {
     offset = 32
     selectedNode = undefined as FlowchartNode | undefined
     addButton: SVGElement | undefined
-    button = {
-        diameter: 25,
+    
+
+    options = {
+        buttonDiameter: 25
     }
     
     constructor(flowchart: Flowchart) {
@@ -48,7 +50,7 @@ export class AddNodeTool extends FlowchartTool {
             return
         }
         const distance = Math.sqrt((mousePos.x - point.x) ** 2 + (mousePos.y - point.y) ** 2)
-        if (distance < this.button.diameter) {
+        if (distance < this.options.buttonDiameter) {
             this.addNewNode()
         }
     }
@@ -91,8 +93,8 @@ export class AddNodeTool extends FlowchartTool {
     private updateButtonPosition(node: FlowchartNode) {
         if (!this.addButton) return
         const mousePos = this.flowchart.events.mousePos
-        const { x,y } = node.calculateEdgeStart(mousePos, this.button.diameter/2)
-        this.addButton.setAttribute("transform", `translate(${x-this.button.diameter/2}, ${y-this.button.diameter/2})`)
+        const { x,y } = node.calculateEdgeStart(mousePos, this.options.buttonDiameter/2)
+        this.addButton.setAttribute("transform", `translate(${x-this.options.buttonDiameter/2}, ${y-this.options.buttonDiameter/2})`)
     }
 
     private removeButton() {
@@ -107,7 +109,7 @@ export class AddNodeTool extends FlowchartTool {
 
         const el = document.createElementNS("http://www.w3.org/2000/svg", "g")
         const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle")
-        const diameter = this.button.diameter
+        const diameter = this.options.buttonDiameter
         
         // Add circle
         circle.setAttribute("r", `${diameter / 2}`)
