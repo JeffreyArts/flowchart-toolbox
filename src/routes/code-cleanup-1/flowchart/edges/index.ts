@@ -158,8 +158,27 @@ export class FlowchartEdge {
         if (!this.svgGroup) return
         this.svgGroup.style.opacity = "0"
     }
-    
-    private updatePosition() {
+
+    private boundUpdatePosition = this.updatePosition.bind(this)
+
+    private draw: DrawEdgeType = () => "" // This method is being replaced by an edge method that is being defined by the edge-type, see: FlowchartEdge.options.type
+
+    // █████▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄    ▄▄  ▄▄▄▄ 
+    // ██▄▄█▀ ██ ██ ██▄██ ██    ██ ██▀▀▀ 
+    // ██     ▀███▀ ██▄█▀ ██▄▄▄ ██ ▀████  
+
+    drawEdge() {
+        if (!this.startNode || !this.endNode) return
+        if (!this.pathEl) return
+
+        const start = this.startNode.calculateEdgeStart(this.endNode)
+        const end = this.endNode.calculateEdgeStart(this.startNode)
+
+        const pathData = this.draw(start, end, this)
+        this.pathEl.setAttribute("d", pathData)
+    }
+
+    updatePosition() {
         if (!this.svgGroup) return
         if (!this.startNode.svgGroup) {
             console.warn("Start node element not found for edge, cannot update position")
@@ -181,25 +200,6 @@ export class FlowchartEdge {
         this.updatePositionDelay = setTimeout(() => {
             this.drawEdge()
         }, 0)
-    }
-
-    private boundUpdatePosition = this.updatePosition.bind(this)
-
-    private draw: DrawEdgeType = () => "" // This method is being replaced by an edge method that is being defined by the edge-type, see: FlowchartEdge.options.type
-
-    // █████▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄    ▄▄  ▄▄▄▄ 
-    // ██▄▄█▀ ██ ██ ██▄██ ██    ██ ██▀▀▀ 
-    // ██     ▀███▀ ██▄█▀ ██▄▄▄ ██ ▀████  
-
-    drawEdge() {
-        if (!this.startNode || !this.endNode) return
-        if (!this.pathEl) return
-
-        const start = this.startNode.calculateEdgeStart(this.endNode)
-        const end = this.endNode.calculateEdgeStart(this.startNode)
-
-        const pathData = this.draw(start, end, this)
-        this.pathEl.setAttribute("d", pathData)
     }
     
     destroy() {
