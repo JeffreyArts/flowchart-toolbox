@@ -20,6 +20,7 @@ import PassingOptions from "./passing-options/passing-options.vue"
 import AddNodeTool from "./add-node-tool/add-node-tool.vue"
 import PassRegisterOptions from "./pass-register-options/pass-register-options.vue"
 import CodeCleanup1 from "./code-cleanup-1/code-cleanup.vue"
+import Grid from "./grid/grid.vue"
 import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
 import Cytoscape from "./cytoscape.vue"
@@ -145,6 +146,11 @@ const routes = [
         path: "/code-cleanup-1",
         name: "22) Code cleanup 1",
         component: CodeCleanup1
+    },
+    {
+        path: "/grid",
+        name: "23) Grid",
+        component: Grid
     },
     {
         path: "/options-overview",
