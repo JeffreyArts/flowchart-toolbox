@@ -80,11 +80,11 @@ export class FlowchartNode {
         class: []
     }, {
         set: (target, prop, value) => {
-            // Type forcing
             if (prop === "offsetPadding") {
                 value = parseFloat(value) || 0
             }
-
+            
+            // Type forcing
             (target as Record<string, any>)[prop as string] = value
     
             if (prop === "maxWidth") {

@@ -1,10 +1,16 @@
 import type Flowchart  from "../index"
 
+export type FlowchartGridConstructOptions = {
+    type?: string
+    cellWidth?: number
+    cellHeight?: number
+    options?: Partial<FlowchartGridOptions>
+}
+
+
 export type FlowchartGridOptions = {
-    type: string
-    cellWidth: number
-    cellHeight: number
     fixToGrid: boolean
+    visible: boolean
 }
 
 export class FlowchartGrid {
@@ -17,9 +23,25 @@ export class FlowchartGrid {
         height: 32,
         svg: undefined as SVGElement | undefined
     }
-    options = {
+    options = new Proxy<FlowchartGridOptions>({ 
+        visible: true,
         fixToGrid: true
-    } as Partial<FlowchartGridOptions>
+    }, {
+        set: (target, prop, value) => {
+            // Type forcing
+            (target as Record<string, any>)[prop as string] = value
+
+            if (prop == "visible") {
+                if (value) {
+                    this.showGrid()
+                } else {
+                    this.hideGrid()
+                }
+            }
+
+            return true
+        }
+    })
 
     constructor(flowchart: Flowchart) {
         this.flowchart = flowchart
@@ -35,8 +57,19 @@ export class FlowchartGrid {
         return { x: gridX, y: gridY }
     }
 
-    updateGrid() {
+    hideGrid() {
+        if (this.backgroundSvg) {
+            this.backgroundSvg.style.opacity = "0"
+        }
+    }
 
+    showGrid() {
+        if (this.backgroundSvg) {
+            this.backgroundSvg.style.opacity = "1"
+        }
+    }
+
+    updateGrid() {
         if (!this.flowchart) return
         if (!this.flowchart.chart) return
         if (!this.backgroundSvg) return
