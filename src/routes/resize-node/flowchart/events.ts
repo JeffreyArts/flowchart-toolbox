@@ -1,6 +1,7 @@
 import Flowchart from "."
+import type { FlowchartNode } from "./nodes"
 
-export type FlowchartEventType = "mouseDown" | "mouseMove" | "mouseUp" | "click" | "keyDown" | "keyUp" | "wheel" | "touchStart" | "touchMove" | "touchEnd" | "pinch" | "swipe" | "zoomChange" | "viewBoxChange"
+export type FlowchartEventType = "mouseDown" | "mouseMove" | "mouseUp" | "click" | "keyDown" | "keyUp" | "wheel" | "touchStart" | "touchMove" | "touchEnd" | "pinch" | "swipe" | "zoomChange" | "viewBoxChange" | "nodeAdded" | "nodeRemoved" 
 
 export type FlowchartEvent = { 
     eventType: FlowchartEventType,
@@ -9,11 +10,14 @@ export type FlowchartEvent = {
 }
 
 export type FlowchartEventContext = {
-    originalEvent?: Event | MouseEvent | KeyboardEvent;
+    originalEvent?: Event | MouseEvent | KeyboardEvent | FlowchartNodeEvent;
     stopped: boolean;
     stopPropagation(): void;
 }
 
+export type FlowchartNodeEvent = {
+    node: FlowchartNode
+}
 
 export class FlowchartEvents {
     flowchart: Flowchart
@@ -50,6 +54,8 @@ export class FlowchartEvents {
         touchEnd: false,
         pinch: false,
         swipe: false,
+        nodeAdded: false,
+        nodeRemoved: false,
     } as Record<FlowchartEventType, boolean>
 
     constructor(flowchart: Flowchart) {
@@ -73,7 +79,7 @@ export class FlowchartEvents {
     // ██▄▄█▀ ██▄█▄ ██ ██▄██ ██▀██  ██   ██▄▄  
     // ██     ██ ██ ██  ▀█▀  ██▀██  ██   ██▄▄▄ 
                              
-    private dispatch(eventType: FlowchartEventType, e?: Event) {
+    private dispatch(eventType: FlowchartEventType, e?: Event | FlowchartNodeEvent) {
         if (this.ignore[eventType]) return
 
         const handlers = this.get(eventType)
@@ -86,7 +92,7 @@ export class FlowchartEvents {
         }
     }
 
-    private createContext = (originalEvent?: Event): FlowchartEventContext =>{
+    private createContext = (originalEvent?: Event | FlowchartNodeEvent): FlowchartEventContext =>{
         const ctx = {
             stopped: false,
             stopPropagation() {
@@ -196,8 +202,8 @@ export class FlowchartEvents {
         return this.list.filter(ev => ev.eventType === eventType).sort((a, b) => a.priority - b.priority)
     }
 
-    trigger(eventType: FlowchartEventType) {
-        this.dispatch(eventType)
+    trigger(eventType: FlowchartEventType, e?: FlowchartNodeEvent) {
+        this.dispatch(eventType, e)
     }
 
     destroy() {

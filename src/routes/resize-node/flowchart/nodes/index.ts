@@ -4,7 +4,7 @@ import FlowchartEdge from "../edges/index"
 import TextHelper from "../shapes/text-helper"
 import type FlowchartShape from "../shapes/index"
 
-export type FlowchartNodeEventType = "positionChange" | "segmentsChange" | "beforeTextChange" | "afterTextChange" | "mouseOver" | "mouseEntered" | "mouseLeft" | "show" | "hide" | "dimensionChange"
+export type FlowchartNodeEventType = "positionChange" | "segmentsChange" | "beforeTextChange" | "afterTextChange" | "mouseOver" | "mouseEntered" | "mouseLeft" | "show" | "hide" | "dimensionChange" | "selected" | "deselected"
 export type FlowchartTypeMethod = (node: FlowchartNode) => FlowchartShape
 
 export type FlowchartNodeOptions = {
@@ -110,6 +110,9 @@ export class FlowchartNode {
         visible: false,
     }, {
         set: (target, prop, value) => {
+            const previousValue = (target as Record<string, any>)[prop as string];
+            (target as Record<string, any>)[prop as string] = value;
+
             (target as Record<string, any>)[prop as string] = value
 
             if (prop === "mouseOver") {
@@ -134,9 +137,17 @@ export class FlowchartNode {
                 this.changeVisibility()
                 if (value === true) {
                     this.triggerEvent("show")
-                } 
-                if (value === false) {
+                } else if (value === false) {
                     this.triggerEvent("hide")
+                }
+            }
+            
+            if (prop === "selected") {
+                if (!!previousValue === !!value) return true // prevent double triggering when value doesn't change
+                if (value === true) {
+                    this.triggerEvent("selected")
+                } else if (value === false) {
+                    this.triggerEvent("deselected")
                 }
             }
             return true
@@ -180,6 +191,10 @@ export class FlowchartNode {
 
         this.flowchart.addNode(this)
         this.updatePosition()
+
+        if (!this.flowchart.events.ignore.nodeAdded) {
+            this.flowchart.events.trigger("nodeAdded", { node: this })
+        }
     }
     
     // █████▄ ▄▄▄▄  ▄▄ ▄▄ ▄▄  ▄▄▄ ▄▄▄▄▄▄ ▄▄▄▄▄ 
@@ -681,8 +696,13 @@ export class FlowchartNode {
         // document.removeEventListener("mousemove", this.boundSetIsHover)
         // if (this.flowchart)
         // if (this.foreignObject) { this.foreignObject.remove()}
+        if (this.flowchart && !this.flowchart.events.ignore.nodeRemoved) {
+            this.flowchart.events.trigger("nodeRemoved", { node: this })
+        }
+
         if (this.svgGroup) { this.svgGroup.remove() }
         if (this.shape) { this.shape.destroy() }
+
     }
 }
 

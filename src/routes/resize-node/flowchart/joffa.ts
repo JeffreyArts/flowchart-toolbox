@@ -5,6 +5,7 @@ import { PanTool } from "./chart-tools/pan"
 import { ZoomTool } from "./chart-tools/zoom"
 import { MoveNodeTool } from "./chart-tools/move-node"
 import { AddNodeTool } from "./chart-tools/add-node"
+import { ResizeNodeTool } from "./chart-tools/resize-node"
 
 // Nodes
 import StartNode from "./nodes/types/start"
@@ -44,6 +45,7 @@ export default class Joffa extends Flowchart {
             }
         })
         this.register("tool","pan", PanTool)
+        this.register("tool","resize-node", ResizeNodeTool)
         
         // Default Nodes
         this.register("node", "process", ProcessNode, { shape: { class: "▭" }})

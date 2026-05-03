@@ -11,7 +11,7 @@ export class SelectTool extends FlowchartTool {
     selectionBox = undefined as SVGRectElement | undefined
 
     options = {
-        // Different methods of zooming
+        // Different methods for selecting nodes
         mouseClick: true,
         multipleClick: true, 
         selectBox: true,
@@ -59,9 +59,10 @@ export class SelectTool extends FlowchartTool {
         }
     }
     
-    private clearSelection() {
+    private clearSelection(selectedNode?: FlowchartNode) {
         this.selectedNodes.length = 0
         this.flowchart.nodes.forEach(node => {
+            if (node === selectedNode) return
             node.state.selected = false
         })
     }
@@ -140,7 +141,7 @@ export class SelectTool extends FlowchartTool {
                 // If clicking an already-selected node, don't clear yet —
                 // wait for mouseUp to decide (allows dragging multi-selection)
                 if (!clickedNode.state.selected) {
-                    this.clearSelection()
+                    this.clearSelection(clickedNode)
                     clickedNode.state.selected = true
                     this.selectedNodes.push(clickedNode)
                 }
@@ -176,7 +177,7 @@ export class SelectTool extends FlowchartTool {
             
             // Plain click on an already-selected node (part of multi-selection):
             // now narrow selection to just this node
-            this.clearSelection()
+            this.clearSelection(clickedNode)
             clickedNode.state.selected = true
             this.selectedNodes.push(clickedNode)
         }
