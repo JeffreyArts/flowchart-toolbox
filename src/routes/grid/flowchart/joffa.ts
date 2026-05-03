@@ -23,6 +23,7 @@ import drawDoubleDiagonalEdge from "./edges/draw/double-diagonal"
 // Grids
 import { PlusGrid } from "./grid/plus"
 import { HexagonalGrid } from "./grid/hexagonal"
+import { TriangularGrid } from "./grid/triangular"
 import RectangularGrid from "./grid/rectangular"
 
 
@@ -61,6 +62,7 @@ export default class Joffa extends Flowchart {
         this.register("grid", "weird rectangles", RectangularGrid, { cellWidth: 32, cellHeight: 128, lineColor: "#222", lineThickness: 16 })
         this.register("grid", "plus", PlusGrid, { cellWidth: 32, cellHeight: 32, lineColor: "#eee", lineThickness: .5 })
         this.register("grid", "hexagonal", HexagonalGrid, { cellDiameter: 64, lineThickness: .25 })
+        this.register("grid", "triangular", TriangularGrid, { cellDiameter: 8, lineThickness: .128 })
         
     }
 }
