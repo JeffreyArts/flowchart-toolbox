@@ -468,7 +468,7 @@ export class FlowchartNode {
         }
 
         if (this.flowchart.grid.options.snap) {
-            const fixedCoordinate = this.flowchart.grid.fixCoordinate(parseInt(res, 10), this.y)
+            const fixedCoordinate = this.flowchart.grid.snap(parseInt(res, 10), this.y)
             res = fixedCoordinate.x + "px"
         }
 
@@ -489,7 +489,7 @@ export class FlowchartNode {
         }
 
         if (this.flowchart.grid.options.snap) {
-            const fixedCoordinate = this.flowchart.grid.fixCoordinate(this.x, parseInt(res, 10))
+            const fixedCoordinate = this.flowchart.grid.snap(this.x, parseInt(res, 10))
             res = fixedCoordinate.y + "px"
         }
 

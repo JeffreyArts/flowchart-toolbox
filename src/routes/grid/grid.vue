@@ -281,9 +281,6 @@ export default defineComponent ({
                         maxWidth: this.options.nodeMaxWidth,
                         offsetPadding: this.options.nodeOffsetPadding,
                         class: ["flowchart-node"],
-                        shape: { 
-                            style: { fill:"rgba(255, 255, 255, 0.2)" }
-                        },
                         text: {
                             style: {
                                 fontSize: "24px",

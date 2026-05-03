@@ -6,7 +6,8 @@ import FlowchartEvents from "./events"
 import { type DrawEdgeType } from "./edges/index"
 import { type FlowchartTool } from "./chart-tools/index"
 import { SelectTool } from "./chart-tools/select-node"
-import FlowchartGrid from "./grid/index"
+import FlowchartGrid, { FlowchartGridAbstract, type FlowchartGridAbstractConstructor } from "./grid/index"
+import RectangularGrid from "./grid/rectangular"
 
 export interface FlowchartOptions {
     edges: Partial<FlowchartEdgeOptions>
@@ -66,7 +67,8 @@ export class Flowchart {
     registered = {
         nodes: [] as Array<{ type: string, shape: FlowchartTypeMethod, options?: Partial<FlowchartNodeOptions> }>,
         edges: [] as Array<{ type: string, draw: DrawEdgeType }>,
-        tools: [] as Array<{ type: string, object: FlowchartTool }>
+        tools: [] as Array<{ type: string, object: FlowchartTool }>,
+        grids: [] as Array<{ type: string, object: FlowchartGridAbstract }>
     }
 
     // Pan
@@ -126,7 +128,9 @@ export class Flowchart {
 
         this.#parseOptions(options)
         this.#addChart()
-        this.grid.createGrid()
+
+        // Default grid
+        this.register("grid", "rectangular", RectangularGrid, { cellWidth: 32, cellHeight: 32 })
     }
 
     #parseOptions(options?: FlowchartOptions) {
@@ -143,7 +147,7 @@ export class Flowchart {
         }
     }
 
-    register(registrationType: "node" | "edge" | "tool", type: string, value: FlowchartTypeMethod | DrawEdgeType | FlowchartToolConstructor, options?: { [key: string]: any }) {
+    register(registrationType: "node" | "edge" | "tool" | "grid", type: string, value: FlowchartTypeMethod | DrawEdgeType | FlowchartToolConstructor | FlowchartGridAbstractConstructor, options?: { [key: string]: any }) {
         if (registrationType === "node") {
             this.registered.nodes.push({ type: type, shape: value as FlowchartTypeMethod, options: options as unknown as FlowchartNodeOptions | undefined })
         } else if (registrationType === "edge") {
@@ -151,6 +155,13 @@ export class Flowchart {
         } else if (registrationType === "tool") {
             const o = value as FlowchartToolConstructor
             this.registered.tools.push({ type: type, object: new o(this, options) })
+        } else if (registrationType === "grid") {
+            const o = value as FlowchartGridAbstractConstructor
+            this.registered.grids.push({ type: type, object:new o(this.grid, options) })
+            
+            if (this.registered.grids.length === 1) {
+                this.grid.options.gridType = type
+            }
         }
     }
 

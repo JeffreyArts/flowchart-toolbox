@@ -1,31 +1,43 @@
 import type Flowchart  from "../index"
 
-export type FlowchartGridConstructOptions = {
-    type?: string
-    cellWidth?: number
-    cellHeight?: number
-    options?: Partial<FlowchartGridOptions>
-}
+export abstract class FlowchartGridAbstract {
+    type = "unknown"
+    grid = undefined as FlowchartGrid | undefined
+    cell = {
+        width: 32,
+        height: 32,
+        svg: undefined as SVGPatternElement | undefined
+    }
+    protected constructor(grid: FlowchartGrid, _options?: { [key: string]: any }) {
+        this.grid = grid
+    }
+    
+    abstract snap(x: number, y: number): { x: number, y: number } 
+    abstract drawCell(): SVGPatternElement
+} 
 
+export interface FlowchartGridAbstractConstructor {
+    new (grid: FlowchartGrid, options?: { [key: string]: any }): FlowchartGridAbstract
+}
 
 export type FlowchartGridOptions = {
     snap: boolean
     visible: boolean
+    gridType: string
 }
 
 export class FlowchartGrid {
-    type = "unknown"
     flowchart: Flowchart
-    isActive = true
     backgroundSvg: SVGElement | undefined
     cell = {
         width: 32,
         height: 32,
-        svg: undefined as SVGElement | undefined
+        svg: undefined as SVGPatternElement | undefined
     }
     options = new Proxy<FlowchartGridOptions>({ 
         visible: true,
-        snap: true
+        snap: true,
+        gridType: "none"
     }, {
         set: (target, prop, value) => {
             // Type forcing
@@ -39,22 +51,47 @@ export class FlowchartGrid {
                 }
             }
 
+            if (prop === "gridType") {
+                this.updateGridType()
+            }
+
             return true
         }
     })
 
-    constructor(flowchart: Flowchart) {
+    constructor(flowchart: Flowchart, _options?: { [key: string]: any }) {
         this.flowchart = flowchart
+        this.createGrid()
+    }
+
+    private getGridObject() {
+        const registeredGrid = this.flowchart.registered.grids.find(grid => grid.type === this.options.gridType)
+
+        if (registeredGrid) {
+            return registeredGrid.object
+        }
+        
+        throw new Error(`Grid type "${this.options.gridType}" is not a registered gridType, please validate if it is correctly registered and/or check for typos.`)
+    }
+    
+    private updateGridType() {
+        const registeredGrid = this.flowchart.registered.grids.find(grid => grid.type === this.options.gridType)
+        if (registeredGrid) {
+            this.removeOldGrid()
+
+            const gridObject = registeredGrid.object
+            this.cell = gridObject.cell
+            this.createGrid()
+        }
+    }
+
+    snap(x: number, y: number) {
+        const gridObject = this.getGridObject()
+        return gridObject.snap(x, y)
     }
 
     onViewBoxChange = () => {
         this.updateGrid()
-    }
-
-    fixCoordinate(x: number, y: number) {
-        const gridX = Math.round(x / this.cell.width) * this.cell.width
-        const gridY = Math.round(y / this.cell.height) * this.cell.height
-        return { x: gridX, y: gridY }
     }
 
     hideGrid() {
@@ -90,14 +127,10 @@ export class FlowchartGrid {
         if (!this.flowchart) return
         if (!this.flowchart.chart) return
         if (!this.cell.svg) { this.drawCell() }
-        
-
-        // This piece should go to its own method in subClass
         this.backgroundSvg = document.createElementNS("http://www.w3.org/2000/svg", "rect")
         this.backgroundSvg.setAttribute("fill", "url(#grid-pattern)")
         this.flowchart.chart.insertBefore(this.backgroundSvg, this.flowchart.chart.firstChild)
 
-        // This should always be triggered
         this.updateGrid()
         this.flowchart.events.add("viewBoxChange", this.onViewBoxChange)
     }
@@ -106,29 +139,23 @@ export class FlowchartGrid {
         if (!this.flowchart) return
         if (!this.flowchart.chart) return
         
-        this.cell.svg = document.createElementNS("http://www.w3.org/2000/svg", "pattern")
+        const gridObject = this.getGridObject()
+        this.cell.svg = gridObject.drawCell()
         this.cell.svg.setAttribute("id", "grid-pattern")
-        this.cell.svg.setAttribute("width", this.cell.width.toString())
-        this.cell.svg.setAttribute("height", this.cell.height.toString())
-        this.cell.svg.setAttribute("patternUnits", "userSpaceOnUse")
 
-        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect")
-        rect.setAttribute("width", this.cell.width.toString())
-        rect.setAttribute("height", this.cell.height.toString())
-        rect.setAttribute("fill", "none")
-        rect.setAttribute("stroke", "#e0e0e0")
-        rect.setAttribute("stroke-width", "1")
-
-        this.cell.svg.appendChild(rect)
+        if (!this.cell.svg) return
         this.flowchart.chart.appendChild(this.cell.svg)
     }
 
-    activate() {
-        this.isActive = true
-    }
-
-    deactivate() {
-        this.isActive = false
+    removeOldGrid() {
+        if (this.backgroundSvg) {
+            this.backgroundSvg.remove()
+            this.backgroundSvg = undefined
+        }
+        if (this.cell.svg) {
+            this.cell.svg.remove()
+            this.cell.svg = undefined
+        }
     }
 }
 
