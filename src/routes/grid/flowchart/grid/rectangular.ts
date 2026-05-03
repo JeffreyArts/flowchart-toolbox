@@ -15,15 +15,26 @@ export class RectangularGrid extends FlowchartGridAbstract {
         svg: undefined as SVGPatternElement | undefined
     }
 
-    constructor(grid: FlowchartGrid, options: RectangularGridOptions) {
+    constructor(grid: FlowchartGrid, options?: { [key: string]: any }) {
         super(grid)
 
-        if (options.cellWidth) this.cell.width = options.cellWidth
-        if (options.cellHeight) this.cell.height = options.cellHeight
+        this.parseOptions(options as RectangularGridOptions)
     }
 
     get flowchart() {
         return this.grid?.flowchart
+    }
+
+    parseOptions(options?: RectangularGridOptions) {
+        if (!options) return
+
+        if (options.cellWidth) {
+            this.cell.width = options.cellWidth
+        }
+
+        if (options.cellHeight) {
+            this.cell.height = options.cellHeight
+        }
     }
 
     snap(x: number, y: number) {

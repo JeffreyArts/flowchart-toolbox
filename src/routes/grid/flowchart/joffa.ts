@@ -20,6 +20,9 @@ import drawZigZagEdge from "./edges/draw/zigzag"
 import drawDiagonalEdge from "./edges/draw/diagonal"
 import drawDoubleDiagonalEdge from "./edges/draw/double-diagonal"
 
+// Grids
+import { PlusGrid } from "./grid/plus"
+
 
 export default class Joffa extends Flowchart {
     constructor(container: HTMLElement, options?: FlowchartOptions) {
@@ -51,6 +54,9 @@ export default class Joffa extends Flowchart {
         this.register("edge", "zigzag", drawZigZagEdge)
         this.register("edge", "diagonal", drawDiagonalEdge)
         this.register("edge", "double-diagonal", drawDoubleDiagonalEdge)
+
+        // Default grids
+        this.register("grid", "plus", PlusGrid)
         
     }
 }

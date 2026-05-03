@@ -168,6 +168,14 @@
                                 <label for="options-grid-snap-v1"> true </label>
                             </span>
                         </div>
+
+                        <div class="option" v-if="flowchart?.registered.grids">
+                            <label for="gridType">Grid type</label>
+                            <select name="gridType" id="" v-model="options.gridType" @change="changeGridType">
+                                <option :value="gridType.type" v-for="gridType in flowchart.registered.grids" :key="gridType.type">{{ gridType.type }}</option>
+                            </select>
+                        </div>
+
                     </div>
                 </div>
 
@@ -206,6 +214,7 @@ interface Options {
     nodeOffsetPadding: number
     gridVisible: boolean
     snapToGrid: boolean
+    gridType: string
 }
 
 export default defineComponent ({ 
@@ -224,6 +233,7 @@ export default defineComponent ({
                 nodeOffsetPadding: 8,
                 snapToGrid: true,
                 gridVisible: true,
+                gridType: "rectangular",
             } as Partial<Options>,
             nodes: [] as Array<FlowchartNode>,
             flowchart: undefined as Flowchart | undefined,
@@ -308,6 +318,9 @@ export default defineComponent ({
                 const zoomTool = this.flowchart.getTool("zoom")
                 setTimeout(() => {
                     zoomTool.fit()
+                    this.changeGridType()
+                    this.changeGridVisibility()
+                    this.changeGridSnap()
                 })
             })
         }
@@ -394,6 +407,10 @@ export default defineComponent ({
         changeGridSnap() {
             if (!this.flowchart) return
             this.flowchart.grid.options.snap = this.options.snapToGrid
+        },
+        changeGridType() {
+            if (!this.flowchart) return
+            this.flowchart.grid.options.gridType = this.options.gridType
         },
 
         resetPan(e:Event) {

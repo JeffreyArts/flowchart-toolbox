@@ -147,7 +147,15 @@ export class Flowchart {
         }
     }
 
-    register(registrationType: "node" | "edge" | "tool" | "grid", type: string, value: FlowchartTypeMethod | DrawEdgeType | FlowchartToolConstructor | FlowchartGridAbstractConstructor, options?: { [key: string]: any }) {
+    register<T extends "node" | "edge" | "tool" | "grid">(
+        registrationType: T,
+        type: string,
+        value: T extends "node" ? FlowchartTypeMethod
+            : T extends "edge" ? DrawEdgeType
+                : T extends "tool" ? FlowchartToolConstructor
+                    : FlowchartGridAbstractConstructor,
+        options?: { [key: string]: any }
+    ) {
         if (registrationType === "node") {
             this.registered.nodes.push({ type: type, shape: value as FlowchartTypeMethod, options: options as unknown as FlowchartNodeOptions | undefined })
         } else if (registrationType === "edge") {
