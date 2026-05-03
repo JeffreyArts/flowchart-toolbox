@@ -45,6 +45,11 @@ body {
     width: 100%;
     padding-top: 64px;
     float: left;
+    
+    .options {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
 
     a {
         color: #09f;

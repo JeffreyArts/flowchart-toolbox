@@ -9,7 +9,7 @@ export type FlowchartGridConstructOptions = {
 
 
 export type FlowchartGridOptions = {
-    fixToGrid: boolean
+    snap: boolean
     visible: boolean
 }
 
@@ -25,7 +25,7 @@ export class FlowchartGrid {
     }
     options = new Proxy<FlowchartGridOptions>({ 
         visible: true,
-        fixToGrid: true
+        snap: true
     }, {
         set: (target, prop, value) => {
             // Type forcing
@@ -73,6 +73,7 @@ export class FlowchartGrid {
         if (!this.flowchart) return
         if (!this.flowchart.chart) return
         if (!this.backgroundSvg) return
+        
         const viewBox = this.flowchart.chart.getAttribute("viewBox")
         if (!viewBox) return
         
@@ -90,10 +91,13 @@ export class FlowchartGrid {
         if (!this.flowchart.chart) return
         if (!this.cell.svg) { this.drawCell() }
         
+
+        // This piece should go to its own method in subClass
         this.backgroundSvg = document.createElementNS("http://www.w3.org/2000/svg", "rect")
         this.backgroundSvg.setAttribute("fill", "url(#grid-pattern)")
         this.flowchart.chart.insertBefore(this.backgroundSvg, this.flowchart.chart.firstChild)
 
+        // This should always be triggered
         this.updateGrid()
         this.flowchart.events.add("viewBoxChange", this.onViewBoxChange)
     }

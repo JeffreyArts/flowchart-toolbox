@@ -142,6 +142,35 @@
 
 
 
+                <div class="option-group" name="Grid" >
+                    <div class="columns-2">
+                        <div class="option" v-if="flowchart?.grid">
+                            <label for="options-grid-visible">Visible</label>
+                            <span>
+                                <input type="radio" id="options-grid-visible-v0" :value="false" v-model="options.gridVisible" @change="changeGridVisibility">
+                                <label for="options-grid-visible-v0"> false </label>
+                            </span>
+
+                            <span>
+                                <input type="radio" id="options-grid-visible-v1" :value="true" v-model="options.gridVisible" @change="changeGridVisibility">
+                                <label for="options-grid-visible-v1"> true </label>
+                            </span>
+                        </div>
+                        <div class="option" v-if="flowchart?.grid">
+                            <label for="options-grid-snap">Snap to grid</label>
+                            <span>
+                                <input type="radio" id="options-grid-snap-v0" :value="false" v-model="options.snapToGrid" @change="changeGridSnap">
+                                <label for="options-grid-snap-v0"> false </label>
+                            </span>
+
+                            <span>
+                                <input type="radio" id="options-grid-snap-v1" :value="true" v-model="options.snapToGrid" @change="changeGridSnap">
+                                <label for="options-grid-snap-v1"> true </label>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="option-group" name="Actions" >
                     <div class="option">
                         <label for="options-resetPan">Reset zoom/pan</label>
@@ -175,6 +204,8 @@ interface Options {
     edgeShowArrow: boolean
     nodeMaxWidth: number
     nodeOffsetPadding: number
+    gridVisible: boolean
+    snapToGrid: boolean
 }
 
 export default defineComponent ({ 
@@ -191,6 +222,8 @@ export default defineComponent ({
                 edgeShowArrow: true,
                 nodeMaxWidth: 200,
                 nodeOffsetPadding: 8,
+                snapToGrid: true,
+                gridVisible: true,
             } as Partial<Options>,
             nodes: [] as Array<FlowchartNode>,
             flowchart: undefined as Flowchart | undefined,
@@ -357,6 +390,14 @@ export default defineComponent ({
             if (!this.flowchart) return
             this.flowchart.options.nodes.offsetPadding = this.options.nodeOffsetPadding
         },
+        changeGridVisibility() {
+            if (!this.flowchart) return
+            this.flowchart.grid.options.visible = this.options.gridVisible
+        },
+        changeGridSnap() {
+            if (!this.flowchart) return
+            this.flowchart.grid.options.snap = this.options.snapToGrid
+        },
 
         resetPan(e:Event) {
             e.preventDefault()
@@ -404,6 +445,14 @@ export default defineComponent ({
 <style lang="scss">
 
 .grid { 
+
+    @media all and (min-width: 1440px) {
+        .sidebar .options {
+            gap: 0px 16px;
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
     .flowchart {
         position: relative;
         width: 100%;
@@ -418,6 +467,7 @@ export default defineComponent ({
 
     .flowchart-shape {
         stroke-width: 4px;
+        fill: rgba(255, 255, 255, 0.8); 
 
         &.start-node { stroke: #ffccff;}
         &.end-node { stroke: #444;}
