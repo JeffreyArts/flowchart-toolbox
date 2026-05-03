@@ -171,3 +171,15 @@ src: url("/src/assets/fonts/fixed-sys.otf");
         opacity: 1;
     }
 }
+
+#segments-canvas {
+    ::selection {
+    background:transparent;
+    color: inherit;
+    }
+
+    ::-moz-selection {
+    background:transparent;
+    color: inherit;
+    }
+}
