@@ -10,6 +10,7 @@ export type AddNodeToolOptions = {
     defaultNodeType: string
     defaultDistance: number
     autoFit: boolean
+    disableOnSelect: boolean,
     smartNodes?: {
         start: string
         normal: string
@@ -32,7 +33,8 @@ export class AddNodeTool extends FlowchartTool {
         segments: 8,
         defaultNodeType: "end",
         defaultDistance: 100,
-        autoFit: true
+        autoFit: true,
+        disableOnSelect: true,
     } as AddNodeToolOptions
     
     constructor(flowchart: Flowchart, options?: AddNodeToolOptions) {
@@ -233,6 +235,8 @@ export class AddNodeTool extends FlowchartTool {
                 matchedNodes++
                 if (!node.shape.containsPoint(mousePos)) {
                     this.selectedNode = node
+                    if (this.options.disableOnSelect && node.state.selected) return
+                    
                     this.createButton()
                     this.updateButtonPosition(node)
                 } else if (this.selectedNode) {
