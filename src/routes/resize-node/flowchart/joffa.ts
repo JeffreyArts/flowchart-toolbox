@@ -1,0 +1,68 @@
+import Flowchart, { type FlowchartOptions } from "."
+
+// Tools
+import { PanTool } from "./chart-tools/pan"
+import { ZoomTool } from "./chart-tools/zoom"
+import { MoveNodeTool } from "./chart-tools/move-node"
+import { AddNodeTool } from "./chart-tools/add-node"
+
+// Nodes
+import StartNode from "./nodes/types/start"
+import EndNode from "./nodes/types/end"
+import DecisionNode from "./nodes/types/decision"
+import ProcessNode from "./nodes/types/process"
+
+
+// Edges
+import drawStraightEdge from "./edges/draw/straight"
+import drawElbowEdge from "./edges/draw/elbow"
+import drawZigZagEdge from "./edges/draw/zigzag"
+import drawDiagonalEdge from "./edges/draw/diagonal"
+import drawDoubleDiagonalEdge from "./edges/draw/double-diagonal"
+
+// Grids
+import { PlusGrid } from "./grid/plus"
+import { HexagonalGrid } from "./grid/hexagonal"
+import { TriangularGrid } from "./grid/triangular"
+import RectangularGrid from "./grid/rectangular"
+
+
+export default class Joffa extends Flowchart {
+    constructor(container: HTMLElement, options?: FlowchartOptions) {
+        super(container, options)
+        
+        // Default tools
+        this.register("tool","zoom", ZoomTool)
+        this.register("tool","move-node", MoveNodeTool)
+        this.register("tool","add-node", AddNodeTool, { 
+            segments: 16, 
+            smartNodes: {
+                start: "start",
+                normal: "process",
+                decision: "decision",
+                end: "end",
+            }
+        })
+        this.register("tool","pan", PanTool)
+        
+        // Default Nodes
+        this.register("node", "process", ProcessNode, { shape: { class: "▭" }})
+        this.register("node", "start", StartNode, { shape: { class: "💊" }})
+        this.register("node", "end", EndNode, { shape: { class: ["💊"] }})
+        this.register("node", "decision", DecisionNode, { shape: { class: "🔶" }})
+
+        // Default edges
+        this.register("edge", "straight", drawStraightEdge)
+        this.register("edge", "elbow", drawElbowEdge)
+        this.register("edge", "zigzag", drawZigZagEdge)
+        this.register("edge", "diagonal", drawDiagonalEdge)
+        this.register("edge", "double-diagonal", drawDoubleDiagonalEdge)
+
+        // Default grids
+        this.register("grid", "weird rectangles", RectangularGrid, { cellWidth: 32, cellHeight: 128, lineColor: "#222", lineThickness: 16 })
+        this.register("grid", "plus", PlusGrid, { cellWidth: 32, cellHeight: 32, lineColor: "#eee", lineThickness: .5 })
+        this.register("grid", "hexagonal", HexagonalGrid, { cellDiameter: 64, lineThickness: .25 })
+        this.register("grid", "triangular", TriangularGrid, { cellDiameter: 8, lineThickness: .128 })
+        
+    }
+}
