@@ -18,6 +18,7 @@ export class MoveNodeTool extends FlowchartTool {
 
         this.flowchart.events.add("mouseDown", this.onMouseDown)
         this.flowchart.events.add("mouseMove", this.onMouseMove)
+        this.flowchart.events.add("mouseUp", this.onMouseUp)
     }
     
     // ██████ ▄▄ ▄▄ ▄▄▄▄▄ ▄▄  ▄▄ ▄▄▄▄▄▄ ▄▄▄▄ 
@@ -55,6 +56,10 @@ export class MoveNodeTool extends FlowchartTool {
         if (!mouseDown) return
         if (!mouseStartPos) return
 
+        if (this.flowchart?.parentElement) {
+            this.flowchart.parentElement.style.cursor = "move"
+        }
+
         let deltaX = (globalMousePos.x - mouseStartPos.x) /// this.flowchart.zoom
         let deltaY = (globalMousePos.y - mouseStartPos.y) /// this.flowchart.zoom
         // If holding shift key only move vertical or horizontal
@@ -71,6 +76,12 @@ export class MoveNodeTool extends FlowchartTool {
             pos.node.x = pos.x + deltaX
             pos.node.y = pos.y + deltaY
         })
+    }
+
+    private onMouseUp = (_fec: FlowchartEventContext) => {
+        if (this.flowchart?.parentElement) {
+            this.flowchart.parentElement.style.cursor = ""
+        }
     }
 }
 
