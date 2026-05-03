@@ -6,7 +6,7 @@ import type { FlowchartEventContext,  FlowchartNodeEvent } from "../events"
 export class ResizeNodeTool extends FlowchartTool {
     name = "resize-node"
     selectedNodes = [] as FlowchartNode[]
-    selectionBox = undefined as SVGRectElement | undefined
+    selectBox = undefined as SVGElement | undefined
 
     options = {
     }

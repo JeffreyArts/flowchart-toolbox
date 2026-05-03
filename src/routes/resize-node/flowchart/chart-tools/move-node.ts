@@ -56,7 +56,7 @@ export class MoveNodeTool extends FlowchartTool {
         if (!mouseDown) return
         if (!mouseStartPos) return
 
-        if (this.flowchart?.parentElement) {
+        if (this.flowchart?.parentElement && this.selectedNodesStartPos.length > 0) {
             this.flowchart.parentElement.style.cursor = "move"
         }
 

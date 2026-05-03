@@ -29,6 +29,7 @@ export class SelectTool extends FlowchartTool {
         this.flowchart.events.add("mouseDown", this.selectOnMouseDown)
         this.flowchart.events.add("mouseUp", this.deselectOnMouseUp)
         this.flowchart.events.add("mouseMove", this.onMouseMove)
+        this.flowchart.events.add("keyDown", this.onKeyDown)
     }
 
     // █████▄ ▄▄▄▄  ▄▄ ▄▄ ▄▄  ▄▄▄ ▄▄▄▄▄▄ ▄▄▄▄▄ 
@@ -181,6 +182,16 @@ export class SelectTool extends FlowchartTool {
             clickedNode.state.selected = true
             this.selectedNodes.push(clickedNode)
         }
+    }
+
+    private onKeyDown = (fec: FlowchartEventContext) => {
+        const e = fec.originalEvent as KeyboardEvent
+        if (e.key === "Escape") {
+            if ( this.selectionBox ) {
+                this.removeSelectionBox()
+            }
+        }
+            
     }
 }
 
