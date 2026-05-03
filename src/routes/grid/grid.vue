@@ -407,10 +407,22 @@ export default defineComponent ({
         changeGridSnap() {
             if (!this.flowchart) return
             this.flowchart.grid.options.snap = this.options.snapToGrid
+            
+            if (!this.flowchart.grid.options.snap) return
+            this.flowchart.nodes.forEach(node => {
+                const pos  = this.flowchart!.grid.snap(node.x , node.y)
+                node.x = pos.x
+                node.y = pos.y
+            })
         },
         changeGridType() {
             if (!this.flowchart) return
             this.flowchart.grid.options.gridType = this.options.gridType
+            this.flowchart.nodes.forEach(node => {
+                const pos  = this.flowchart!.grid.snap(node.x , node.y)
+                node.x = pos.x
+                node.y = pos.y
+            })
         },
 
         resetPan(e:Event) {

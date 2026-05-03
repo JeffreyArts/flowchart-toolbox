@@ -4,6 +4,8 @@ import FlowchartGrid, { FlowchartGridAbstract } from "./index"
 export type PlusGridOptions = {
     cellWidth?: number
     cellHeight?: number
+    lineColor?: string
+    lineThickness?: number
 }
 
 export class PlusGrid extends FlowchartGridAbstract {
@@ -12,6 +14,8 @@ export class PlusGrid extends FlowchartGridAbstract {
     cell = {
         width: 32,
         height: 32,
+        lineColor: "#e0e0e0",
+        lineThickness: .33,
         svg: undefined as SVGPatternElement | undefined
     }
 
@@ -29,6 +33,14 @@ export class PlusGrid extends FlowchartGridAbstract {
 
         if (options.cellHeight) {
             this.cell.height = options.cellHeight
+        }
+        
+        if (options.lineColor) {
+            this.cell.lineColor = options.lineColor
+        }
+
+        if (options.lineThickness) {
+            this.cell.lineThickness = options.lineThickness
         }
     }
 
@@ -53,16 +65,16 @@ export class PlusGrid extends FlowchartGridAbstract {
         horizontalLine.setAttribute("y1", this.cell.height / 2 + "")
         horizontalLine.setAttribute("x2", this.cell.width *.6 + "")
         horizontalLine.setAttribute("y2", this.cell.height / 2 + "")
-        horizontalLine.setAttribute("stroke", "#e0e0e0")
-        horizontalLine.setAttribute("stroke-width", ".33")
+        horizontalLine.setAttribute("stroke",this.cell.lineColor)
+        horizontalLine.setAttribute("stroke-width", this.cell.lineThickness.toString())
 
         const verticalLine = document.createElementNS("http://www.w3.org/2000/svg", "line")
         verticalLine.setAttribute("x1", this.cell.width / 2 + "")
         verticalLine.setAttribute("y1", this.cell.height *.4 + "")
         verticalLine.setAttribute("x2", this.cell.width / 2 + "")
         verticalLine.setAttribute("y2", this.cell.height *.6 + "")
-        verticalLine.setAttribute("stroke", "#e0e0e0")
-        verticalLine.setAttribute("stroke-width", ".33")
+        verticalLine.setAttribute("stroke",this.cell.lineColor)
+        verticalLine.setAttribute("stroke-width", this.cell.lineThickness.toString())
 
         svgEl.appendChild(verticalLine)
         svgEl.appendChild(horizontalLine)

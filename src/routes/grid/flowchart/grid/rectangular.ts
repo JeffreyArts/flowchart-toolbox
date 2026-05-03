@@ -4,6 +4,8 @@ import FlowchartGrid, { FlowchartGridAbstract } from "./index"
 export type RectangularGridOptions = {
     cellWidth?: number
     cellHeight?: number
+    lineColor?: string
+    lineThickness?: number
 }
 
 export class RectangularGrid extends FlowchartGridAbstract {
@@ -12,6 +14,8 @@ export class RectangularGrid extends FlowchartGridAbstract {
     cell = {
         width: 32,
         height: 32,
+        lineColor: "#e0e0e0",
+        lineThickness: .33,
         svg: undefined as SVGPatternElement | undefined
     }
 
@@ -35,6 +39,14 @@ export class RectangularGrid extends FlowchartGridAbstract {
         if (options.cellHeight) {
             this.cell.height = options.cellHeight
         }
+
+        if (options.lineColor) {
+            this.cell.lineColor = options.lineColor
+        }
+
+        if (options.lineThickness) {
+            this.cell.lineThickness = options.lineThickness
+        }
     }
 
     snap(x: number, y: number) {
@@ -53,8 +65,8 @@ export class RectangularGrid extends FlowchartGridAbstract {
         rect.setAttribute("width", this.cell.width.toString())
         rect.setAttribute("height", this.cell.height.toString())
         rect.setAttribute("fill", "none")
-        rect.setAttribute("stroke", "#e0e0e0")
-        rect.setAttribute("stroke-width", "1")
+        rect.setAttribute("stroke", this.cell.lineColor)
+        rect.setAttribute("stroke-width", this.cell.lineThickness.toString())
 
         svgEl.appendChild(rect)
         
