@@ -22,10 +22,12 @@ import PassRegisterOptions from "./pass-register-options/pass-register-options.v
 import CodeCleanup1 from "./code-cleanup-1/code-cleanup.vue"
 import Grid from "./grid/grid.vue"
 import ResizeNode from "./resize-node/resize-node.vue"
+import ToolOptions from "./tool-options/tool-options.vue"
 import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
 import Cytoscape from "./cytoscape.vue"
 import ShapeOutside from "./shape-outside.vue"
+import path from "path"
 
 const routes = [
     {
@@ -157,6 +159,11 @@ const routes = [
         path: "/resize-node",
         name: "24) Resize Node",
         component: ResizeNode
+    },
+    {
+        path: "/tool-options",
+        name: "25) Tool options",
+        component: ToolOptions
     },
     {
         path: "/options-overview",
