@@ -359,6 +359,9 @@ export default defineComponent ({
                     this.changeGridVisibility()
                     this.changeGridSnap()
                 })
+
+                // allow option groups to be draggable and rearranged
+                this.draggableOptions()
             })
         }
 
@@ -512,6 +515,58 @@ export default defineComponent ({
             if (!this.flowchart) return
             this.selectedNodes = markRaw(this.flowchart.nodes.filter(n => n.state.selected))
         },
+        draggableOptions() {
+            document.querySelectorAll(".option-group").forEach((el, i) => {
+                el.style.order = String(i + 1)
+                
+                el.setAttribute("draggable", "true")
+
+                el.addEventListener("dragstart", (e: DragEvent) => {
+                    el.classList.add("dragging")
+                    e.dataTransfer!.effectAllowed = "move"
+                    e.dataTransfer!.setData("text/plain", el.getAttribute("name") ?? "")
+                })
+
+                el.addEventListener("dragend", () => {
+                    el.classList.remove("dragging")
+                    document.querySelectorAll(".option-group").forEach(e => e.classList.remove("drag-over"))
+                })
+
+                el.addEventListener("dragover", (e: DragEvent) => {
+                    e.preventDefault()
+                    el.classList.add("drag-over")
+                })
+
+                el.addEventListener("dragleave", () => {
+                    el.classList.remove("drag-over")
+                })
+
+                el.addEventListener("drop", (e: DragEvent) => {
+                    e.preventDefault()
+                    el.classList.remove("drag-over")
+
+                    const fromName = e.dataTransfer!.getData("text/plain")
+                    const toName = el.getAttribute("name") ?? ""
+
+                    if (!fromName || fromName === toName) return
+
+                    const allEls = Array.from(document.querySelectorAll<HTMLElement>(".option-group"))
+                    const fromEl = allEls.find(e => e.getAttribute("name") === fromName)!
+
+                    // Use index-based order (1-based) if not explicitly set yet
+                    const getOrder = (el: HTMLElement) => {
+                        const o = parseInt(el.style.order)
+                        return isNaN(o) ? allEls.indexOf(el) + 1 : o
+                    }
+
+                    const fromOrder = getOrder(fromEl)
+                    const toOrder = getOrder(el)
+
+                    fromEl.style.order = String(toOrder)
+                    el.style.order = String(fromOrder)
+                })
+            })
+        }
     }
 })
 </script>
@@ -601,6 +656,23 @@ export default defineComponent ({
                 opacity: 1;
             }
         }
+    }
+
+    .option-group {
+        cursor: default;
+    }
+
+    .option-group::before {
+        cursor: grab;
+        /* any other handle styling */
+    }
+
+    .option-group.dragging {
+        opacity: 0.4;
+    }
+
+    .option-group.drag-over {
+        border-top: 8px solid var(--accent-color);
     }
 }
 
