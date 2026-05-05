@@ -1,5 +1,5 @@
 <template>
-    <div class="tool-options" @click="updateSelectedNodes" @mousemove="updateSelectedNodes">
+    <div class="tool-options-route" @click="updateSelectedNodes" @mousemove="updateSelectedNodes">
         <header class="title">
             <h1>Tool options</h1>
         </header>
@@ -179,6 +179,41 @@
                     </div>
                 </div>
 
+
+                <div class="option-group" name="Tools" >
+                    <div class="columns-2">
+                        <div class="option" v-if="flowchart?.registered.tools">
+                            <details v-for="tool in flowchart.registered.tools" :key="tool.type" class="tool-options">
+                                
+                                <summary>    
+                                    <input type="checkbox" :id="tool.type + '-checkbox'" :checked="tool.object.isActive == true" v-on:input="updateToolActive(tool, $event)">
+                                    <label :for="tool.type + '-checkbox'" class="none">&nbsp;</label>
+                                    <span :title="tool.type">{{ sentenceCase(tool.type) }}</span>
+                                </summary>
+
+                                <div class="tool-options-content" v-if="tool.object.options" v-for="(value, option) in tool.object.options" :key="option">
+                                    <div v-if="typeof value === 'boolean'">
+                                        <input type="checkbox" :id="tool.type + '-' + option" v-model="tool.object.options[option]">
+                                        <label :for="tool.type + '-' + option">{{ sentenceCase(option) }}</label>
+                                    </div>
+
+                                    <div v-if="typeof value == 'number'">
+                                        <input type="number" :id="tool.type + '-' + option" v-model="tool.object.options[option]">
+                                        <label :for="tool.type + '-' + option">{{ sentenceCase(option) }}</label>
+                                    </div>
+
+                                    <div v-if="typeof value == 'string'">
+                                        <input type="text" :id="tool.type + '-' + option" v-model="tool.object.options[option]">
+                                        <label :for="tool.type + '-' + option">{{ sentenceCase(option) }}</label>
+                                    </div>
+                                </div>
+
+                            </details>
+                        </div>
+
+                    </div>
+                </div>
+
                 <div class="option-group" name="Actions" >
                     <div class="option">
                         <label for="options-resetPan">Reset zoom/pan</label>
@@ -197,6 +232,7 @@
 //@ts-nocheck
 import { defineComponent, markRaw } from "vue"
 import _, { update } from "lodash"
+import { sentenceCase } from "change-case"
 import gsap from "gsap"
 import Joffa from "./flowchart/joffa"
 import { FlowchartNode, type FlowchartNodeOptions } from "./flowchart/nodes"
@@ -278,6 +314,7 @@ export default defineComponent ({
         if (this.$el && !this.flowchart) {
             // Timeout is for giving some time for processing this.options
             setTimeout(() => {
+                
                 const flowchartOptions = {
                     edges: { 
                         type: this.options.edgeType,
@@ -331,6 +368,9 @@ export default defineComponent ({
         this.flowchart?.destroy()
     },
     methods: {
+        sentenceCase(str: string) {
+            return sentenceCase(str)
+        },
         changeSelectedNode(selectedNode: FlowchartNode) {
             if (!selectedNode) return
             if (!this.flowchart) return
@@ -459,6 +499,15 @@ export default defineComponent ({
             this.options = {
             }
         },
+        updateToolActive(tool: { type: string, object: any }, event: Event) {
+            const isActive = (event.target as HTMLInputElement).checked
+            
+            if (isActive) {
+                tool.object.activate()
+            } else {    
+                tool.object.deactivate()
+            }
+        },
         updateSelectedNodes() {
             if (!this.flowchart) return
             this.selectedNodes = markRaw(this.flowchart.nodes.filter(n => n.state.selected))
@@ -470,7 +519,7 @@ export default defineComponent ({
 
 <style lang="scss">
 
-.tool-options { 
+.tool-options-route { 
     @media all and (min-width: 1440px) {
         .sidebar .options {
             gap: 0px 16px;
@@ -498,6 +547,60 @@ export default defineComponent ({
         &.end-node { stroke: #444;}
         &.process-node { stroke: #b2e0f9;}
         &.decision-node { stroke: #fffa88;}
+    }
+
+    .option label.none {
+        margin: 0;
+        padding-left: 16px;
+    }
+
+    
+    .tool-options summary {
+        font-size: 18px;
+        font-family: "FixedSys";
+    }
+    .tool-options-content {
+        padding-left: 16px;
+        scale: .9;
+        
+        input + label {
+            font-family: "DroidSans";
+            opacity: 0.6;
+
+            &:hover {
+                opacity: 1;
+
+                &:before {
+                    opacity: 1;
+                }
+            }
+        }
+
+        input[type="checkbox"] + label{
+            &:before {
+                opacity: 0.5;
+            }
+
+            &:hover:before {
+                opacity: 1;
+            }
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 40px;
+            padding-left: 0px;
+            padding-right: 0;
+            opacity: 0.8;
+            + label {
+                width: auto;
+                padding-left: 8px;
+            }
+            &:hover,
+            &:focus {
+                opacity: 1;
+            }
+        }
     }
 }
 
