@@ -5,29 +5,75 @@ import type { FlowchartEventContext,  FlowchartNodeEvent } from "../events"
 
 export type ResizeNodeToolOptions = {
     handleSize: number
+    roundedHandles: boolean
     minWidth: number
+    minHeight: number
+    resizeHorizontal: boolean
+    resizeVertical: boolean
 }
 
 export class ResizeNodeTool extends FlowchartTool {
     name = "resize-node"
     selectedNode = undefined as FlowchartNode | undefined
     selectBox = undefined as SVGElement | undefined
-    handles = [ "middle-left", "middle-right" ]
+    handles = [ ] as Array<"middle-left" | "middle-right" | "middle-top" | "middle-bottom">
 
-    startWidth = undefined as number | undefined
-    startX = undefined as number | undefined
+    start = {
+        x: undefined as number | undefined,
+        y: undefined as number | undefined,
+        width: undefined as number | undefined,
+        height: undefined as number | undefined,
+    }
     
     state = {
-        resizing: "" as "" | "horizontal-left" | "horizontal-right" | "vertical" | "both",
+        resizing: "" as "" | "horizontal-left" | "horizontal-right" | "vertical-top" | "vertical-bottom",
     }
 
-    options = {
+    options = new Proxy<ResizeNodeToolOptions>({
         handleSize: 8,
         minWidth: 32,
-    }
+        minHeight: 32,
+        roundedHandles: true,
+        resizeHorizontal: false, // This is being set in the constructor so it will trgger the handles to be set correctly
+        resizeVertical: false, // This is being set in the constructor so it will trgger the handles to be set correctly
+    }, {
+        set: (target, prop, value) => {
+            (target as Record<string, any>)[prop as string] = value
+
+            if (prop === "resizeHorizontal") {
+                if (value) {
+                    this.handles.push("middle-left", "middle-right")
+                } else {
+                    this.handles = this.handles.filter(h => h !== "middle-left" && h !== "middle-right")
+                }
+            }
+
+            if (prop === "resizeVertical") {
+                if (value) {
+                    this.handles.push("middle-top", "middle-bottom")
+                } else {
+                    this.handles = this.handles.filter(h => h !== "middle-top" && h !== "middle-bottom")
+                }
+            }
+
+            if (prop === "handleSize" || prop === "roundedHandles") {
+                this.removeSelectionBox()
+                if (this.selectedNode) {
+                    this.createResizeHandles()
+                }
+            }
+
+            return true
+        }
+    })
+    
 
     constructor(flowchart: Flowchart, options?: ResizeNodeToolOptions) {
         super(flowchart)
+
+        this.options.resizeHorizontal = true
+        this.options.resizeVertical = true
+
         this.parseOptions(options)
 
         this.flowchart.events.add("nodeAdded", this.onNodeAdded)
@@ -43,11 +89,29 @@ export class ResizeNodeTool extends FlowchartTool {
     private parseOptions(options?: Partial<ResizeNodeToolOptions>) {
         if (!options) return
 
-        this.options = { ...this.options, ...options }
+        if (options.handleSize !== undefined) {
+            this.options.handleSize = options.handleSize
+        }
+        
+        if (options.minWidth !== undefined) {
+            this.options.minWidth = options.minWidth
+        }   
+        
+        if (options.resizeHorizontal !== undefined) {
+            this.options.resizeHorizontal = options.resizeHorizontal
+        }
+
+        if (options.resizeVertical !== undefined) {
+            this.options.resizeVertical = options.resizeVertical
+        }
     }
 
-    private createResizeHandles(node: FlowchartNode) {
+    private createResizeHandles() {
         if (this.selectBox) return
+        if (!this.selectedNode) return
+
+        const node = this.selectedNode
+
         this.selectBox = document.createElementNS("http://www.w3.org/2000/svg", "g")
         this.selectBox.setAttribute("tool", "resize-node-tool")
         this.selectBox.setAttribute("name", "select-box")
@@ -74,12 +138,20 @@ export class ResizeNodeTool extends FlowchartTool {
             handle.setAttribute("stroke-width", ".5")
             handle.setAttribute("x", pos.x.toString())
             handle.setAttribute("y", pos.y.toString())
-            handle.setAttribute("rx", (pos.width / 2).toString())
-            handle.setAttribute("ry", (pos.width / 2).toString())
             handle.setAttribute("width", pos.width.toString())
             handle.setAttribute("height", pos.height.toString())
             handle.setAttribute("class", "handle")
             handle.setAttribute("id", handleId)
+
+            if (this.options.roundedHandles) {
+                if (handleId === "middle-left" || handleId === "middle-right") {
+                    handle.setAttribute("rx", (pos.width / 2).toString())
+                    handle.setAttribute("ry", (pos.width / 2).toString())
+                } else if (handleId === "middle-top" || handleId === "middle-bottom") {
+                    handle.setAttribute("rx", (pos.height / 2).toString())
+                    handle.setAttribute("ry", (pos.height / 2).toString())
+                }
+            }
             this.selectBox?.appendChild(handle)
         })
     }
@@ -106,6 +178,20 @@ export class ResizeNodeTool extends FlowchartTool {
                     y: y + height / 2 - this.options.handleSize / 2,
                     width: this.options.handleSize / 2,
                     height: this.options.handleSize,
+                }
+            case "middle-top":
+                return { 
+                    x: x + width / 2 - this.options.handleSize / 2, 
+                    y: y - this.options.handleSize / 4,
+                    width: this.options.handleSize,
+                    height: this.options.handleSize / 2,
+                }
+            case "middle-bottom":
+                return {    
+                    x: x + width / 2 - this.options.handleSize / 2, 
+                    y: y + height - this.options.handleSize / 4,
+                    width: this.options.handleSize,
+                    height: this.options.handleSize / 2,
                 }
             default:
                 return { x: node.x, y: node.y, width: node.width, height: node.height }
@@ -151,6 +237,8 @@ export class ResizeNodeTool extends FlowchartTool {
     }
 
     private isLeftHandle() {
+        if (!this.options.resizeHorizontal) return false
+
         const mousePos = this.flowchart.events.mousePos
         const leftHandle = this.selectBox?.querySelector("#middle-left")
         if (!leftHandle) return false
@@ -163,6 +251,8 @@ export class ResizeNodeTool extends FlowchartTool {
     }
 
     private isRightHandle() {
+        if (!this.options.resizeHorizontal) return false
+
         const mousePos = this.flowchart.events.mousePos
         const rightHandle = this.selectBox?.querySelector("#middle-right")
         if (!rightHandle) return false
@@ -174,10 +264,47 @@ export class ResizeNodeTool extends FlowchartTool {
         return mousePos.x >= x && mousePos.x <= x + width && mousePos.y >= y && mousePos.y <= y + height
     }
 
+    private isTopHandle() {
+        if (!this.options.resizeVertical) return false
+
+        const mousePos = this.flowchart.events.mousePos
+        const topHandle = this.selectBox?.querySelector("#middle-top")
+        if (!topHandle) return false
+        const x = parseFloat(topHandle.getAttribute("x") || "0")
+        const y = parseFloat(topHandle.getAttribute("y") || "0")
+        const width = parseFloat(topHandle.getAttribute("width") || "0")
+        const height = parseFloat(topHandle.getAttribute("height") || "0")
+
+        return mousePos.x >= x && mousePos.x <= x + width && mousePos.y >= y && mousePos.y <= y + height
+    }
+
+    private isBottomHandle() {
+        if (!this.options.resizeVertical) return false
+
+        const mousePos = this.flowchart.events.mousePos
+        const bottomHandle = this.selectBox?.querySelector("#middle-bottom")
+        if (!bottomHandle) return false
+        const x = parseFloat(bottomHandle.getAttribute("x") || "0")
+        const y = parseFloat(bottomHandle.getAttribute("y") || "0")
+        const width = parseFloat(bottomHandle.getAttribute("width") || "0")
+        const height = parseFloat(bottomHandle.getAttribute("height") || "0")   
+     
+        return mousePos.x >= x && mousePos.x <= x + width && mousePos.y >= y && mousePos.y <= y + height
+    }
+
+    get horizontalHandle() {
+        return this.isLeftHandle() || this.isRightHandle()
+    }
+
+    get verticalHandle() {
+        return this.isTopHandle() || this.isBottomHandle()
+    }
+
+
     private resizeNodeHorizontal( event: MouseEvent) {
         if (!this.selectedNode) return
-        if (!this.startWidth) return
-        if (!this.startX) return
+        if (!this.start.width) return
+        if (!this.start.x) return
         if (!this.selectedNode.shape) return
 
 
@@ -188,34 +315,79 @@ export class ResizeNodeTool extends FlowchartTool {
 
         if (this.state.resizing.includes("left")) {
             if (event.altKey) {
-                newX = this.startX
-                newWidth = Math.max(0, this.startWidth - (mouseDelta.x * 2))
+                newX = this.start.x
+                newWidth = Math.max(0, this.start.width - (mouseDelta.x * 2))
             } else {
-                newX = Math.max(0, this.startX + mouseDelta.x / 2)
-                newWidth = Math.max(0, this.startWidth - (mouseDelta.x ))
+                newX = Math.max(0, this.start.x + mouseDelta.x / 2)
+                newWidth = Math.max(0, this.start.width - (mouseDelta.x ))
 
             }
         } 
         if (this.state.resizing.includes("right")) {
             if (event.altKey) {
-                newX = this.startX
-                newWidth = Math.max(0, this.startWidth + (mouseDelta.x * 2))
+                newX = this.start.x
+                newWidth = Math.max(0, this.start.width + (mouseDelta.x * 2))
             } else {
-                newX = Math.max(0, this.startX + mouseDelta.x / 2)
-                newWidth = Math.max(0, this.startWidth + (mouseDelta.x ))
+                newX = Math.max(0, this.start.x + mouseDelta.x / 2)
+                newWidth = Math.max(0, this.start.width + (mouseDelta.x ))
             }
         }
         
         if (newWidth > this.options.minWidth) {
             this.selectedNode.x = newX
-            this.selectedNode.shape.style.width = newWidth + "px"
+            this.selectedNode.shape.svgEl.setAttribute("width", newWidth + "px")
             this.selectedNode.textBox.width = newWidth
         } else {
-            this.selectedNode.shape.style.width = this.options.minWidth + "px"
+            this.selectedNode.shape.svgEl.setAttribute("width", this.options.minWidth + "px")
             this.selectedNode.textBox.width = this.options.minWidth
         }
         
         this.updateSelectionBox(this.selectedNode)
+    }
+
+    private resizeNodeVertical( event: MouseEvent) {
+        if (!this.selectedNode) return
+        if (!this.start.height) return
+        if (!this.start.y) return
+        if (!this.selectedNode.shape) return
+        
+        const mouseDelta = this.flowchart.events.mouseDelta
+
+        let newY = 0
+        let newHeight = 0
+
+        if (this.state.resizing.includes("top")) {
+            if (event.altKey) {
+                newY = this.start.y
+                newHeight = Math.max(0, this.start.height - (mouseDelta.y * 2))
+            } else {
+                newY = Math.max(0, this.start.y + mouseDelta.y / 2)
+                newHeight = Math.max(0, this.start.height - (mouseDelta.y ))
+            }
+        } 
+        if (this.state.resizing.includes("bottom")) {
+            if (event.altKey) {
+                newY = this.start.y
+                newHeight = Math.max(0, this.start.height + (mouseDelta.y * 2))
+            } else {
+                newY = Math.max(0, this.start.y + mouseDelta.y / 2)
+                newHeight = Math.max(0, this.start.height + (mouseDelta.y ))
+            }
+        }
+        
+        if (newHeight > this.options.minHeight) {
+            this.selectedNode.y = newY
+            this.selectedNode.shape.svgEl.setAttribute("height", newHeight + "px")
+            this.selectedNode.shape.style.height = newHeight + "px"
+            this.selectedNode.textBox.height = newHeight
+        } else {
+            this.selectedNode.shape.svgEl.setAttribute("height", this.options.minHeight + "px")
+            this.selectedNode.shape.style.height = this.options.minHeight + "px"
+            this.selectedNode.textBox.height = this.options.minHeight
+        }
+        
+        this.updateSelectionBox(this.selectedNode)
+        
     }
 
     // ██████ ▄▄ ▄▄ ▄▄▄▄▄ ▄▄  ▄▄ ▄▄▄▄▄▄ ▄▄▄▄ 
@@ -223,19 +395,34 @@ export class ResizeNodeTool extends FlowchartTool {
     // ██▄▄▄▄  ▀█▀  ██▄▄▄ ██ ▀██   ██  ▄▄██▀ 
 
     private onmouseDown = (_fec: FlowchartEventContext) => {
-        if (this.isLeftHandle() || this.isRightHandle()) {
-            if (this.isLeftHandle()) {
-                this.state.resizing = "horizontal-left"
-            } else if (this.isRightHandle()) {
-                this.state.resizing = "horizontal-right"
-            }
-
-            if (!this.selectedNode) return
-            
-            this.startX = this.selectedNode.x
-            this.startWidth = this.selectedNode.width
-            document.body.style.cursor = "ew-resize"
+        let cursor = ""
+        if (this.isLeftHandle()) {
+            this.state.resizing = "horizontal-left"
+        } else if (this.isRightHandle()) {
+            this.state.resizing = "horizontal-right"
+        } else if (this.isTopHandle()) {
+            this.state.resizing = "vertical-top"
+        } else if (this.isBottomHandle()) {
+            this.state.resizing = "vertical-bottom"
         }
+
+        
+        if (this.horizontalHandle) {
+            cursor = "ew-resize"
+        } else if (this.verticalHandle) {
+            cursor = "ns-resize"
+        }
+
+        if (cursor) {
+            document.body.style.cursor = cursor
+        }
+        
+        if (!this.selectedNode) return
+        
+        this.start.x = this.selectedNode.x
+        this.start.y = this.selectedNode.y
+        this.start.width = this.selectedNode.width
+        this.start.height = this.selectedNode.height
     }
 
     private onMouseUp = (fec: FlowchartEventContext) => {
@@ -243,13 +430,15 @@ export class ResizeNodeTool extends FlowchartTool {
         if (!this.selectedNode) return
         if (!fec.originalEvent) return
 
-        if (this.state.resizing.includes("horizontal")) {
-            this.startX = this.selectedNode.x
-            this.startWidth = this.selectedNode.width
+        if (this.state.resizing.includes("horizontal") || this.state.resizing.includes("vertical")) {
+            this.start.x = this.selectedNode.x
+            this.start.y = this.selectedNode.y
+            this.start.width = this.selectedNode.width
+            this.start.height = this.selectedNode.height
             this.state.resizing = ""
             this.selectedNode.state.selected = true
             document.body.style.cursor = ""
-        }
+        } 
     }
 
     private onMouseMove = (fec: FlowchartEventContext) => {
@@ -261,8 +450,10 @@ export class ResizeNodeTool extends FlowchartTool {
         if (this.state.resizing) {
             fec.stopPropagation()
         } else {
-            if (this.isLeftHandle() || this.isRightHandle()) {
+            if (this.horizontalHandle) {
                 document.body.style.cursor = "ew-resize"
+            } else if (this.verticalHandle) {
+                document.body.style.cursor = "ns-resize"
             } else {
                 document.body.style.cursor = ""
             }
@@ -271,6 +462,9 @@ export class ResizeNodeTool extends FlowchartTool {
         // Trigger resize if mouse is down and handle is active
         if (this.state.resizing.includes("horizontal")) {
             this.resizeNodeHorizontal(fec.originalEvent as MouseEvent)
+            return
+        } else if (this.state.resizing.includes("vertical")) {
+            this.resizeNodeVertical(fec.originalEvent as MouseEvent)
             return
         }
 
@@ -288,20 +482,19 @@ export class ResizeNodeTool extends FlowchartTool {
 
     private onNodeSelected = (node: FlowchartNode) => {
         if (!this.flowchart) return
-        this.createResizeHandles(node)
-
+        
         node.addEventListener("positionChange", this.updateSelectionBox)
         this.selectedNode = node
-        this.startX = node.x
-        this.startWidth = node.width
+        this.start.x = node.x
+        this.start.width = node.width
+
+        this.createResizeHandles()
     }
 
-    private onNodeDeselected = (node: FlowchartNode) => {
+    private onNodeDeselected = (_node: FlowchartNode) => {
 
-        if (this.isLeftHandle()) return
-        if (this.isRightHandle()) return
+        if (this.horizontalHandle || this.verticalHandle) return
         
-
         this.state.resizing = ""
         this.removeSelectionBox()
     }
