@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 128 128">
+  <defs>
+    <style>
+      .text { fill: #231f20; }
+      .bg { fill: #fff; }
+      .outline { fill: #ffccff; }
+    </style>
+  </defs>
+  <g>
+      <g>
+        <rect class="outline" x="0" y="17.3" width="128" height="16"/>
+        <rect class="outline" x="0" y="94.4" width="128" height="16"/>
+        <rect class="bg" y="33.3" width="128" height="61"/>
+      </g>
+      <g class="text">
+        <path d="M30.1,76.1h-3.5v3.5h-14v-3.5h-3.5v-7h7v7h7v-27.9h7v27.9Z"/>
+        <path d="M53.1,76.1h-3.5v3.5h-14v-3.5h-3.5v-24.4h3.5v-3.5h14v3.5h3.5v24.4ZM46.1,76.1v-24.4h-7v24.4h7Z"/>
+        <path d="M76,51.6h-14v10.5h10.5v3.5h-10.5v14h-7v-31.4h20.9v3.5Z"/>
+        <path d="M99,51.6h-14v10.5h10.5v3.5h-10.5v14h-7v-31.4h20.9v3.5Z"/>
+        <path d="M118.8,79.6h-7v-10.5h-7v10.5h-7v-24.4h3.5v-3.5h3.5v-3.5h7v3.5h3.5v3.5h3.5v24.4ZM111.8,65.6v-10.5h-7v10.5h7Z"/>
+      </g>
+  </g>
+</svg>

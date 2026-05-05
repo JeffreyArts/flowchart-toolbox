@@ -200,7 +200,7 @@ import _, { update } from "lodash"
 import gsap from "gsap"
 import Joffa from "./flowchart/joffa"
 import { FlowchartNode, type FlowchartNodeOptions } from "./flowchart/nodes"
-import { type EdgeType } from "./flowchart/edge"
+import { type EdgeType } from "./flowchart/edges"
 import SelectTool from "./flowchart/chart-tools/select-node"
 
 interface Options {
