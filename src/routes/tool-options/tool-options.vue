@@ -141,7 +141,6 @@
                 </div>
 
 
-
                 <div class="option-group" name="Grid" >
                     <div class="columns-2">
                         <div class="option" v-if="flowchart?.grid">
@@ -516,8 +515,17 @@ export default defineComponent ({
             this.selectedNodes = markRaw(this.flowchart.nodes.filter(n => n.state.selected))
         },
         draggableOptions() {
+            const localState = JSON.parse(localStorage.getItem("option-groups") || "{}")
             document.querySelectorAll(".option-group").forEach((el, i) => {
-                el.style.order = String(i + 1)
+                const name = el.getAttribute("name")
+                el.style.order = parseInt(localState[name], 10)
+                
+                if (!el.style.order) {
+                    el.style.order = i + 1
+                }
+
+                localState[name] = el.style.order
+                localStorage.setItem("option-groups", JSON.stringify(localState))
                 
                 el.setAttribute("draggable", "true")
 
@@ -561,7 +569,11 @@ export default defineComponent ({
 
                     const fromOrder = getOrder(fromEl)
                     const toOrder = getOrder(el)
-
+                    const localState = JSON.parse(localStorage.getItem("option-groups") || "{}")
+                    localState[fromName] = toOrder
+                    localState[toName] = fromOrder
+                    localStorage.setItem("option-groups", JSON.stringify(localState))
+                    console.log(localState)
                     fromEl.style.order = String(toOrder)
                     el.style.order = String(fromOrder)
                 })
