@@ -1,6 +1,7 @@
 import Flowchart  from "../index"
 import FlowchartTool from "./index"
 import FlowchartNode from "../nodes/index"
+import type { SelectTool } from "./select-node"
 import type { FlowchartEventContext,  FlowchartNodeEvent } from "../events"
 
 export type ResizeNodeToolOptions = {
@@ -473,6 +474,11 @@ export class ResizeNodeTool extends FlowchartTool {
     private onNodeSelected = (node: FlowchartNode) => {
         if (!this.state.active) return
         if (!this.flowchart) return
+        // If multiple selection is not allowed, deselect other nodes
+        const selectTool = this.flowchart.getTool("select-node") as SelectTool | undefined
+        if (selectTool && selectTool.selectedNodes.length !== 0) {
+            return
+        }
         
         node.addEventListener("positionChange", this.updateSelectionBox)
         this.selectedNode = node
@@ -482,8 +488,8 @@ export class ResizeNodeTool extends FlowchartTool {
         this.createResizeHandles()
     }
 
+    
     private onNodeDeselected = (_node: FlowchartNode) => {
-
         if (this.horizontalHandle || this.verticalHandle) return
         
         this.state.resizing = ""
