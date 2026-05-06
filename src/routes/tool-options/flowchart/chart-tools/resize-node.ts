@@ -26,6 +26,7 @@ export class ResizeNodeTool extends FlowchartTool {
     }
     
     state = {
+        active: true,
         resizing: "" as "" | "horizontal-left" | "horizontal-right" | "vertical-top" | "vertical-bottom",
     }
 
@@ -74,7 +75,7 @@ export class ResizeNodeTool extends FlowchartTool {
         this.options.resizeHorizontal = true
         this.options.resizeVertical = true
 
-        this.parseOptions(options)
+        this.updateOptions(options)
 
         this.flowchart.events.add("nodeAdded", this.onNodeAdded)
         this.flowchart.events.add("mouseDown", this.onmouseDown)
@@ -86,26 +87,12 @@ export class ResizeNodeTool extends FlowchartTool {
     // ██▄▄█▀ ██▄█▄ ██ ██▄██ ██▀██  ██   ██▄▄  
     // ██     ██ ██ ██  ▀█▀  ██▀██  ██   ██▄▄▄ 
 
-    private parseOptions(options?: Partial<ResizeNodeToolOptions>) {
-        if (!options) return
-
-        if (options.handleSize !== undefined) {
-            this.options.handleSize = options.handleSize
-        }
-        
-        if (options.minWidth !== undefined) {
-            this.options.minWidth = options.minWidth
-        }   
-        
-        if (options.resizeHorizontal !== undefined) {
-            this.options.resizeHorizontal = options.resizeHorizontal
-        }
-
-        if (options.resizeVertical !== undefined) {
-            this.options.resizeVertical = options.resizeVertical
+    private updateOptions(options?: Partial<ResizeNodeToolOptions>) {
+        if (options) {
+            Object.assign(this.options, options)
         }
     }
-
+    
     private createResizeHandles() {
         if (this.selectBox) return
         if (!this.selectedNode) return
@@ -395,6 +382,7 @@ export class ResizeNodeTool extends FlowchartTool {
     // ██▄▄▄▄  ▀█▀  ██▄▄▄ ██ ▀██   ██  ▄▄██▀ 
 
     private onmouseDown = (_fec: FlowchartEventContext) => {
+        if (!this.state.active) return
         let cursor = ""
         if (this.isLeftHandle()) {
             this.state.resizing = "horizontal-left"
@@ -426,6 +414,7 @@ export class ResizeNodeTool extends FlowchartTool {
     }
 
     private onMouseUp = (fec: FlowchartEventContext) => {
+        if (!this.state.active) return
         if (!this.selectBox) return
         if (!this.selectedNode) return
         if (!fec.originalEvent) return
@@ -442,6 +431,7 @@ export class ResizeNodeTool extends FlowchartTool {
     }
 
     private onMouseMove = (fec: FlowchartEventContext) => {
+        if (!this.state.active) return
         if (!this.selectBox) return
         if (!this.selectedNode) return
         if (!fec.originalEvent) return
@@ -481,6 +471,7 @@ export class ResizeNodeTool extends FlowchartTool {
     }
 
     private onNodeSelected = (node: FlowchartNode) => {
+        if (!this.state.active) return
         if (!this.flowchart) return
         
         node.addEventListener("positionChange", this.updateSelectionBox)
