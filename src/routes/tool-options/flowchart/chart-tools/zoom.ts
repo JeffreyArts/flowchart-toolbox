@@ -3,14 +3,26 @@ import type FlowchartNode from "../nodes/index"
 import type { FlowchartEventContext } from "../events"
 import FlowchartTool from "./index"
 
+export type ZoomToolOptions = {
+    fitPadding: number
+    pinchZooming: boolean
+    zHotkeyZooming: boolean
+    cmdZooming: boolean
+    cmdFit: boolean
+    cmdReset: boolean
+    scrollZooming: boolean
+}
+
 export class ZoomTool extends FlowchartTool {
     name = "zoom"
-    mouseStartPos = undefined as { x: number, y: number } | undefined
-    zKeyDown = false
     isZoomingTimeout = 0
-    _isZooming = false
 
-    options = {
+    state = {
+        zooming: false,
+        zKeyDown: false
+    }
+
+    options = new Proxy<ZoomToolOptions>({
         fitPadding: 16,
         // Different methods of zooming
         pinchZooming: true,
@@ -19,10 +31,17 @@ export class ZoomTool extends FlowchartTool {
         cmdFit: true,
         cmdReset: true,
         scrollZooming: true,
-    }
+    }, {
+        set: (target, prop, value) => {
+            (target as Record<string, any>)[prop as string] = value
+            return true
+        }
+    })
     
-    constructor(flowchart: Flowchart) {
+    constructor(flowchart: Flowchart, options?: Partial<ZoomToolOptions>) {
         super(flowchart)
+
+        this.updateOptions(options)
 
         this.flowchart.events.add("wheel", this.onWheel)
         this.flowchart.events.add("keyDown", this.onKeyDown)
@@ -34,19 +53,10 @@ export class ZoomTool extends FlowchartTool {
     // ██▄▄█▀ ██▄█▄ ██ ██▄██ ██▀██  ██   ██▄▄  
     // ██     ██ ██ ██  ▀█▀  ██▀██  ██   ██▄▄▄ 
 
-    private set isZooming(value: boolean) {
-        if (this.flowchart?.parentElement) {
-            if (value) {
-                this.flowchart.parentElement.classList.add("__isZooming")
-            } else {
-                this.flowchart.parentElement.classList.remove("__isZooming")
-            }
+    private updateOptions(options?: Partial<ZoomToolOptions>) {
+        if (options) {
+            Object.assign(this.options, options)
         }
-        this._isZooming = value
-    }
-
-    private get isZooming() {
-        return this._isZooming
     }
 
     // █████▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄    ▄▄  ▄▄▄▄ 
@@ -150,13 +160,13 @@ export class ZoomTool extends FlowchartTool {
             
             this.zoomAt(this.flowchart.events.globalMousePos.x, this.flowchart.events.globalMousePos.y, factor)
             
-            this.isZooming = true
+            this.state.zooming = true
             if (this.isZoomingTimeout) {
                 clearTimeout(this.isZoomingTimeout)
             }
             
             this.isZoomingTimeout = setTimeout(() => {
-                this.isZooming = false
+                this.state.zooming = false
             }, 100)
         }
     }
@@ -201,7 +211,7 @@ export class ZoomTool extends FlowchartTool {
         if (this.options.zHotkeyZooming) {
             if (!this.flowchart.parentElement) return
             
-            if (this.zKeyDown) {
+            if (this.state.zKeyDown) {
                 if (e.altKey) {
                     this.flowchart.parentElement.style.cursor = "zoom-out"
                 } else {
@@ -211,9 +221,9 @@ export class ZoomTool extends FlowchartTool {
 
             if (e.code === "KeyZ") {
                 e.preventDefault()
-                if (this.zKeyDown) return
+                if (this.state.zKeyDown) return
                 
-                this.zKeyDown = true
+                this.state.zKeyDown = true
                 this.flowchart.parentElement.style.cursor = "zoom-in"
             }
         }
@@ -225,10 +235,10 @@ export class ZoomTool extends FlowchartTool {
             if (!this.flowchart.parentElement) return
 
             if (e.code === "KeyZ") {
-                this.zKeyDown = false
+                this.state.zKeyDown = false
             }
             
-            if (this.zKeyDown) {
+            if (this.state.zKeyDown) {
                 this.flowchart.parentElement.style.cursor = "zoom-in"
             } else {
                 this.flowchart.parentElement.style.cursor = ""
@@ -241,7 +251,7 @@ export class ZoomTool extends FlowchartTool {
         if (!this.flowchart.events.isWithinChart) return
 
         if (this.options.zHotkeyZooming) { 
-            if (!this.zKeyDown) return
+            if (!this.state.zKeyDown) return
         
             if (e.altKey) {
                 this.zoomOut(this.flowchart.events.globalMousePos.x, this.flowchart.events.globalMousePos.y)
