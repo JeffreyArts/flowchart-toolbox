@@ -16,7 +16,7 @@ export type ResizeNodeToolOptions = {
 export class ResizeNodeTool extends FlowchartTool {
     name = "resize-node"
     selectedNode = undefined as FlowchartNode | undefined
-    selectBox = undefined as SVGElement | undefined
+    boundingBox = undefined as SVGElement | undefined
     handles = [ ] as Array<"middle-left" | "middle-right" | "middle-top" | "middle-bottom">
 
     start = {
@@ -95,27 +95,27 @@ export class ResizeNodeTool extends FlowchartTool {
     }
     
     private createResizeHandles() {
-        if (this.selectBox) return
+        if (this.boundingBox) return
         if (!this.selectedNode) return
 
         const node = this.selectedNode
 
-        this.selectBox = document.createElementNS("http://www.w3.org/2000/svg", "g")
-        this.selectBox.setAttribute("tool", "resize-node-tool")
-        this.selectBox.setAttribute("name", "select-box")
+        this.boundingBox = document.createElementNS("http://www.w3.org/2000/svg", "g")
+        this.boundingBox.setAttribute("tool", "resize-node-tool")
+        this.boundingBox.setAttribute("name", "select-box")
         
         const outerBox = document.createElementNS("http://www.w3.org/2000/svg", "rect")
         outerBox.setAttribute("fill", "rgba(0, 0, 0, 0.0)")
         outerBox.setAttribute("stroke", "rgba(0, 0, 0, 0.4)")
         outerBox.setAttribute("stroke-width", ".5")
-        this.selectBox.appendChild(outerBox)
+        this.boundingBox.appendChild(outerBox)
         
         this.updateSelectionBox(node)
 
 
-        // Add this.selectBox just after the node's shape element, so that it doesn't get covered by the shape
+        // Add this.boundingBox just after the node's shape element, so that it doesn't get covered by the shape
         if (node.shape.svgEl.parentNode) {
-            node.shape.svgEl.parentNode.insertBefore(this.selectBox, node.shape.svgEl.nextSibling)
+            node.shape.svgEl.parentNode.insertBefore(this.boundingBox, node.shape.svgEl.nextSibling)
         }
         
         this.handles.forEach(handleId => {
@@ -140,7 +140,7 @@ export class ResizeNodeTool extends FlowchartTool {
                     handle.setAttribute("ry", (pos.height / 2).toString())
                 }
             }
-            this.selectBox?.appendChild(handle)
+            this.boundingBox?.appendChild(handle)
         })
     }
 
@@ -187,7 +187,7 @@ export class ResizeNodeTool extends FlowchartTool {
     }
 
     private updateSelectionBox = (node: FlowchartNode) => {
-        if (!this.selectBox) return
+        if (!this.boundingBox) return
         const nodeStyle = getComputedStyle(node.shape.svgEl)
         const strokeWidth = parseFloat(nodeStyle.strokeWidth)  || 0
         const x = node.x - node.width / 2 - strokeWidth / 2
@@ -195,7 +195,7 @@ export class ResizeNodeTool extends FlowchartTool {
         const width =  node.width + strokeWidth
         const height = node.height + strokeWidth
 
-        const outerBox = this.selectBox.querySelector("rect")
+        const outerBox = this.boundingBox.querySelector("rect")
         if (outerBox) {
             outerBox.setAttribute("x", x.toString())
             outerBox.setAttribute("y", y.toString())
@@ -205,7 +205,7 @@ export class ResizeNodeTool extends FlowchartTool {
 
         // Update handle positions
         
-        const handles = this.selectBox.querySelectorAll(".handle")
+        const handles = this.boundingBox.querySelectorAll(".handle")
         handles.forEach(handle => {
             const handleId = handle.getAttribute("id")
             if (!handleId) return
@@ -218,9 +218,9 @@ export class ResizeNodeTool extends FlowchartTool {
     }
 
     private removeSelectionBox() {
-        if (this.selectBox) {
-            this.selectBox.remove()
-            this.selectBox = undefined
+        if (this.boundingBox) {
+            this.boundingBox.remove()
+            this.boundingBox = undefined
         }
     }
 
@@ -228,7 +228,7 @@ export class ResizeNodeTool extends FlowchartTool {
         if (!this.options.resizeHorizontal) return false
 
         const mousePos = this.flowchart.events.mousePos
-        const leftHandle = this.selectBox?.querySelector("#middle-left")
+        const leftHandle = this.boundingBox?.querySelector("#middle-left")
         if (!leftHandle) return false
         const x = parseFloat(leftHandle.getAttribute("x") || "0")
         const y = parseFloat(leftHandle.getAttribute("y") || "0")
@@ -242,7 +242,7 @@ export class ResizeNodeTool extends FlowchartTool {
         if (!this.options.resizeHorizontal) return false
 
         const mousePos = this.flowchart.events.mousePos
-        const rightHandle = this.selectBox?.querySelector("#middle-right")
+        const rightHandle = this.boundingBox?.querySelector("#middle-right")
         if (!rightHandle) return false
         const x = parseFloat(rightHandle.getAttribute("x") || "0")
         const y = parseFloat(rightHandle.getAttribute("y") || "0")
@@ -256,7 +256,7 @@ export class ResizeNodeTool extends FlowchartTool {
         if (!this.options.resizeVertical) return false
 
         const mousePos = this.flowchart.events.mousePos
-        const topHandle = this.selectBox?.querySelector("#middle-top")
+        const topHandle = this.boundingBox?.querySelector("#middle-top")
         if (!topHandle) return false
         const x = parseFloat(topHandle.getAttribute("x") || "0")
         const y = parseFloat(topHandle.getAttribute("y") || "0")
@@ -270,7 +270,7 @@ export class ResizeNodeTool extends FlowchartTool {
         if (!this.options.resizeVertical) return false
 
         const mousePos = this.flowchart.events.mousePos
-        const bottomHandle = this.selectBox?.querySelector("#middle-bottom")
+        const bottomHandle = this.boundingBox?.querySelector("#middle-bottom")
         if (!bottomHandle) return false
         const x = parseFloat(bottomHandle.getAttribute("x") || "0")
         const y = parseFloat(bottomHandle.getAttribute("y") || "0")
@@ -416,7 +416,7 @@ export class ResizeNodeTool extends FlowchartTool {
 
     private onMouseUp = (fec: FlowchartEventContext) => {
         if (!this.state.active) return
-        if (!this.selectBox) return
+        if (!this.boundingBox) return
         if (!this.selectedNode) return
         if (!fec.originalEvent) return
 
@@ -433,7 +433,7 @@ export class ResizeNodeTool extends FlowchartTool {
 
     private onMouseMove = (fec: FlowchartEventContext) => {
         if (!this.state.active) return
-        if (!this.selectBox) return
+        if (!this.boundingBox) return
         if (!this.selectedNode) return
         if (!fec.originalEvent) return
 
