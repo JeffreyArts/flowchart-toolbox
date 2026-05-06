@@ -3,7 +3,10 @@ import type Flowchart  from "../index"
 export abstract class FlowchartTool {
     abstract name: string
     flowchart: Flowchart
-    isActive = true
+    state = {
+        active: true,
+    }
+    
     options?: { [key: string]: any }
 
     constructor(flowchart: Flowchart) {
@@ -11,11 +14,11 @@ export abstract class FlowchartTool {
     }
 
     activate() {
-        this.isActive = true
+        this.state.active = true
     }
 
     deactivate() {
-        this.isActive = false
+        this.state.active = false
     }
 }
 

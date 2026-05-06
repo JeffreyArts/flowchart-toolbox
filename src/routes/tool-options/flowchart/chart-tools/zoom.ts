@@ -18,6 +18,7 @@ export class ZoomTool extends FlowchartTool {
     isZoomingTimeout = 0
 
     state = {
+        active: true,
         zooming: false,
         zKeyDown: false
     }
@@ -143,6 +144,8 @@ export class ZoomTool extends FlowchartTool {
     // ██▄▄▄▄  ▀█▀  ██▄▄▄ ██ ▀██   ██  ▄▄██▀ 
 
     private onWheel = (fec: FlowchartEventContext) => {
+        if (!this.state.active) return
+        
         const e = fec.originalEvent as WheelEvent
         if (!this.flowchart?.parentElement) return
         if (this.flowchart.events.isWithinChart) {
@@ -172,6 +175,7 @@ export class ZoomTool extends FlowchartTool {
     }
 
     private onKeyDown = (fec: FlowchartEventContext) => {
+        if (!this.state.active) return
         const e = fec.originalEvent as KeyboardEvent
 
         // If an input or textarea is focused, ignore events for zooming
@@ -230,6 +234,7 @@ export class ZoomTool extends FlowchartTool {
     }
     
     private onKeyUp = (fec: FlowchartEventContext) => {
+        if (!this.state.active) return
         const e = fec.originalEvent as KeyboardEvent
         if (this.options.zHotkeyZooming) { 
             if (!this.flowchart.parentElement) return
@@ -247,6 +252,7 @@ export class ZoomTool extends FlowchartTool {
     }
 
     private onMouseDown = (fec: FlowchartEventContext) => {
+        if (!this.state.active) return
         const e = fec.originalEvent as MouseEvent
         if (!this.flowchart.events.isWithinChart) return
 
@@ -262,6 +268,7 @@ export class ZoomTool extends FlowchartTool {
     }
 
     private onPinch = (_fec: FlowchartEventContext) => {
+        if (!this.state.active) return
         if (!this.flowchart.events.isWithinChart) return
         
         if (this.options.pinchZooming) {

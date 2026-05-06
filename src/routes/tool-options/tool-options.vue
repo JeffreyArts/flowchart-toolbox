@@ -185,7 +185,7 @@
                             <details v-for="tool in flowchart.registered.tools" :key="tool.type" class="tool-options">
                                 
                                 <summary>    
-                                    <input type="checkbox" :id="tool.type + '-checkbox'" :checked="tool.object.isActive == true" v-on:input="updateToolActive(tool, $event)">
+                                    <input type="checkbox" :id="tool.type + '-checkbox'" :checked="tool.object.state.active == true" v-on:input="updateToolActive(tool, $event)">
                                     <label :for="tool.type + '-checkbox'" class="none">&nbsp;</label>
                                     <span :title="tool.type">{{ sentenceCase(tool.type) }}</span>
                                 </summary>

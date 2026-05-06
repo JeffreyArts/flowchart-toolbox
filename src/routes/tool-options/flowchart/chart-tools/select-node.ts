@@ -3,28 +3,37 @@ import FlowchartTool from "./index"
 import FlowchartNode from "../nodes/index"
 import type { FlowchartEventContext } from "../events"
 
+export type SelectToolOptions = {
+    mouseClick: boolean
+    multipleClick: boolean
+    selectBox: boolean
+}
+
 export class SelectTool extends FlowchartTool {
     name = "select-node"
-    mouseStartPos = undefined as { x: number, y: number } | undefined
-    startPan = { x: 0, y: 0 } 
     selectedNodes = [] as FlowchartNode[]
     selectionBox = undefined as SVGRectElement | undefined
 
-    options = {
+    state = {
+        active: true,
+    }
+
+    options = new Proxy<SelectToolOptions>({
         // Different methods for selecting nodes
         mouseClick: true,
         multipleClick: true, 
         selectBox: true,
-    }
+    }, {
+        set: (target, prop, value) => {
+            (target as Record<string, any>)[prop as string] = value
+            return true
+        }
+    })
 
-    constructor(flowchart: Flowchart) {
+    constructor(flowchart: Flowchart, options?: Partial<SelectToolOptions>) {
         super(flowchart)
 
-        if (flowchart.parentElement) {
-            if (!flowchart.parentElement.classList.contains("__toolSelect")) {
-                flowchart.parentElement.classList.add("__toolSelect")
-            }
-        }
+        this.updateOptions(options)
 
         this.flowchart.events.add("mouseDown", this.selectOnMouseDown)
         this.flowchart.events.add("mouseUp", this.deselectOnMouseUp)
@@ -35,6 +44,12 @@ export class SelectTool extends FlowchartTool {
     // █████▄ ▄▄▄▄  ▄▄ ▄▄ ▄▄  ▄▄▄ ▄▄▄▄▄▄ ▄▄▄▄▄ 
     // ██▄▄█▀ ██▄█▄ ██ ██▄██ ██▀██  ██   ██▄▄  
     // ██     ██ ██ ██  ▀█▀  ██▀██  ██   ██▄▄▄ 
+
+    private updateOptions(options?: Partial<SelectToolOptions>) {
+        if (options) {
+            Object.assign(this.options, options)
+        }
+    }
 
     // Extract the repeated hit-test
     private findNodeAtMouse() {
@@ -73,6 +88,7 @@ export class SelectTool extends FlowchartTool {
     // ██▄▄▄▄  ▀█▀  ██▄▄▄ ██ ▀██   ██  ▄▄██▀ 
 
     private onMouseMove = (_fec: FlowchartEventContext) => {
+        if (!this.state.active) return
         if (!this.selectionBox) return
         if (!this.flowchart.events.mouseStartPos) return
 
@@ -116,6 +132,8 @@ export class SelectTool extends FlowchartTool {
     }
     
     private selectOnMouseDown = (fec: FlowchartEventContext) => {
+        if (!this.state.active) return
+
         const e = fec.originalEvent as MouseEvent
         const clickedNode = this.findNodeAtMouse()
         const isWithinChart = this.flowchart.events.isWithinChart
@@ -151,6 +169,7 @@ export class SelectTool extends FlowchartTool {
     }
 
     private deselectOnMouseUp = (fec: FlowchartEventContext) => {
+        if (!this.state.active) return
         const e = fec.originalEvent as MouseEvent
         const clickedNode = this.findNodeAtMouse()
         const isWithinChart = this.flowchart.events.isWithinChart
@@ -185,6 +204,7 @@ export class SelectTool extends FlowchartTool {
     }
 
     private onKeyDown = (fec: FlowchartEventContext) => {
+        if (!this.state.active) return
         const e = fec.originalEvent as KeyboardEvent
         if (e.key === "Escape") {
             if ( this.selectionBox ) {
