@@ -530,6 +530,11 @@ export default defineComponent ({
                 el.setAttribute("draggable", "true")
 
                 el.addEventListener("dragstart", (e: DragEvent) => {
+                    // Skip if mouse.y is not within the 32px of the top
+                    if (e.offsetY > 32) {
+                        return e.preventDefault()
+                    }
+
                     el.classList.add("dragging")
                     e.dataTransfer!.effectAllowed = "move"
                     e.dataTransfer!.setData("text/plain", el.getAttribute("name") ?? "")
@@ -573,7 +578,7 @@ export default defineComponent ({
                     localState[fromName] = toOrder
                     localState[toName] = fromOrder
                     localStorage.setItem("option-groups", JSON.stringify(localState))
-                    console.log(localState)
+                    
                     fromEl.style.order = String(toOrder)
                     el.style.order = String(fromOrder)
                 })
