@@ -7,6 +7,7 @@ import type { ZoomTool } from "./zoom"
 export type AddNodeToolOptions = {
     buttonDiameter: number
     segments: number
+    buttonOffset: number
     defaultNodeType: string
     defaultDistance: number
     autoFit: boolean
@@ -21,38 +22,39 @@ export type AddNodeToolOptions = {
 
 export class AddNodeTool extends FlowchartTool {
     name = "add-node"
-    keyDown = false
-    offset = 32
-    selectedNode = undefined as FlowchartNode | undefined
-    newNodeType = ""
     addButton: SVGElement | undefined
     
+    state = {
+        active: true,
+        keyDown: false,
+        selectedNode: undefined as FlowchartNode | undefined
+    }
 
-    options = {
-        buttonDiameter: 25,
-        segments: 8,
+    options = new Proxy<AddNodeToolOptions>({
+        autoFit: true,
+        buttonDiameter: 24,
+        buttonOffset: 12,
         defaultNodeType: "end",
         defaultDistance: 100,
-        autoFit: true,
         disableOnSelect: true,
-    } as AddNodeToolOptions
+        segments: 8,
+    }, {
+        set: (target, prop, value) => {
+            (target as Record<string, any>)[prop as string] = value
+
+            return true
+        }
+    })
     
     constructor(flowchart: Flowchart, options?: AddNodeToolOptions) {
         super(flowchart)
         
         this.parseOptions(options)
 
-        this.newNodeType = this.options.defaultNodeType
-
-        if (flowchart.parentElement) {
-            if (!flowchart.parentElement.classList.contains("__toolAddNode")) {
-                flowchart.parentElement.classList.add("__toolAddNode")
-            }
-        }
-
         this.flowchart.events.add("mouseDown", this.onMouseDown)
         this.flowchart.events.add("mouseMove", this.onMouseMove)
         this.flowchart.events.add("keyDown", this.onKeyDown)
+        this.flowchart.events.add("keyUp", this.onKeyUp)
     }
     
     // █████▄ ▄▄▄▄  ▄▄ ▄▄ ▄▄  ▄▄▄ ▄▄▄▄▄▄ ▄▄▄▄▄ 
@@ -80,13 +82,13 @@ export class AddNodeTool extends FlowchartTool {
     }
     
     private addNewNode() {
-        if (!this.selectedNode) return
+        if (!this.state.selectedNode) return
         const mousePos = this.flowchart.events.mousePos
-        const borderDistance = this.selectedNode.calculateEdgeStart(mousePos, this.options.defaultDistance)
+        const borderDistance = this.state.selectedNode.calculateEdgeStart(mousePos, this.options.defaultDistance)
 
-        const newNode = new FlowchartNode(this.newNodeType, {
+        const newNode = new FlowchartNode(this.options.defaultNodeType, {
             text: "New node",
-            parent: this.selectedNode,
+            parent: this.state.selectedNode,
             x: borderDistance.x,
             y: borderDistance.y,
             options: { maxWidth: 200 }
@@ -96,28 +98,28 @@ export class AddNodeTool extends FlowchartTool {
 
 
         if (this.options.smartNodes) {
-            const parentCount = this.selectedNode.parents.length
-            const childCount = this.selectedNode.children.length
+            const parentCount = this.state.selectedNode.parents.length
+            const childCount = this.state.selectedNode.children.length
             const newNodeOptions = {
                 flowchart: this.flowchart,
-                x: this.selectedNode.x,
-                y: this.selectedNode.y,
-                options: this.selectedNode.options
+                x: this.state.selectedNode.x,
+                y: this.state.selectedNode.y,
+                options: this.state.selectedNode.options
             }
             let newNodeType = this.options.defaultNodeType
             let addNode = false
 
-            if (parentCount === 0 && this.selectedNode.type !== this.options.smartNodes.start) {
+            if (parentCount === 0 && this.state.selectedNode.type !== this.options.smartNodes.start) {
                 if (this.options.smartNodes.start) {
                     newNodeType = this.options.smartNodes.start
                 }
                 addNode = true
-            } else if (childCount === 1 && parentCount > 0 && this.selectedNode.type !== this.options.smartNodes.normal) {
+            } else if (childCount === 1 && parentCount > 0 && this.state.selectedNode.type !== this.options.smartNodes.normal) {
                 if (this.options.smartNodes.normal) {
                     newNodeType = this.options.smartNodes.normal
                 }
                 addNode = true
-            } else if (childCount > 1 && parentCount > 0 && this.selectedNode.type !== this.options.smartNodes.decision) {
+            } else if (childCount > 1 && parentCount > 0 && this.state.selectedNode.type !== this.options.smartNodes.decision) {
                 if (this.options.smartNodes.decision) {
                     newNodeType = this.options.smartNodes.decision
                 }
@@ -125,7 +127,7 @@ export class AddNodeTool extends FlowchartTool {
             }
 
             if (addNode) {
-                this.flowchart.replaceNode(this.selectedNode, new FlowchartNode(newNodeType, newNodeOptions))
+                this.flowchart.replaceNode(this.state.selectedNode, new FlowchartNode(newNodeType, newNodeOptions))
             }
         }
         
@@ -144,8 +146,8 @@ export class AddNodeTool extends FlowchartTool {
     private updateButtonPosition(node: FlowchartNode) {
         if (!this.addButton) return
         const mousePos = this.flowchart.events.mousePos
-        const { x,y } = node.calculateEdgeStart(mousePos, this.options.buttonDiameter/2, this.options.segments)
-        this.addButton.setAttribute("transform", `translate(${x-this.options.buttonDiameter/2}, ${y-this.options.buttonDiameter/2})`)
+        const { x,y } = node.calculateEdgeStart(mousePos, this.options.buttonOffset, this.options.segments)
+        this.addButton.setAttribute("transform", `translate(${x-this.options.buttonOffset}, ${y-this.options.buttonOffset})`)
     }
 
     private removeButton() {
@@ -200,15 +202,24 @@ export class AddNodeTool extends FlowchartTool {
     // ██▄▄▄▄  ▀█▀  ██▄▄▄ ██ ▀██   ██  ▄▄██▀ 
 
     private onKeyDown = (_fec: FlowchartEventContext) => {
+        if (!this.state.active) return
 
-        if (this.selectedNode) {
-            this.selectedNode = undefined
+        this.state.keyDown = true
+        this.removeButton()
+        if (this.state.selectedNode) {
+            this.state.selectedNode = undefined
         }
     }
 
+    private onKeyUp = (_fec: FlowchartEventContext) => {
+        this.state.keyDown = false
+    }
+
     private onMouseDown = () => {  
+        if (!this.state.active) return
         if (!this.addButton) return
-        if (!this.selectedNode) return
+        if (!this.state.selectedNode) return
+        if (this.state.keyDown) return // Cancel when a key is hold down to allow for keyboard shortcuts without accidentally adding nodes
         const mousePos = this.flowchart.events.mousePos
 
         const transformProp = this.addButton.getAttribute("transform")
@@ -227,27 +238,30 @@ export class AddNodeTool extends FlowchartTool {
         
 
     private onMouseMove = () => {
+        if (!this.state.active) return
+        if (this.state.keyDown) return // Cancel when a key is hold down to allow for keyboard shortcuts without accidentally showing the add button
+
         const mousePos = this.flowchart.events.mousePos
         let matchedNodes = 0
 
         this.flowchart.nodes.forEach(node => {
-            if (node.shape.containsPoint(mousePos, this.offset)) {
+            if (node.shape.containsPoint(mousePos, this.options.buttonOffset + this.options.buttonDiameter)) {
                 matchedNodes++
                 if (!node.shape.containsPoint(mousePos)) {
-                    this.selectedNode = node
+                    this.state.selectedNode = node
                     if (this.options.disableOnSelect && node.state.selected) return
                     
                     this.createButton()
                     this.updateButtonPosition(node)
-                } else if (this.selectedNode) {
-                    this.selectedNode = undefined
+                } else if (this.state.selectedNode) {
+                    this.state.selectedNode = undefined
                     this.removeButton()
                 }
             }  
         })
 
         if (matchedNodes === 0 || matchedNodes > 1) {
-            this.selectedNode = undefined
+            this.state.selectedNode = undefined
             this.removeButton()
         }
     }

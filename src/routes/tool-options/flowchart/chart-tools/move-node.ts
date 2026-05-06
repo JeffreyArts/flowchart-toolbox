@@ -7,14 +7,12 @@ export class MoveNodeTool extends FlowchartTool {
     name = "move-node"
     selectedNodesStartPos = [] as { x: number, y: number, node: FlowchartNode }[]
     
+    state = {
+        active: true,
+    }
+
     constructor(flowchart: Flowchart) {
         super(flowchart)
-
-        if (flowchart.parentElement) {
-            if (!flowchart.parentElement.classList.contains("__toolMoveNode")) {
-                flowchart.parentElement.classList.add("__toolMoveNode")
-            }
-        }
 
         this.flowchart.events.add("mouseDown", this.onMouseDown)
         this.flowchart.events.add("mouseMove", this.onMouseMove)
@@ -26,9 +24,12 @@ export class MoveNodeTool extends FlowchartTool {
     // ██▄▄▄▄  ▀█▀  ██▄▄▄ ██ ▀██   ██  ▄▄██▀ 
 
     private onMouseDown = (_fec: FlowchartEventContext) => {  
+        if (!this.state.active) return
+        
         this.selectedNodesStartPos = []
         if (!this.flowchart.events.isWithinChart) return
         let selectedNode = undefined as FlowchartNode | undefined
+        
         this.flowchart.nodes.filter(node => {
             if (!node.shape) return false
             if (!node.state.selected) return false
@@ -48,6 +49,8 @@ export class MoveNodeTool extends FlowchartTool {
     }
 
     private onMouseMove = (fec: FlowchartEventContext) => {
+        if (!this.state.active) return
+
         const e = fec.originalEvent as MouseEvent
         const mouseDown = this.flowchart.events.mouseDown
         const mouseStartPos = this.flowchart.events.mouseStartPos
@@ -79,6 +82,8 @@ export class MoveNodeTool extends FlowchartTool {
     }
 
     private onMouseUp = (_fec: FlowchartEventContext) => {
+        if (!this.state.active) return
+
         if (this.flowchart?.parentElement) {
             this.flowchart.parentElement.style.cursor = ""
         }
