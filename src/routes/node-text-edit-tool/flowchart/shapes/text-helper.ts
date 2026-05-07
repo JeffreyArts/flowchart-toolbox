@@ -5,6 +5,7 @@ class TextHelper {
     el: HTMLDivElement
     leftEl = undefined as  HTMLDivElement | undefined
     rightEl = undefined as  HTMLDivElement | undefined
+    private _text = ""
 
     constructor(text: string = "", shape: FlowchartShape, style?: Partial<CSSStyleDeclaration>) {
         this.text = text
@@ -51,7 +52,16 @@ class TextHelper {
     // ██▄▄█▀ ██▄█▄ ██ ██▄██ ██▀██  ██   ██▄▄  
     // ██     ██ ██ ██  ▀█▀  ██▀██  ██   ██▄▄▄ 
     
-    private text: string = "" 
+    set text(value: string) {
+        while (value.indexOf("  ") !== -1) {
+            value = value.replace(/  /g, "\u00A0\u00A0")
+        }
+        this._text = value
+    }
+
+    get text() {
+        return this._text
+    }
 
     // █████▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄    ▄▄  ▄▄▄▄ 
     // ██▄▄█▀ ██ ██ ██▄██ ██    ██ ██▀▀▀ 

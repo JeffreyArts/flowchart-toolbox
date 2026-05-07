@@ -71,6 +71,7 @@ export abstract class FlowchartShape {
         const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text")
         textEl.setAttribute("text-anchor", "middle")
         textEl.setAttribute("dominant-baseline", "middle")
+        textEl.setAttribute("xml:space", "preserve")
         textEl.classList.add("flowchart-shape-text")
 
         if (!this.node.flowchart?.nodesGroup) {
