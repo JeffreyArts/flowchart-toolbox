@@ -56,6 +56,15 @@ class TextHelper {
         while (value.indexOf("  ") !== -1) {
             value = value.replace(/  /g, "\u00A0\u00A0")
         }
+
+        if (value.startsWith(" ")) {
+            value = "\u00A0" + value.slice(1)
+        }
+        
+        if (value.endsWith(" ")) {
+            value = value.slice(0, -1) + "\u00A0"
+        }
+
         this._text = value
     }
 

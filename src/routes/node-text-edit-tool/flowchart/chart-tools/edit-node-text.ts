@@ -16,6 +16,7 @@ export class EditNodeTextTool extends FlowchartTool {
         blinkInterval: undefined as ReturnType<typeof setInterval> | undefined,
         selectedNode: undefined as FlowchartNode | undefined,
         inputElement: undefined as HTMLInputElement | undefined,
+        caretIndexX: 0,
     }
 
     options = new Proxy<EditNodeTextToolOptions>({
@@ -50,7 +51,7 @@ export class EditNodeTextTool extends FlowchartTool {
         }
     }
 
-    private createEditableTextElement(node: FlowchartNode, caretPos: number) {
+    private createEditableTextElement(node: FlowchartNode, caretPos: { x: number, y: number, index: number }) {
         const inputElement = document.createElement("input")
         inputElement.type = "text"
         inputElement.value = node.text
@@ -60,7 +61,7 @@ export class EditNodeTextTool extends FlowchartTool {
         inputElement.style.width = `${node.width}px`
         inputElement.style.height = `${node.height}px`
         document.body.appendChild(inputElement)
-        inputElement.setSelectionRange(caretPos, caretPos)
+        inputElement.setSelectionRange(caretPos.index, caretPos.index)
         const onBlur = () => {
             node.text = inputElement.value
             
@@ -79,9 +80,11 @@ export class EditNodeTextTool extends FlowchartTool {
             // } else {
             // }
             node.svgGroup.querySelector("#text-caret")?.remove()
-            const newCaretPos = inputElement.selectionStart ?? node.text.length
-            this.createBlinkingCursor(node, newCaretPos)
             node.text = inputElement.value
+            setTimeout(() => {
+                const caretIndex = inputElement.selectionStart ?? node.text.length
+                this.createBlinkingCursor(node, this.indexToPosition(node, caretIndex))
+            }, 0)
         }
 
         inputElement.addEventListener("blur", onBlur)
@@ -105,79 +108,71 @@ export class EditNodeTextTool extends FlowchartTool {
         setTimeout(() => inputElement.focus(), 0)
     }
     
-    private getCaretPositionFromClick(node: FlowchartNode, clickX: number): number {
+    private getCaretPositionFromClick(node: FlowchartNode, pos: { x: number, y: number }): { x: number, y: number, index: number } {
         const textEl = this.flowchart.chart.querySelector(`[id="${node.id}"] text`) as SVGTextElement | null
-        if (!textEl) return node.text.length
-        
-        for (let i = 0; i < node.text.length; i++) {
-            const extent = textEl.getExtentOfChar(i)
-            if (clickX < extent.x + extent.width / 2) return i
+        if (!textEl) return { x: node.x, y: node.y, index: 0 }
+
+        const tspanArray = Array.from(textEl.querySelectorAll("tspan"))
+        let globalIndex = 0
+
+        for (const tspan of tspanArray) {
+            const tspanLength = tspan.textContent?.length ?? 0
+
+            for (let i = 0; i < tspanLength; i++) {
+                const extent = textEl.getExtentOfChar(globalIndex)
+                const inRow = pos.y >= extent.y && pos.y <= extent.y + extent.height
+
+                if (inRow && pos.x < extent.x + extent.width / 2) {
+                    return this.indexToPosition(node, globalIndex)
+                }
+
+                if (inRow) {
+                // past midpoint of this char, keep scanning
+                    globalIndex++
+                    continue
+                }
+
+                globalIndex++
+            }
         }
-        return node.text.length
+
+        // Click was past all characters — return end of text
+        return this.indexToPosition(node, textEl.getNumberOfChars())
     }
 
-    private caretXPosition(node: FlowchartNode, caretPos: number): number {
+    private indexToPosition(node: FlowchartNode, index: number): { x: number, y: number, index: number } {
         const textEl = this.flowchart.chart.querySelector(`[id="${node.id}"] text`) as SVGTextElement | null
+        if (!textEl || node.text.length === 0) return { x: node.x, y: node.y, index }
 
-        if (!textEl) return node.x
-
-        // Use SVG's own measurement for the full text width
-        const fullWidth = textEl.getComputedTextLength()
-        const fullText = node.text
-
-        if (fullText.length === 0) return textEl.getBBox().x
-
-        // Scale factor between canvas pixels and SVG units
-        const canvas = document.createElement("canvas")
-        const ctx = canvas.getContext("2d")!
-        ctx.font = getComputedStyle(textEl).font
-
-        const canvasFullWidth = ctx.measureText(fullText).width
-        const scale = fullWidth / canvasFullWidth  // SVG units per canvas pixel
-
-        const textUpToCaret = fullText.substring(0, caretPos)
-        const canvasCaretWidth = ctx.measureText(textUpToCaret).width
-
-        return textEl.getBBox().x + canvasCaretWidth * scale
-    }
-
-    private createBlinkingCursor(node: FlowchartNode, caretPos: number): SVGLineElement {
-        const textEl = this.flowchart.chart.querySelector(`[id="${node.id}"] text`) as SVGTextElement | null
+        const clampedIndex = Math.min(index, textEl.getNumberOfChars() - 1)
     
-        // Bereken de X positie van de cursor
-        let cursorX = this.caretXPosition(node, caretPos)
-        // if (textEl && node.text.length > 0) {
-        //     const svgCharCount = textEl.getNumberOfChars()
+        if (index >= textEl.getNumberOfChars()) {
+        // End of text: use end of last character
+            const last = textEl.getExtentOfChar(clampedIndex)
+            return { x: last.x + last.width, y: last.y, index }
+        }
+        console.log("Index to position:", { index, clampedIndex })
 
-        //     if (caretPos >= node.text.length || caretPos >= svgCharCount) {
-        //         if (svgCharCount > 0) {
-        //         // Use the end position of the last visible character
-        //             const lastIndex = svgCharCount - 1
-        //             cursorX = textEl.getStartPositionOfChar(lastIndex).x + textEl.getSubStringLength(lastIndex, 1)
-        //         } else {
-        //         // No visible characters at all (e.g. all spaces)
-        //             cursorX = textEl.getBBox().x
-        //         }
-        //     } else if (caretPos > 0) {
-        //         cursorX = textEl.getStartPositionOfChar(caretPos - 1).x + textEl.getSubStringLength(caretPos - 1, 1)
-        //     } else {
-        //         cursorX = textEl.getStartPositionOfChar(0).x
-        //     }
-        // }
-        // caretXPosition
-
+        this.state.caretIndexX = index  // not clampedIndex
+        const extent = textEl.getExtentOfChar(clampedIndex)
+        return { x: extent.x, y: extent.y, index }
+    }
+    
+    private createBlinkingCursor(node: FlowchartNode, caret: { x: number, y: number, index: number }): SVGLineElement {
+        const textEl = this.flowchart.chart.querySelector(`[id="${node.id}"] text`) as SVGTextElement | null
         const fontSize = parseFloat(getComputedStyle(textEl ?? node.svgGroup).fontSize) || 16
-        
-        // Maak een SVG lijn als cursor
+
+        const cursorX = caret.x
+        const cursorY = caret.y  // already absolute SVG Y from getExtentOfChar
+
         const cursor = document.createElementNS("http://www.w3.org/2000/svg", "line")
         cursor.setAttribute("x1", `${cursorX}`)
         cursor.setAttribute("x2", `${cursorX}`)
-        cursor.setAttribute("y1", `${node.y - fontSize/2}`)
-        cursor.setAttribute("y2", `${node.y + fontSize/2}`)
+        cursor.setAttribute("y1", `${cursorY}`)
+        cursor.setAttribute("y2", `${cursorY + fontSize}`)
         cursor.setAttribute("stroke", "black")
         cursor.setAttribute("stroke-width", ".5")
         cursor.setAttribute("id", "text-caret")
-        // CSS animatie voor knipperen
         cursor.style.animation = "blink 1s step-start infinite"
 
         node.svgGroup.appendChild(cursor)
@@ -207,9 +202,15 @@ export class EditNodeTextTool extends FlowchartTool {
             return
         }
 
-        this.state.selectedNode?.svgGroup.querySelector("#text-caret")?.remove()
-        const newCaretPos = this.state.inputElement?.selectionStart ?? this.state.selectedNode?.text.length
-        this.createBlinkingCursor(this.state.selectedNode, newCaretPos)
+        if (event.key === "ArrowLeft") {
+            this.state.selectedNode?.svgGroup.querySelector("#text-caret")?.remove()
+            this.state.caretIndexX = Math.max(0, this.state.caretIndexX - 1)
+            this.createBlinkingCursor(this.state.selectedNode, this.indexToPosition(this.state.selectedNode, this.state.caretIndexX))
+        } else if (event.key === "ArrowRight") {
+            this.state.selectedNode?.svgGroup.querySelector("#text-caret")?.remove()
+            this.state.caretIndexX = Math.min(this.state.selectedNode.text.length, this.state.caretIndexX + 1)
+            this.createBlinkingCursor(this.state.selectedNode, this.indexToPosition(this.state.selectedNode, this.state.caretIndexX))
+        }
     }
 
     private onMouseDown = (fec: FlowchartEventContext) => {  
@@ -229,7 +230,7 @@ export class EditNodeTextTool extends FlowchartTool {
 
         fec.stopPropagation()
         
-        const caretPos = this.getCaretPositionFromClick(selectedNode, mousePos.x)
+        const caretPos = this.getCaretPositionFromClick(selectedNode, mousePos)
         this.state.selectedNode = selectedNode
         this.state.focus = true
         
