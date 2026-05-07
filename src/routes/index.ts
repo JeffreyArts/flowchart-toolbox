@@ -23,6 +23,7 @@ import CodeCleanup1 from "./code-cleanup-1/code-cleanup.vue"
 import Grid from "./grid/grid.vue"
 import ResizeNode from "./resize-node/resize-node.vue"
 import ToolOptions from "./tool-options/tool-options.vue"
+import NodeTextEditTool from "./node-text-edit-tool/node-text-edit-tool.vue"
 import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
 import Cytoscape from "./cytoscape.vue"
@@ -164,6 +165,11 @@ const routes = [
         path: "/tool-options",
         name: "25) Tool options",
         component: ToolOptions
+    },
+    {
+        path: "/node-text-edit-tool",
+        name: "26) Node text edit",
+        component: NodeTextEditTool
     },
     {
         path: "/options-overview",
