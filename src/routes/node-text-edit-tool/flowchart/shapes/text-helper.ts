@@ -32,7 +32,8 @@ class TextHelper {
             right: "0vw",
             bottom: "0vh",
             textAlign: "center",
-            wordWrap: "break-word",
+            // hyphens: "auto",
+            // wordBreak: "break-word",
             ...style
         })
         
