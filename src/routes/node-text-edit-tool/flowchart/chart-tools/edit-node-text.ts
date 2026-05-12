@@ -406,6 +406,13 @@ export class EditNodeTextTool extends FlowchartTool {
         if (!this.state.active) return
         const event = fec.originalEvent as KeyboardEvent
         
+        if (event.key === "Tab") {
+            if (this.inputElement) {
+                event.preventDefault()
+                return
+            }
+        }
+        
         if ((event.key === "Enter" && !event.shiftKey) || event.key === "Escape") {
             this.deselectNode()
             return
@@ -421,6 +428,13 @@ export class EditNodeTextTool extends FlowchartTool {
         
         const event = fec.originalEvent as KeyboardEvent
         
+        if (event.key === "Tab") {
+            if (this.inputElement) {
+                event.preventDefault()
+                return
+            }
+        }
+
         if (typeof this.inputElement.selectionStart === "number") {
             this.selection.start = this.inputElement.selectionStart
         }
