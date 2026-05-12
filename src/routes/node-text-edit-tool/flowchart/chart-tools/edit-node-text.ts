@@ -429,9 +429,12 @@ export class EditNodeTextTool extends FlowchartTool {
         if (!this.state.active) return
         const mousePos = this.flowchart.events.mousePos
         const selectedNode = this.flowchart.nodes.find(node => node.shape.containsPoint(mousePos))
+        console.log("mouseDown", selectedNode, this.selectedNode)
+        if (this.selectedNode !== selectedNode && typeof selectedNode !== "undefined") {
+            this.deselectNode()
+        }
         const e = fec.originalEvent as MouseEvent
         // e.preventDefault()
-        console.log(this.flowchart.events.mouseDown)
         // let selectedNode = this.selectedNode
         // if (!selectedNode)
         // Clicked outside a node
