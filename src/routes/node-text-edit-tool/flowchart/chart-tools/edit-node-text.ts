@@ -63,6 +63,7 @@ export class EditNodeTextTool extends FlowchartTool {
         this.updateOptions(options)
 
         this.flowchart.events.add("nodeAdded", this.onNodeAdded)
+        this.flowchart.events.add("doubleClick", this.onDoubleClick)
         this.flowchart.events.add("mouseDown", this.onMouseDown, -1)
         this.flowchart.events.add("mouseMove", this.onMouseMove, -1)
         this.flowchart.events.add("keyDown", this.onKeyDown)
@@ -81,7 +82,6 @@ export class EditNodeTextTool extends FlowchartTool {
     }
 
     private syncSelection() {
-        console.log("Syncing selection:", this.selection.start)
         if (!this.inputElement || !this.selectedNode) return
         // if (this.selection.start === this.inputElement.selectionStart) return // Prevent infinite loop
 
@@ -102,13 +102,13 @@ export class EditNodeTextTool extends FlowchartTool {
         } else {
             this.selection.direction = "none"
         }
-        
+
         if (this.selection.direction == "backward") {
             this.inputElement.setSelectionRange(this.selection.end, this.selection.start)
         } else if (this.selection.direction == "forward") {
             this.inputElement.setSelectionRange(this.selection.start, this.selection.end)
         } else {
-            this.inputElement.setSelectionRange(this.selection.start, this.selection.start)
+            this.inputElement.setSelectionRange(this.selection.start, this.selection.end)
         }
         // }
 
@@ -219,11 +219,6 @@ export class EditNodeTextTool extends FlowchartTool {
         }
         inputElement.focus()
         inputElement.setSelectionRange(startPos, endPos)
-        // setTimeout(() => {
-
-        //     console.log("FOCUS",startPos, endPos)
-        //     // inputElement.setSelectionRange(this.selection.start, this.selection.end)
-        // }, 0)
     }
     
     
@@ -259,6 +254,25 @@ export class EditNodeTextTool extends FlowchartTool {
         return textEl.getNumberOfChars()
         // return this.convertIndexToPos()
     }
+
+    private getWordAtIndex(string: string, index: number): { start: number, end: number } | undefined {
+    // Splits op spatie of -
+        const regex = /[^ -\.]+/g
+
+        let match
+
+        while ((match = regex.exec(string)) !== null) {
+            const start = match.index
+            const end = start + match[0].length 
+
+            if (index >= start && index <= end) {
+                return { start, end }
+            }
+        }
+
+        return undefined
+    }
+
 
     private convertIndexToPos(index = this.selection.end): { x: number, y: number } {
         const node = this.selectedNode
@@ -323,7 +337,6 @@ export class EditNodeTextTool extends FlowchartTool {
 
         const startPos = this.convertIndexToPos(this.selection.start)
         const endPos = this.convertIndexToPos(this.selection.end)
-        console.log("startPOS, endPOS:",startPos, endPos)
 
         if (this.selection.start === this.selection.end) return // No selection
         const tspanArray = textEl.querySelectorAll("tspan") as NodeListOf<SVGTSpanElement>
@@ -343,7 +356,6 @@ export class EditNodeTextTool extends FlowchartTool {
 
 
             if (this.selection.direction === "forward") {
-                console.log(y, endPos.y, "FORWARD")
                 if (y < startPos.y || y > this.state.mouseY ) {
                     return // Not in selection range vertically
                 }
@@ -368,19 +380,15 @@ export class EditNodeTextTool extends FlowchartTool {
                 { start: x, end: x + width },
                 { start: y, end: y + bbox.height }
             )
-            console.log("Tspan bbox:", bbox, bbox.y >= startPos.y, "Start Y:", startPos.y)
-            
         })
     }
 
     private updateSVGCaretPosition() {
         if (!this.selectedNode) return
-        console.log("Updating caret position for node:", this.caretEl)
         if (!this.caretEl) return
-        const node = this.selectedNode
 
+        const node = this.selectedNode
         const caret = this.convertIndexToPos()
-        // console.log("Updating caret position:", caret)
         const textEl = this.flowchart.chart.querySelector(`[id="${node.id}"] text`) as SVGTextElement | null
         const fontSize = parseFloat(getComputedStyle(textEl ?? node.svgGroup).fontSize) || 16
 
@@ -420,8 +428,20 @@ export class EditNodeTextTool extends FlowchartTool {
         if (typeof this.inputElement.selectionEnd === "number") {
             this.selection.end = this.inputElement.selectionEnd
         }
-        console.log("KeyUP",this.selection)
+        
+        this.syncSelection()
+    }
+    
+    private onDoubleClick = (fec: FlowchartEventContext) => {  
+        if (!this.state.active) return
+        if (!this.selectedNode) return
+        if (!this.inputElement) return
 
+        const v = this.getWordAtIndex(this.inputElement.value, this.selection.start)
+        if (!v) return
+        
+        this.selection.start = v.start
+        this.selection.end = v.end
         this.syncSelection()
     }
 
@@ -429,7 +449,7 @@ export class EditNodeTextTool extends FlowchartTool {
         if (!this.state.active) return
         const mousePos = this.flowchart.events.mousePos
         const selectedNode = this.flowchart.nodes.find(node => node.shape.containsPoint(mousePos))
-        console.log("mouseDown", selectedNode, this.selectedNode)
+        
         if (this.selectedNode !== selectedNode && typeof selectedNode !== "undefined") {
             this.deselectNode()
         }

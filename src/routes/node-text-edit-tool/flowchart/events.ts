@@ -1,7 +1,7 @@
 import Flowchart from "."
 import type { FlowchartNode } from "./nodes"
 
-export type FlowchartEventType = "mouseDown" | "mouseMove" | "mouseUp" | "click" | "keyDown" | "keyUp" | "wheel" | "touchStart" | "touchMove" | "touchEnd" | "pinch" | "swipe" | "zoomChange" | "viewBoxChange" | "nodeAdded" | "nodeRemoved" 
+export type FlowchartEventType = "mouseDown" | "mouseMove" | "mouseUp" | "click" | "doubleClick" | "keyDown" | "keyUp" | "wheel" | "touchStart" | "touchMove" | "touchEnd" | "pinch" | "swipe" | "zoomChange" | "viewBoxChange" | "nodeAdded" | "nodeRemoved" 
 
 export type FlowchartEvent = { 
     eventType: FlowchartEventType,
@@ -38,6 +38,8 @@ export class FlowchartEvents {
     globalTouchAvg = { x: 0, y: 0 }
     touchScale = 1
     touchDelta = { x: 0, y: 0 }
+
+    clickTimestamp = 0
 
     list = [] as FlowchartEvent[]
 
@@ -227,10 +229,17 @@ export class FlowchartEvents {
 
     private onMouseDown = (e: MouseEvent) => {
         this.setMousePos(e)
+
+        // Check for double click
+        if (this.clickTimestamp && Date.now() - this.clickTimestamp < 320) {
+            return this.dispatch("doubleClick", e)
+        }
         
         this.mouseDown = true
         this.mouseStartPos = { ...this.mousePos }
         this.globalMouseStartPos = { ...this.globalMousePos }
+
+        this.clickTimestamp = Date.now()
 
         this.dispatch("mouseDown", e)
     }
