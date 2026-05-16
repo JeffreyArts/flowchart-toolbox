@@ -4,7 +4,8 @@ import type { FlowchartEventContext,  FlowchartNodeEvent } from "../events"
 import { FlowchartNode } from "../nodes"
 
 export type EditNodeTextToolOptions = {
-    autoFocus: boolean
+    autoFocus: boolean,
+    selectionColor: string
 }
 
 type TextSelection = {
@@ -19,6 +20,7 @@ export class EditNodeTextTool extends FlowchartTool {
     blinkInterval = undefined as ReturnType<typeof setInterval> | undefined
     caretEl = undefined as SVGLineElement | undefined
     svgGroup = undefined as SVGGElement | undefined
+    svgGroupBg = undefined as SVGGElement | undefined
     inputElement = undefined as HTMLInputElement | undefined
 
     state = {
@@ -49,9 +51,14 @@ export class EditNodeTextTool extends FlowchartTool {
 
     options = new Proxy<EditNodeTextToolOptions>({
         autoFocus: true,
+        selectionColor: "rgba(0, 120, 215, 0.4)"
     }, {
         set: (target, prop, value) => {
             (target as Record<string, any>)[prop as string] = value
+
+            if (prop === "selectionColor" && this.selectedNode) {
+                this.updateSVGSelection()
+            }
 
             return true
         }
@@ -82,44 +89,59 @@ export class EditNodeTextTool extends FlowchartTool {
     }
 
     private syncSelection() {
-        if (!this.inputElement || !this.selectedNode) return
-        // if (this.selection.start === this.inputElement.selectionStart) return // Prevent infinite loop
-
+        if (!this.inputElement) return
+        
         // Check if inputElement is focused
         if (document.activeElement !== this.inputElement) {
             this.inputElement.focus()
         }
-
+        
         // if inputElement is focused, but selection is different, update it
         // if (this.inputElement.selectionStart === this.selection.start || this.inputElement.selectionEnd === this.selection.end) {
         //     return
         // }
-
-        if (this.selection.end > this.selection.start) {
-            this.selection.direction = "forward"
-        } else if (this.selection.end < this.selection.start) {
-            this.selection.direction = "backward"
-        } else {
-            this.selection.direction = "none"
-        }
-
-        if (this.selection.direction == "backward") {
-            this.inputElement.setSelectionRange(this.selection.end, this.selection.start)
-        } else if (this.selection.direction == "forward") {
-            this.inputElement.setSelectionRange(this.selection.start, this.selection.end)
-        } else {
-            this.inputElement.setSelectionRange(this.selection.start, this.selection.end)
-        }
-        // }
-
-        this.updateSVGSelection()
-        this.updateSVGCaretPosition()
+            
+        window.requestAnimationFrame(() => {
+            if (!this.inputElement) return
+            if (this.selection.end > this.selection.start) {
+                this.selection.direction = "forward"
+            } else if (this.selection.end < this.selection.start) {
+                this.selection.direction = "backward"
+            } else {
+                this.selection.direction = "none"
+            }
+            
+            if (this.selection.direction == "backward") {
+                this.inputElement.setSelectionRange(this.selection.end, this.selection.start)
+            } else if (this.selection.direction == "forward") {
+                this.inputElement.setSelectionRange(this.selection.start, this.selection.end)
+            } else {
+                this.inputElement.setSelectionRange(this.selection.start, this.selection.end)
+            }
+            // }
+            
+            window.requestAnimationFrame(() => {
+                this.updateSVGSelection()
+                this.updateSVGCaretPosition()
+                console.log(this.selection)
+            })
+        })
+            
         // this.selectedNode.svgGroup.querySelector("#text-caret")?.remove()
         // this.createCaretEl(this.selectedNode, this.converIndexToPos( this.selection.start))
     }
 
-    private selectNode(node: FlowchartNode) {
+    private async selectNode(node: FlowchartNode) {
         this.selectedNode = node
+
+        if (!this.svgGroupBg) {
+            this.svgGroupBg = document.createElementNS("http://www.w3.org/2000/svg", "g")
+            this.svgGroupBg.setAttribute("tool", "edit-node-text-tool")
+            this.svgGroupBg.setAttribute("background", "")
+    
+            // Add background after node.shape.svgEl
+            node.shape.svgEl.parentNode?.insertBefore(this.svgGroupBg, node.shape.svgEl.nextSibling)
+        }
 
         if (!this.svgGroup) {
             this.svgGroup = document.createElementNS("http://www.w3.org/2000/svg", "g")
@@ -133,7 +155,7 @@ export class EditNodeTextTool extends FlowchartTool {
         }
 
         if (!this.inputElement) {
-            this.createInputElement()
+            await this.createInputElement()
         }
 
         return node
@@ -144,6 +166,12 @@ export class EditNodeTextTool extends FlowchartTool {
         if (this.svgGroup) {
             this.svgGroup.remove()
             this.svgGroup = undefined
+        }
+
+        // Remove svgGroupBg from node
+        if (this.svgGroupBg) {
+            this.svgGroupBg.remove()
+            this.svgGroupBg = undefined
         }
 
         if (this.caretEl) {
@@ -162,69 +190,76 @@ export class EditNodeTextTool extends FlowchartTool {
     }
 
     private createInputElement(node?: FlowchartNode, startPos = this.selection.start, endPos = this.selection.end) {
-        if (!node) {
-            node = this.selectedNode
+        return new Promise<void>((resolve) => {
+        
             if (!node) {
-                throw new Error("No node selected")
+                node = this.selectedNode
+                if (!node) {
+                    throw new Error("No node selected")
+                }
             }
-        }
-        if (!node.flowchart?.parentElement) {
-            throw new Error("Node is not attached to a flowchart")
-        }
+            if (!node.flowchart?.parentElement) {
+                throw new Error("Node is not attached to a flowchart")
+            }
 
-        const textEl = this.flowchart.chart.querySelector(`[id="${node.id}"] text`) as SVGTextElement | null
-        const fontSize = parseFloat(getComputedStyle(textEl ?? node.svgGroup).fontSize) || 16
-        const fontFamily = getComputedStyle(textEl ?? node.svgGroup).fontFamily || "inherit"
+            const textEl = this.flowchart.chart.querySelector(`[id="${node.id}"] text`) as SVGTextElement | null
+            const fontSize = parseFloat(getComputedStyle(textEl ?? node.svgGroup).fontSize) || 16
+            const fontFamily = getComputedStyle(textEl ?? node.svgGroup).fontFamily || "inherit"
         
-        const inputElement = document.createElement("input")
-        inputElement.value = node.text
-        inputElement.style.position = "fixed"
-        inputElement.style.left = "0"
-        inputElement.style.top = "0"
-        inputElement.style.width = `${node.width}px`
-        inputElement.style.height = `${node.height}px`
-        inputElement.style.fontSize = fontSize + "px"
-        inputElement.style.fontFamily = fontFamily
-        // inputElement.style.zIndex = "990000000"
+            const inputElement = document.createElement("input")
+            inputElement.value = node.text
+            inputElement.style.position = "fixed"
+            inputElement.style.left = "0"
+            inputElement.style.top = "0"
+            inputElement.style.width = `${node.width}px`
+            inputElement.style.height = `${node.height}px`
+            inputElement.style.fontSize = fontSize + "px"
+            inputElement.style.fontFamily = fontFamily
+            // inputElement.style.zIndex = "990000000"
 
-        document.body.appendChild(inputElement)
+            document.body.appendChild(inputElement)
 
-        // console.log("Created input element:", inputElement, startPos)
+            // console.log("Created input element:", inputElement, startPos)
         
-        const onInput = (event: InputEvent) => {
+            const onInput = (event: InputEvent) => {
             // if (event.key === "Enter") {
             //     inputElement.blur()
             // }// else {
             // }
             // console.log("Input event:", event)
             // node.svgGroup.querySelector("#text-caret")?.remove()
-            node.text = inputElement.value
-        }
+                if (!this.selectedNode) return
+                this.selectedNode.text = inputElement.value
+            }
 
-        inputElement.addEventListener("input", onInput)
-        this.inputElement = inputElement
+            inputElement.addEventListener("input", onInput)
+            this.inputElement = inputElement
 
-        if (!this.blinkInterval) {
-            this.blinkInterval = setInterval(() => {
-                if (!this.focus) { 
-                    return clearInterval(this.blinkInterval)
-                }
-                const caret = node.svgGroup.querySelector("#text-caret")
-                if (!caret) return
+            if (!this.blinkInterval) {
+                this.blinkInterval = setInterval(() => {
+                    if (!this.selectedNode) { 
+                        return clearInterval(this.blinkInterval)
+                    }
+                    
+                    const caret = this.selectedNode.svgGroup.querySelector("#text-caret")
+                    if (!caret) return
                 
-                const opacity = caret.getAttribute("opacity") === "0" ? "1" : "0"
-                caret.setAttribute("opacity", opacity)
+                    const opacity = caret.getAttribute("opacity") === "0" ? "1" : "0"
+                    caret.setAttribute("opacity", opacity)
                 
-            }, 500)
-        }
-        inputElement.focus()
-        inputElement.setSelectionRange(startPos, endPos)
+                }, 500)
+            }
+            inputElement.focus()
+        //     requestAnimationFrame(() => {
+        //         inputElement.setSelectionRange(startPos, endPos)
+        //     })
+        })
     }
     
     
-    private caretGetPositionFromSVGCoordinate(node: FlowchartNode, coordinate: { x: number, y: number }): number {
+    private caretGetPositionFromSVGCoordinate(node: FlowchartNode, coordinate: { x: number, y: number }): number | undefined {
         const textEl = this.flowchart.chart.querySelector(`[id="${node.id}"] text`) as SVGTextElement | null
-        if (!textEl) return 0
+        if (!textEl) return undefined
 
         const tspanArray = Array.from(textEl.querySelectorAll("tspan"))
         let globalIndex = 0
@@ -250,9 +285,7 @@ export class EditNodeTextTool extends FlowchartTool {
             }
         }
 
-        // Click was past all characters — return end of text
-        return textEl.getNumberOfChars()
-        // return this.convertIndexToPos()
+        return undefined
     }
 
     private getWordAtIndex(string: string, index: number): { start: number, end: number } | undefined {
@@ -311,24 +344,24 @@ export class EditNodeTextTool extends FlowchartTool {
     }
 
     private createSelectionEl(x: { start: number, end: number }, y: { start: number, end: number }) {
-        if (!this.svgGroup) {
+        if (!this.svgGroupBg) {
             throw new Error("SVG group not initialized")
         }
 
         const selectionEl = document.createElementNS("http://www.w3.org/2000/svg", "rect")
-        selectionEl.setAttribute("fill", "rgba(0, 120, 215, 0.4)")
+        selectionEl.setAttribute("fill", this.options.selectionColor)
         selectionEl.setAttribute("x", `${x.start}`)
         selectionEl.setAttribute("y", `${y.start}`)
         selectionEl.setAttribute("width", `${x.end - x.start}`)
         selectionEl.setAttribute("height", `${y.end - y.start}`)
 
-        this.svgGroup.appendChild(selectionEl)
+        this.svgGroupBg.appendChild(selectionEl)
     }
 
     private updateSVGSelection() {
         if (!this.selectedNode) return
         
-        const toolContainer = this.flowchart.chart.querySelector("[tool=\"edit-node-text-tool\"]") as SVGTextElement | null
+        const toolContainer = this.flowchart.chart.querySelector("[tool=\"edit-node-text-tool\"][background]") as SVGTextElement | null
         const textEl = this.flowchart.chart.querySelector(`[id="${this.selectedNode.id}"] text`) as SVGTextElement | null
         if (!textEl) return
         if (!toolContainer) return
@@ -354,6 +387,9 @@ export class EditNodeTextTool extends FlowchartTool {
                 return // Not in selection range vertically
             }
 
+            function startPosOnSameLine() {
+                return y >= startPos.y && y <= startPos.y + height
+            }
 
             if (this.selection.direction === "forward") {
                 if (y < startPos.y || y > this.state.mouseY ) {
@@ -361,12 +397,12 @@ export class EditNodeTextTool extends FlowchartTool {
                 }
 
                 // Set X
-                if (y >= startPos.y && y <= startPos.y + height ) {
+                if (startPosOnSameLine()) {
                     x = startPos.x // First selected line
                 }
 
                 // Set width
-                if (Math.round(startPos.y) === Math.round(endPos.y)) {
+                if (Math.round(startPos.y) === Math.round(endPos.y) && startPosOnSameLine()) {
                     width = endPos.x - startPos.x // First selected line (while still on the same line)
                 } else if (y >= startPos.y && y <= startPos.y + height) {
                     width = bbox.x + bbox.width - x
@@ -459,7 +495,7 @@ export class EditNodeTextTool extends FlowchartTool {
         this.syncSelection()
     }
 
-    private onMouseDown = (fec: FlowchartEventContext) => {  
+    private onMouseDown = async (fec: FlowchartEventContext) => {  
         if (!this.state.active) return
         const mousePos = this.flowchart.events.mousePos
         const selectedNode = this.flowchart.nodes.find(node => node.shape.containsPoint(mousePos))
@@ -480,9 +516,13 @@ export class EditNodeTextTool extends FlowchartTool {
         
         // Clicked inside a node
         fec.stopPropagation()
-        this.selectedNode = this.selectNode(selectedNode)
-        this.selection.start = this.caretGetPositionFromSVGCoordinate(selectedNode, mousePos)
-        this.selection.end = this.selection.start
+        this.selectedNode = await this.selectNode(selectedNode)
+        const caretPos = this.caretGetPositionFromSVGCoordinate(this.selectedNode, mousePos)
+        if (typeof caretPos === "number") {
+            this.selection.start = caretPos
+            this.selection.end = caretPos
+        }
+        this.inputElement?.focus()
         this.syncSelection()
         // if (this.inputElement) {
         //     this.inputElement.setSelectionRange(this.selection.start, this.selection.end)
@@ -500,7 +540,10 @@ export class EditNodeTextTool extends FlowchartTool {
             e.preventDefault()
 
             if (this.selectedNode) {
-                this.selection.end = this.caretGetPositionFromSVGCoordinate(this.selectedNode, mousePos)
+                const caretPos = this.caretGetPositionFromSVGCoordinate(this.selectedNode, mousePos)
+                if (typeof caretPos === "number") {
+                    this.selection.end = caretPos
+                }
             }
 
             this.syncSelection()

@@ -47,7 +47,9 @@ export default class Joffa extends Flowchart {
         })
         this.register("tool","pan", PanTool)
         this.register("tool","resize-node", ResizeNodeTool)
-        this.register("tool","edit-node-text", EditNodeTextTool)
+        this.register("tool","edit-node-text", EditNodeTextTool, {
+            selectionColor: "#58f208",
+        })
         
         // Default Nodes
         this.register("node", "process", ProcessNode, { shape: { class: "▭" }})
