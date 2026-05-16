@@ -123,7 +123,6 @@ export class EditNodeTextTool extends FlowchartTool {
             window.requestAnimationFrame(() => {
                 this.updateSVGSelection()
                 this.updateSVGCaretPosition()
-                console.log(this.selection)
             })
         })
             
@@ -131,8 +130,9 @@ export class EditNodeTextTool extends FlowchartTool {
         // this.createCaretEl(this.selectedNode, this.converIndexToPos( this.selection.start))
     }
 
-    private async selectNode(node: FlowchartNode) {
+    private selectNode(node: FlowchartNode) {
         this.selectedNode = node
+        this.selectedNode.state.selected = true
 
         if (!this.svgGroupBg) {
             this.svgGroupBg = document.createElementNS("http://www.w3.org/2000/svg", "g")
@@ -155,9 +155,8 @@ export class EditNodeTextTool extends FlowchartTool {
         }
 
         if (!this.inputElement) {
-            await this.createInputElement()
+            this.createInputElement()
         }
-
         return node
     }
 
@@ -189,71 +188,57 @@ export class EditNodeTextTool extends FlowchartTool {
         this.selectedNode = undefined
     }
 
-    private createInputElement(node?: FlowchartNode, startPos = this.selection.start, endPos = this.selection.end) {
-        return new Promise<void>((resolve) => {
-        
+    private createInputElement(node?: FlowchartNode) {
+        if (!node) {
+            node = this.selectedNode
             if (!node) {
-                node = this.selectedNode
-                if (!node) {
-                    throw new Error("No node selected")
+                throw new Error("No node selected")
+            }
+        }
+        if (!node.flowchart?.parentElement) {
+            throw new Error("Node is not attached to a flowchart")
+        }
+
+        const textEl = this.flowchart.chart.querySelector(`[id="${node.id}"] text`) as SVGTextElement | null
+        const fontSize = parseFloat(getComputedStyle(textEl ?? node.svgGroup).fontSize) || 16
+        const fontFamily = getComputedStyle(textEl ?? node.svgGroup).fontFamily || "inherit"
+        
+        const inputElement = document.createElement("input")
+        inputElement.value = node.text
+        inputElement.style.position = "fixed"
+        inputElement.style.left = "0"
+        inputElement.style.top = "0"
+        inputElement.style.width = `${node.width}px`
+        inputElement.style.height = `${node.height}px`
+        inputElement.style.fontSize = fontSize + "px"
+        inputElement.style.fontFamily = fontFamily
+
+        document.body.appendChild(inputElement)
+
+        
+        const onInput = (event: InputEvent) => {
+            if (!this.selectedNode) return
+            this.selectedNode.text = inputElement.value
+        }
+
+        inputElement.addEventListener("input", onInput)
+        this.inputElement = inputElement
+
+        if (!this.blinkInterval) {
+            this.blinkInterval = setInterval(() => {
+                if (!this.selectedNode) { 
+                    return clearInterval(this.blinkInterval)
                 }
-            }
-            if (!node.flowchart?.parentElement) {
-                throw new Error("Node is not attached to a flowchart")
-            }
-
-            const textEl = this.flowchart.chart.querySelector(`[id="${node.id}"] text`) as SVGTextElement | null
-            const fontSize = parseFloat(getComputedStyle(textEl ?? node.svgGroup).fontSize) || 16
-            const fontFamily = getComputedStyle(textEl ?? node.svgGroup).fontFamily || "inherit"
-        
-            const inputElement = document.createElement("input")
-            inputElement.value = node.text
-            inputElement.style.position = "fixed"
-            inputElement.style.left = "0"
-            inputElement.style.top = "0"
-            inputElement.style.width = `${node.width}px`
-            inputElement.style.height = `${node.height}px`
-            inputElement.style.fontSize = fontSize + "px"
-            inputElement.style.fontFamily = fontFamily
-            // inputElement.style.zIndex = "990000000"
-
-            document.body.appendChild(inputElement)
-
-            // console.log("Created input element:", inputElement, startPos)
-        
-            const onInput = (event: InputEvent) => {
-            // if (event.key === "Enter") {
-            //     inputElement.blur()
-            // }// else {
-            // }
-            // console.log("Input event:", event)
-            // node.svgGroup.querySelector("#text-caret")?.remove()
-                if (!this.selectedNode) return
-                this.selectedNode.text = inputElement.value
-            }
-
-            inputElement.addEventListener("input", onInput)
-            this.inputElement = inputElement
-
-            if (!this.blinkInterval) {
-                this.blinkInterval = setInterval(() => {
-                    if (!this.selectedNode) { 
-                        return clearInterval(this.blinkInterval)
-                    }
                     
-                    const caret = this.selectedNode.svgGroup.querySelector("#text-caret")
-                    if (!caret) return
+                const caret = this.selectedNode.svgGroup.querySelector("#text-caret")
+                if (!caret) return
                 
-                    const opacity = caret.getAttribute("opacity") === "0" ? "1" : "0"
-                    caret.setAttribute("opacity", opacity)
+                const opacity = caret.getAttribute("opacity") === "0" ? "1" : "0"
+                caret.setAttribute("opacity", opacity)
                 
-                }, 500)
-            }
-            inputElement.focus()
-        //     requestAnimationFrame(() => {
-        //         inputElement.setSelectionRange(startPos, endPos)
-        //     })
-        })
+            }, 500)
+        }
+        inputElement.focus()
     }
     
     
@@ -264,6 +249,10 @@ export class EditNodeTextTool extends FlowchartTool {
         const tspanArray = Array.from(textEl.querySelectorAll("tspan"))
         let globalIndex = 0
         let extent = undefined as DOMRect | undefined
+
+        if (coordinate.y < textEl.getBBox().y) {
+            return 0
+        }
 
         for (const tspan of tspanArray) {
             const tspanLength = tspan.textContent?.length ?? 0
@@ -286,7 +275,9 @@ export class EditNodeTextTool extends FlowchartTool {
             }
         }
         if (!extent) return undefined
-        if (coordinate.y > extent.y && coordinate.x > extent.x + extent.width) {
+        if ((coordinate.y > extent.y && coordinate.x > extent.x + extent.width) ||
+            (coordinate.y > extent.y + extent.height)
+        ) {
             return textEl.getNumberOfChars()
         }
 
@@ -327,7 +318,6 @@ export class EditNodeTextTool extends FlowchartTool {
             const last = textEl.getExtentOfChar(clampedIndex)
             return { x: last.x + last.width, y: last.y }
         }
-        // console.log("Index to position:", { index, clampedIndex })
 
         // this.selection.start = index  // not clampedIndex
         const extent = textEl.getExtentOfChar(clampedIndex)
@@ -352,13 +342,14 @@ export class EditNodeTextTool extends FlowchartTool {
         if (!this.svgGroupBg) {
             throw new Error("SVG group not initialized")
         }
-
+        const width = Math.abs(x.end - x.start) +""
+        const height = Math.abs(y.end - y.start) + ""
         const selectionEl = document.createElementNS("http://www.w3.org/2000/svg", "rect")
         selectionEl.setAttribute("fill", this.options.selectionColor)
         selectionEl.setAttribute("x", `${x.start}`)
         selectionEl.setAttribute("y", `${y.start}`)
-        selectionEl.setAttribute("width", `${x.end - x.start}`)
-        selectionEl.setAttribute("height", `${y.end - y.start}`)
+        selectionEl.setAttribute("width", width)
+        selectionEl.setAttribute("height", height)
 
         this.svgGroupBg.appendChild(selectionEl)
     }
@@ -526,19 +517,16 @@ export class EditNodeTextTool extends FlowchartTool {
         this.syncSelection()
     }
 
-    private onMouseDown = async (fec: FlowchartEventContext) => {  
+    private onMouseDown = (fec: FlowchartEventContext) => {  
         if (!this.state.active) return
         const mousePos = this.flowchart.events.mousePos
         const selectedNode = this.flowchart.nodes.find(node => node.shape.containsPoint(mousePos))
         
         if (this.selectedNode !== selectedNode && typeof selectedNode !== "undefined") {
+            selectedNode.state.selected = false
             this.deselectNode()
         }
-        const e = fec.originalEvent as MouseEvent
-        // e.preventDefault()
-        // let selectedNode = this.selectedNode
-        // if (!selectedNode)
-        // Clicked outside a node
+        
         if (!selectedNode) {
             this.blinkInterval = undefined
             this.deselectNode()
@@ -547,17 +535,22 @@ export class EditNodeTextTool extends FlowchartTool {
         
         // Clicked inside a node
         fec.stopPropagation()
-        this.selectedNode = await this.selectNode(selectedNode)
+        
+        this.selectedNode = this.selectNode(selectedNode)
         const caretPos = this.caretGetPositionFromSVGCoordinate(this.selectedNode, mousePos)
         if (typeof caretPos === "number") {
             this.selection.start = caretPos
             this.selection.end = caretPos
         }
-        this.inputElement?.focus()
-        this.syncSelection()
-        // if (this.inputElement) {
-        //     this.inputElement.setSelectionRange(this.selection.start, this.selection.end)
-        // }
+
+        if (this.inputElement) {
+            this.inputElement?.focus()
+        }
+        
+        // Delay to ensure inputElement is focused before syncing selection
+        window.requestAnimationFrame(() => {
+            this.syncSelection()
+        })
     }
 
     private onMouseMove = (fec: FlowchartEventContext) => {
@@ -577,7 +570,10 @@ export class EditNodeTextTool extends FlowchartTool {
                 }
             }
 
-            this.syncSelection()
+            // Delay to ensure inputElement is focused before syncing selection
+            window.requestAnimationFrame(() => {
+                this.syncSelection()
+            })
         }
 
         if (selectedNode) {
@@ -597,15 +593,11 @@ export class EditNodeTextTool extends FlowchartTool {
     
     private onNodeSelected = (_node: FlowchartNode) => {
         if (!this.state.active) return
-        
-        // console.log("EditNodeTextTool: Node selected")
     }
     
         
     private onNodeDeselected = (_node: FlowchartNode) => {
         if (!this.state.active) return
-
-        // console.log("EditNodeTextTool: Node deselected")
     }
 }
 
