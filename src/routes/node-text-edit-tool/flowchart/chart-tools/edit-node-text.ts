@@ -263,12 +263,13 @@ export class EditNodeTextTool extends FlowchartTool {
 
         const tspanArray = Array.from(textEl.querySelectorAll("tspan"))
         let globalIndex = 0
+        let extent = undefined as DOMRect | undefined
 
         for (const tspan of tspanArray) {
             const tspanLength = tspan.textContent?.length ?? 0
 
             for (let i = 0; i < tspanLength; i++) {
-                const extent = textEl.getExtentOfChar(globalIndex)
+                extent = textEl.getExtentOfChar(globalIndex)
                 const inRow = coordinate.y >= extent.y && coordinate.y <= extent.y + extent.height
 
                 if (inRow && coordinate.x < extent.x + extent.width / 2) {
@@ -283,6 +284,10 @@ export class EditNodeTextTool extends FlowchartTool {
 
                 globalIndex++
             }
+        }
+        if (!extent) return undefined
+        if (coordinate.y > extent.y && coordinate.x > extent.x + extent.width) {
+            return textEl.getNumberOfChars()
         }
 
         return undefined
@@ -391,27 +396,53 @@ export class EditNodeTextTool extends FlowchartTool {
                 return y >= startPos.y && y <= startPos.y + height
             }
 
+            function endPosOnSameLine() {
+                return y >= endPos.y && y <= endPos.y + height
+            }
+
             if (this.selection.direction === "forward") {
-                if (y < startPos.y || y > this.state.mouseY ) {
+                if (y < startPos.y || y > this.state.mouseY) {
                     return // Not in selection range vertically
                 }
 
-                // Set X
-                if (startPosOnSameLine()) {
-                    x = startPos.x // First selected line
+                if (startPosOnSameLine() && endPosOnSameLine()) {
+                    // Selection starts and ends on this line
+                    x = startPos.x
+                    width = endPos.x - startPos.x
+                } else if (startPosOnSameLine()) {
+                    // This is the first line of the selection (start anchor)
+                    x = startPos.x
+                    width = bbox.x + bbox.width - startPos.x
+                } else if (endPosOnSameLine()) {
+                    // This is the last line of the selection (end anchor)
+                    x = bbox.x
+                    width = endPos.x - bbox.x
+                } else {
+                    // Middle line — full width
+                    x = bbox.x
+                    width = bbox.width
                 }
 
-                // Set width
-                if (Math.round(startPos.y) === Math.round(endPos.y) && startPosOnSameLine()) {
-                    width = endPos.x - startPos.x // First selected line (while still on the same line)
-                } else if (y >= startPos.y && y <= startPos.y + height) {
-                    width = bbox.x + bbox.width - x
-                } else if (y >= endPos.y && y <= endPos.y + height ) {
-                    width = endPos.x - x // First selected line
+            } else if (this.selection.direction === "backward") {
+                if (endPosOnSameLine() && startPosOnSameLine()) {
+                    // Selection starts and ends on this line
+                    x = endPos.x
+                    width = startPos.x - endPos.x
+                } else if (endPosOnSameLine()) {
+                    // This is the first line of the selection (end anchor)
+                    x = endPos.x
+                    width = bbox.x + bbox.width - endPos.x
+                } else if (startPosOnSameLine()) {
+                    // This is the last line of the selection (start anchor)
+                    x = bbox.x
+                    width = startPos.x - bbox.x
+                } else {
+                    // Middle line — full width
+                    x = bbox.x
+                    width = bbox.width
                 }
-            } 
+            }
             
-
             this.createSelectionEl(
                 { start: x, end: x + width },
                 { start: y, end: y + bbox.height }
