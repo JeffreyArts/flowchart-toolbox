@@ -376,7 +376,7 @@ export class EditNodeTextTool extends FlowchartTool {
             }
 
             if (this.selection.direction === "forward") {
-                if (y < startPos.y || y > this.state.mouseY) {
+                if (y < startPos.y || y > endPos.y) {
                     return // Not in selection range vertically
                 }
 
