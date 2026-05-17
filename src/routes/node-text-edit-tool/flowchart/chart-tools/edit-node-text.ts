@@ -33,21 +33,6 @@ export class EditNodeTextTool extends FlowchartTool {
         end: 0,
         direction: "none"
     } as TextSelection
-    // { 
-    //     set: (target, prop, value) => {
-    //         target[prop] = value
-
-    //         requestAnimationFrame(() => {
-    //             if (this.inputElement) {
-    //                 this.syncSelection()
-    //             }
-    //         })
-
-    //         return true
-    //     }
-    // })
-
-    get focus() { return !!this.selectedNode }
 
     options = new Proxy<EditNodeTextToolOptions>({
         autoFocus: true,
@@ -88,43 +73,42 @@ export class EditNodeTextTool extends FlowchartTool {
         }
     }
 
-    private syncSelection() {
+    private updateInputSelection() {
         if (!this.inputElement) return
-        
-        // Check if inputElement is focused
-        if (document.activeElement !== this.inputElement) {
-            this.inputElement.focus()
-        }
-        
-        // if inputElement is focused, but selection is different, update it
-        // if (this.inputElement.selectionStart === this.selection.start || this.inputElement.selectionEnd === this.selection.end) {
-        //     return
+
+        console.log("syncing selection", { selection: this.selection }, this.inputElement.selectionStart, this.inputElement.selectionEnd)
+
+        // if (this.selection.end > this.selection.start) {
+        //     this.selection.direction = "forward"
+        // } else if (this.selection.end < this.selection.start) {
+        //     this.selection.direction = "backward"
+        // } else {
         // }
             
+        if (this.selection.direction == "backward") {
+            this.inputElement.setSelectionRange(this.selection.end, this.selection.start)
+        } else if (this.selection.direction == "forward") {
+            this.inputElement.setSelectionRange(this.selection.start, this.selection.end)
+        } else {
+            this.inputElement.setSelectionRange(this.selection.start, this.selection.end)
+        }
+    }
+
+    private updateSelection() {
+            
+        if (this.selection.start > this.selection.end) {
+            this.selection.direction = "backward"
+        } else if (this.selection.end > this.selection.start) {
+            this.selection.direction = "forward"
+        } else {
+            this.selection.direction = "none"
+        }
+        
         window.requestAnimationFrame(() => {
-            if (!this.inputElement) return
-            if (this.selection.end > this.selection.start) {
-                this.selection.direction = "forward"
-            } else if (this.selection.end < this.selection.start) {
-                this.selection.direction = "backward"
-            } else {
-                this.selection.direction = "none"
-            }
-            
-            if (this.selection.direction == "backward") {
-                this.inputElement.setSelectionRange(this.selection.end, this.selection.start)
-            } else if (this.selection.direction == "forward") {
-                this.inputElement.setSelectionRange(this.selection.start, this.selection.end)
-            } else {
-                this.inputElement.setSelectionRange(this.selection.start, this.selection.end)
-            }
-            // }
-            
-            window.requestAnimationFrame(() => {
-                this.updateSVGSelection()
-                this.updateSVGCaretPosition()
-            })
+            this.updateSVGSelection()
+            this.updateSVGCaretPosition()
         })
+        // })
             
         // this.selectedNode.svgGroup.querySelector("#text-caret")?.remove()
         // this.createCaretEl(this.selectedNode, this.converIndexToPos( this.selection.start))
@@ -462,13 +446,13 @@ export class EditNodeTextTool extends FlowchartTool {
 
     private onKeyDown = (fec: FlowchartEventContext) => {
         if (!this.state.active) return
+        if (!this.inputElement) return
+        this.inputElement.focus() 
         const event = fec.originalEvent as KeyboardEvent
         
         if (event.key === "Tab") {
-            if (this.inputElement) {
-                event.preventDefault()
-                return
-            }
+            event.preventDefault()
+            return
         }
         
         if ((event.key === "Enter" && !event.shiftKey) || event.key === "Escape") {
@@ -476,13 +460,24 @@ export class EditNodeTextTool extends FlowchartTool {
             return
         }
 
-        
+        if ((event.key === "ArrowLeft" && ( event.metaKey || event.ctrlKey)) || 
+            (event.key === "ArrowRight" && ( event.metaKey || event.ctrlKey))){
+            if (this.inputElement) {
+                event.preventDefault()
+            }
+        }
+
+        this.selection.start = this.inputElement.selectionStart as number
+        this.selection.end = this.inputElement.selectionEnd as number
+
+        this.updateSelection()
     }
     
     private onKeyUp = (fec: FlowchartEventContext) => {
         if (!this.state.active) return
         if (!this.inputElement) return
         if (!this.selectedNode) return
+        this.inputElement.focus() 
         
         const event = fec.originalEvent as KeyboardEvent
         
@@ -493,28 +488,45 @@ export class EditNodeTextTool extends FlowchartTool {
             }
         }
 
-        if (typeof this.inputElement.selectionStart === "number") {
-            this.selection.start = this.inputElement.selectionStart
+        if ((event.key === "ArrowLeft" && (event.shiftKey || event.metaKey)) || 
+            (event.key === "ArrowRight" && (event.shiftKey || event.metaKey))){
+            if (this.inputElement) {
+                event.preventDefault()
+            }
         }
+
+        // if (typeof this.inputElement.selectionStart === "number") {
+        //     this.selection.start = this.inputElement.selectionStart
+        // }
         
-        if (typeof this.inputElement.selectionEnd === "number") {
-            this.selection.end = this.inputElement.selectionEnd
-        }
+        // if (typeof this.inputElement.selectionEnd === "number") {
+        //     this.selection.end = this.inputElement.selectionEnd
+        // }
+
+        // First check if element is focused, if not, focus it (can happen when user clicks outside the window and back in)
         
-        this.syncSelection()
+
+        this.selection.start = this.inputElement.selectionStart as number
+        this.selection.end = this.inputElement.selectionEnd as number
+
+        this.updateSelection()
     }
     
     private onDoubleClick = (fec: FlowchartEventContext) => {  
         if (!this.state.active) return
         if (!this.selectedNode) return
         if (!this.inputElement) return
+        const mouseEvent = fec.originalEvent as MouseEvent
+        mouseEvent.preventDefault()  // prevent browser native word selection
 
         const v = this.getWordAtIndex(this.inputElement.value, this.selection.start)
         if (!v) return
         
         this.selection.start = v.start
         this.selection.end = v.end
-        this.syncSelection()
+        this.selection.direction = "forward"
+
+        this.updateSelection()
     }
 
     private onMouseDown = (fec: FlowchartEventContext) => {  
@@ -537,19 +549,22 @@ export class EditNodeTextTool extends FlowchartTool {
         fec.stopPropagation()
         
         this.selectedNode = this.selectNode(selectedNode)
+
+        if (this.inputElement) {
+            this.inputElement.focus()
+        }
+        
         const caretPos = this.caretGetPositionFromSVGCoordinate(this.selectedNode, mousePos)
         if (typeof caretPos === "number") {
             this.selection.start = caretPos
             this.selection.end = caretPos
         }
 
-        if (this.inputElement) {
-            this.inputElement?.focus()
-        }
-        
-        // Delay to ensure inputElement is focused before syncing selection
+        this.selection.direction = "none"
+
+        this.updateInputSelection()
         window.requestAnimationFrame(() => {
-            this.syncSelection()
+            this.updateSelection()
         })
     }
 
@@ -570,10 +585,9 @@ export class EditNodeTextTool extends FlowchartTool {
                 }
             }
 
-            // Delay to ensure inputElement is focused before syncing selection
-            window.requestAnimationFrame(() => {
-                this.syncSelection()
-            })
+
+            this.updateInputSelection()
+            this.updateSelection()
         }
 
         if (selectedNode) {
