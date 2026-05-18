@@ -133,18 +133,26 @@ export class EditNodeTextTool extends FlowchartTool {
             this.svgGroupBg = undefined
         }
 
+        // Remove caret element
         if (this.caretEl) {
             this.caretEl.remove()
             this.caretEl = undefined
         }
 
+        // Remove input element
         if (this.inputElement) {
             // this.inputElement.removeEventListener("blur", onBlur)
             // this.inputElement.removeEventListener("input", onInput)
             this.inputElement.remove()
             this.inputElement = undefined
         }
-            
+        
+        this.startMouseCaretPos = undefined
+
+        if (this.selectedNode) {
+            this.selectedNode.state.selected = false
+        }
+
         this.selectedNode = undefined
     }
 
@@ -436,6 +444,8 @@ export class EditNodeTextTool extends FlowchartTool {
 
         const event = fec.originalEvent as KeyboardEvent
         const selectionDirection = this.inputElement.selectionDirection || "none"
+        let focusPos = 0
+        let anchor = 0
         
         if (event.key === "Tab") {
             event.preventDefault()
@@ -462,81 +472,138 @@ export class EditNodeTextTool extends FlowchartTool {
         // 
         this.inputElement.focus() 
 
+
         //
         // 2. Update selection state
         // 
+        
 
-        if ((event.key === "ArrowUp") || (event.key === "ArrowDown")) {
-            event.preventDefault()
-            if (!this.selectedNode) return
-
-            let focusPos = 0
-            let anchor = 0
-
+        if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+            let yOffset = 2
+            if (event.key === "ArrowUp") {
+                yOffset = -1
+            }
             //
             // UP KEY
             //
-            if (event.key === "ArrowUp") {
+            event.preventDefault()
+            if (!this.selectedNode) return
 
-                if (this.selection.direction === "forward") {
-                    focusPos = this.selection.start
-                    anchor = this.selection.end
-                } else {
-                    focusPos = this.selection.end  
-                    anchor = this.selection.start    
-                }
-
-                const caretPos = this.caretGetPositionFromSVGCoordinate(this.selectedNode, this.convertIndexToPos(focusPos, -1))
-
-                if (caretPos) {
-                    if (!event.shiftKey) {
-                        this.inputElement.selectionStart = caretPos
-                        this.inputElement.selectionEnd = caretPos  // caret bij start (omhoog)
-                        this.selection.direction = "none"
-                    } else {
-                        this.inputElement.selectionStart = Math.min(caretPos, anchor)
-                        this.inputElement.selectionEnd = Math.max(caretPos, anchor)
-                        this.selection.direction = caretPos < anchor ? "backward" : "forward"
-                    }
-                    console.log(caretPos < anchor, this.selection.direction)
-                }
-
+            if (this.selection.direction === "forward") {
+                focusPos = this.selection.end  
+                anchor = this.selection.start    
             } else {
-                //
-                // DOWN KEY
-                //
+                focusPos = this.selection.start
+                anchor = this.selection.end
+            }
 
-                if (this.selection.direction === "backward") {
-                    focusPos = this.selection.start  
-                    anchor = this.selection.end      
+            const pos1 = this.convertIndexToPos(anchor, yOffset)
+            const pos2 = this.convertIndexToPos(focusPos, yOffset)
+            const caretPos = this.caretGetPositionFromSVGCoordinate(this.selectedNode, { x: pos1.x, y: pos2.y })
+
+            if (typeof caretPos === "number") {
+                if (!event.shiftKey) {
+                    this.selection.start     = caretPos
+                    this.selection.end       = caretPos
+                    this.selection.direction = "none"
                 } else {
-                    anchor = this.selection.start    
-                    focusPos = this.selection.end
-                }
-                const pos = this.convertIndexToPos(focusPos, 2)
-                let caretPos = this.caretGetPositionFromSVGCoordinate(this.selectedNode, pos)
-
-                if (caretPos) {
-                    // caretPos += 1
-                    if (!event.shiftKey) {
-                        this.inputElement.selectionEnd = caretPos
-                        this.inputElement.selectionStart = caretPos  // caret bij end (omlaag)
-                        this.selection.direction = "none"
+                    if (caretPos >= anchor) {
+                        if (event.key === "ArrowUp") {
+                            this.selection = {
+                                start: anchor,
+                                end: caretPos,
+                                direction: "forward"
+                            }
+                        } else {
+                            this.selection = {
+                                start: anchor,
+                                end: caretPos,
+                                direction: "forward"
+                            }
+                        }
                     } else {
-                        this.inputElement.selectionStart = Math.min(caretPos, focusPos)
-                        this.inputElement.selectionEnd = Math.max(caretPos, focusPos)
-                        this.selection.direction = caretPos > focusPos ? "forward" : "backward"
+                        if (event.key === "ArrowUp") {
+                            this.selection = {
+                                start: caretPos,
+                                end: anchor,
+                                direction: "backward"
+                            }
+                        } else {
+                            this.selection = {
+                                start: caretPos,
+                                end: anchor,
+                                direction: "backward"
+                            }
+                        }
                     }
                 }
+
+                window.requestAnimationFrame(() => {
+                    if (!this.inputElement) return
+
+                    this.inputElement.setSelectionRange(
+                        this.selection.start,
+                        this.selection.end,
+                        this.selection.direction
+                    )
+                })
             }
-        }
+        } 
+        // if (event.key === "ArrowDown") {
+        //     //
+        //     // Down KEY
+        //     //
+        //     event.preventDefault()
+        //     if (!this.selectedNode) return
+
+        //     if (this.selection.direction === "forward") {
+        //         focusPos = this.selection.end  
+        //         anchor = this.selection.start    
+        //     } else {
+        //         focusPos = this.selection.start
+        //         anchor = this.selection.end
+        //     }
+
+        //     const pos1 = this.convertIndexToPos(anchor, 2)
+        //     const pos2 = this.convertIndexToPos(focusPos, 2)
+        //     const caretPos = this.caretGetPositionFromSVGCoordinate(this.selectedNode, { x: pos1.x, y: pos2.y })
+
+        //     if (typeof caretPos === "number") {
+        //         if (!event.shiftKey) {
+        //             this.selection.start     = caretPos
+        //             this.selection.end       = caretPos
+        //             this.selection.direction = "none"
+        //         } else {
+        //             if (caretPos >= anchor) {
+        //             } else {
+        //                 this.selection.start     = caretPos
+        //                 this.selection.end       = anchor
+        //                 this.selection.direction = "backward"
+        //             }
+        //         }
+
+        //         window.requestAnimationFrame(() => {
+        //             if (!this.inputElement) return
+
+        //             this.inputElement.setSelectionRange(
+        //                 this.selection.start,
+        //                 this.selection.end,
+        //                 this.selection.direction
+        //             )
+        //         })
+        //     }
+        // } 
 
         
         window.requestAnimationFrame(() => {
             if (!this.inputElement) return
-            this.selection.start = this.inputElement.selectionStart as number
-            this.selection.end = this.inputElement.selectionEnd as number
-            this.selection.direction = this.inputElement.selectionDirection || "none"
+
+            // Exclude default behavior when pressing up/down arrow
+            if (event.key !== "ArrowUp" && event.key !== "ArrowDown") {
+                this.selection.start = this.inputElement.selectionStart as number
+                this.selection.end = this.inputElement.selectionEnd as number
+                this.selection.direction = this.inputElement.selectionDirection || "none"
+            }
         
             //
             // 3. Update SVG selection
