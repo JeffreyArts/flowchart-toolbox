@@ -18,6 +18,7 @@ export class EditNodeTextTool extends FlowchartTool {
     name = "edit-node-text"
     selectedNode = undefined as FlowchartNode | undefined
     blinkInterval = undefined as ReturnType<typeof setInterval> | undefined
+    startMouseCaretPos = undefined as number | undefined
     caretEl = undefined as SVGLineElement | undefined
     svgGroup = undefined as SVGGElement | undefined
     svgGroupBg = undefined as SVGGElement | undefined
@@ -76,42 +77,17 @@ export class EditNodeTextTool extends FlowchartTool {
     private updateInputSelection() {
         if (!this.inputElement) return
 
-        console.log("syncing selection", { selection: this.selection }, this.inputElement.selectionStart, this.inputElement.selectionEnd)
-
-        // if (this.selection.end > this.selection.start) {
-        //     this.selection.direction = "forward"
-        // } else if (this.selection.end < this.selection.start) {
-        //     this.selection.direction = "backward"
+        this.inputElement.setSelectionRange(this.selection.start, this.selection.end, this.selection.direction)
+            
+        // if (this.selection.direction == "backward") {
+        //     this.inputElement.setSelectionRange(this.selection.end, this.selection.start)
+        // } else if (this.selection.direction == "forward") {
+        //     this.inputElement.setSelectionRange(this.selection.start, this.selection.end)
         // } else {
+        //     this.inputElement.setSelectionRange(this.selection.start, this.selection.end)
         // }
-            
-        if (this.selection.direction == "backward") {
-            this.inputElement.setSelectionRange(this.selection.end, this.selection.start)
-        } else if (this.selection.direction == "forward") {
-            this.inputElement.setSelectionRange(this.selection.start, this.selection.end)
-        } else {
-            this.inputElement.setSelectionRange(this.selection.start, this.selection.end)
-        }
-    }
 
-    private updateSelection() {
-            
-        if (this.selection.start > this.selection.end) {
-            this.selection.direction = "backward"
-        } else if (this.selection.end > this.selection.start) {
-            this.selection.direction = "forward"
-        } else {
-            this.selection.direction = "none"
-        }
-        
-        window.requestAnimationFrame(() => {
-            this.updateSVGSelection()
-            this.updateSVGCaretPosition()
-        })
-        // })
-            
-        // this.selectedNode.svgGroup.querySelector("#text-caret")?.remove()
-        // this.createCaretEl(this.selectedNode, this.converIndexToPos( this.selection.start))
+        // this.inputElement.selectionDirection = this.selection.direction
     }
 
     private selectNode(node: FlowchartNode) {
@@ -237,28 +213,36 @@ export class EditNodeTextTool extends FlowchartTool {
         if (coordinate.y < textEl.getBBox().y) {
             return 0
         }
-
         for (const tspan of tspanArray) {
             const tspanLength = tspan.textContent?.length ?? 0
+            const firstIndexInRow = globalIndex
 
             for (let i = 0; i < tspanLength; i++) {
                 extent = textEl.getExtentOfChar(globalIndex)
                 const inRow = coordinate.y >= extent.y && coordinate.y <= extent.y + extent.height
 
-                if (inRow && coordinate.x < extent.x + extent.width / 2) {
-                    return globalIndex//this.convertIndexToPos(globalIndex)
-                }
-
                 if (inRow) {
-                // past midpoint of this char, keep scanning
-                    globalIndex++
-                    continue
+                    // X is voor het eerste karakter van de regel
+                    if (i === 0 && coordinate.x < extent.x) {
+                        return firstIndexInRow
+                    }
+
+                    // X is voorbij het laatste karakter van de regel
+                    if (i === tspanLength - 1 && coordinate.x >= extent.x + extent.width / 2) {
+                        return globalIndex 
+                    }
+
+                    if (coordinate.x < extent.x + extent.width / 2) {
+                        return globalIndex
+                    }
                 }
 
                 globalIndex++
             }
         }
+
         if (!extent) return undefined
+
         if ((coordinate.y > extent.y && coordinate.x > extent.x + extent.width) ||
             (coordinate.y > extent.y + extent.height)
         ) {
@@ -287,25 +271,45 @@ export class EditNodeTextTool extends FlowchartTool {
     }
 
 
-    private convertIndexToPos(index = this.selection.end): { x: number, y: number } {
+    private convertIndexToPos(index = undefined as number | undefined, yOffset = 0): { x: number, y: number } {
         const node = this.selectedNode
         if (!node) {
             throw new Error("No node selected")   
         }
         const textEl = this.flowchart.chart.querySelector(`[id="${node.id}"] text`) as SVGTextElement | null
-        if (!textEl || node.text.length === 0) return { x: node.x, y: node.y }
+        if (!textEl || node.text.length === 0) {
+            return {
+                x: node.x,
+                y: node.y
+            }
+        }
+
+        if (typeof index === "undefined") {
+            if (this.selection.direction === "forward") {
+                index = this.selection.end
+            } else {
+                index = this.selection.start
+            }
+        }
 
         const clampedIndex = Math.min(index, textEl.getNumberOfChars() - 1)
     
         if (index >= textEl.getNumberOfChars()) {
-        // End of text: use end of last character
+            // End of text: use end of last character
             const last = textEl.getExtentOfChar(clampedIndex)
-            return { x: last.x + last.width, y: last.y }
+            return { 
+                x: last.x + last.width,
+                y: last.y 
+            }
         }
 
         // this.selection.start = index  // not clampedIndex
         const extent = textEl.getExtentOfChar(clampedIndex)
-        return { x: extent.x, y: extent.y }
+
+        return {
+            x: extent.x,
+            y: extent.y + yOffset * extent.height 
+        }
     }
     
     private createCaretEl(): SVGLineElement {
@@ -340,89 +344,69 @@ export class EditNodeTextTool extends FlowchartTool {
 
     private updateSVGSelection() {
         if (!this.selectedNode) return
-        
-        const toolContainer = this.flowchart.chart.querySelector("[tool=\"edit-node-text-tool\"][background]") as SVGTextElement | null
+
+        const toolContainer = this.flowchart.chart.querySelector("[tool=\"edit-node-text-tool\"][background]") as SVGGElement | null
         const textEl = this.flowchart.chart.querySelector(`[id="${this.selectedNode.id}"] text`) as SVGTextElement | null
-        if (!textEl) return
-        if (!toolContainer) return
+        if (!textEl || !toolContainer) return
 
-        toolContainer.querySelectorAll("rect").forEach(rect => rect.remove()) // Clear previous selection rectangles
+        toolContainer.querySelectorAll("rect").forEach(rect => rect.remove())
 
-        const startPos = this.convertIndexToPos(this.selection.start)
-        const endPos = this.convertIndexToPos(this.selection.end)
+        if (this.selection.start === this.selection.end) return
+        if (this.selection.direction === "none") return
 
-        if (this.selection.start === this.selection.end) return // No selection
-        const tspanArray = textEl.querySelectorAll("tspan") as NodeListOf<SVGTSpanElement>
-        tspanArray.forEach((tspan, i) => {
-            if (!tspan) return
-            const bbox = tspan.getBBox()
-            let x = bbox.x
-            const y = bbox.y
-            let width = bbox.width
-            const height = bbox.height
-            if (
-                y > startPos.y && this.selection.direction === "backward" ||
-                y < endPos.y && this.selection.direction === "backward"
-            ) {
-                return // Not in selection range vertically
+        // Altijd visueel: links = min, rechts = max — ongeacht direction
+        const visualStart = Math.min(this.selection.start, this.selection.end)
+        const visualEnd   = Math.max(this.selection.start, this.selection.end)
+
+        const startPos = this.convertIndexToPos(visualStart)
+        const endPos   = this.convertIndexToPos(visualEnd)
+
+        const tspanArray = Array.from(textEl.querySelectorAll("tspan")) as SVGTSpanElement[]
+
+        for (const tspan of tspanArray) {
+            const bbox   = tspan.getBBox()
+            const lineY  = bbox.y
+            const lineH  = bbox.height
+            const lineX1 = bbox.x
+            const lineX2 = bbox.x + bbox.width
+
+            const lineStartY = lineY
+            const lineEndY   = lineY + lineH
+
+            // Valt deze regel volledig buiten de selectie?
+            if (lineEndY <= startPos.y || lineStartY >= endPos.y + lineH) continue
+
+            const onStartLine = lineY >= startPos.y && lineY < startPos.y + lineH
+            const onEndLine   = lineY >= endPos.y   && lineY < endPos.y   + lineH
+
+            let x: number
+            let width: number
+
+            if (onStartLine && onEndLine) {
+            // Selectie begint én eindigt op deze regel
+                x     = startPos.x
+                width = endPos.x - startPos.x
+            } else if (onStartLine) {
+            // Eerste regel van de selectie
+                x     = startPos.x
+                width = lineX2 - startPos.x
+            } else if (onEndLine) {
+            // Laatste regel van de selectie
+                x     = lineX1
+                width = endPos.x - lineX1
+            } else {
+            // Middelste regel — volledige breedte
+                x     = lineX1
+                width = bbox.width
             }
 
-            function startPosOnSameLine() {
-                return y >= startPos.y && y <= startPos.y + height
-            }
+            if (width <= 0) continue
 
-            function endPosOnSameLine() {
-                return y >= endPos.y && y <= endPos.y + height
-            }
-
-            if (this.selection.direction === "forward") {
-                if (y < startPos.y || y > endPos.y) {
-                    return // Not in selection range vertically
-                }
-
-                if (startPosOnSameLine() && endPosOnSameLine()) {
-                    // Selection starts and ends on this line
-                    x = startPos.x
-                    width = endPos.x - startPos.x
-                } else if (startPosOnSameLine()) {
-                    // This is the first line of the selection (start anchor)
-                    x = startPos.x
-                    width = bbox.x + bbox.width - startPos.x
-                } else if (endPosOnSameLine()) {
-                    // This is the last line of the selection (end anchor)
-                    x = bbox.x
-                    width = endPos.x - bbox.x
-                } else {
-                    // Middle line — full width
-                    x = bbox.x
-                    width = bbox.width
-                }
-
-            } else if (this.selection.direction === "backward") {
-                if (endPosOnSameLine() && startPosOnSameLine()) {
-                    // Selection starts and ends on this line
-                    x = endPos.x
-                    width = startPos.x - endPos.x
-                } else if (endPosOnSameLine()) {
-                    // This is the first line of the selection (end anchor)
-                    x = endPos.x
-                    width = bbox.x + bbox.width - endPos.x
-                } else if (startPosOnSameLine()) {
-                    // This is the last line of the selection (start anchor)
-                    x = bbox.x
-                    width = startPos.x - bbox.x
-                } else {
-                    // Middle line — full width
-                    x = bbox.x
-                    width = bbox.width
-                }
-            }
-            
             this.createSelectionEl(
-                { start: x, end: x + width },
-                { start: y, end: y + bbox.height }
+                { start: x,     end: x + width },
+                { start: lineY, end: lineY + lineH }
             )
-        })
+        }
     }
 
     private updateSVGCaretPosition() {
@@ -431,6 +415,8 @@ export class EditNodeTextTool extends FlowchartTool {
 
         const node = this.selectedNode
         const caret = this.convertIndexToPos()
+
+        console.log("updateSVGCaretPosition",this.selection.direction, this.selection.start, this.selection.end, caret)
         const textEl = this.flowchart.chart.querySelector(`[id="${node.id}"] text`) as SVGTextElement | null
         const fontSize = parseFloat(getComputedStyle(textEl ?? node.svgGroup).fontSize) || 16
 
@@ -447,13 +433,17 @@ export class EditNodeTextTool extends FlowchartTool {
     private onKeyDown = (fec: FlowchartEventContext) => {
         if (!this.state.active) return
         if (!this.inputElement) return
-        this.inputElement.focus() 
+
         const event = fec.originalEvent as KeyboardEvent
+        const selectionDirection = this.inputElement.selectionDirection || "none"
         
         if (event.key === "Tab") {
             event.preventDefault()
             return
         }
+
+        this.selection.direction = selectionDirection
+
         
         if ((event.key === "Enter" && !event.shiftKey) || event.key === "Escape") {
             this.deselectNode()
@@ -467,10 +457,93 @@ export class EditNodeTextTool extends FlowchartTool {
             }
         }
 
-        this.selection.start = this.inputElement.selectionStart as number
-        this.selection.end = this.inputElement.selectionEnd as number
+        //
+        // 1. Set focus to input element
+        // 
+        this.inputElement.focus() 
 
-        this.updateSelection()
+        //
+        // 2. Update selection state
+        // 
+
+        if ((event.key === "ArrowUp") || (event.key === "ArrowDown")) {
+            event.preventDefault()
+            if (!this.selectedNode) return
+
+            let focusPos = 0
+            let anchor = 0
+
+            //
+            // UP KEY
+            //
+            if (event.key === "ArrowUp") {
+
+                if (this.selection.direction === "forward") {
+                    focusPos = this.selection.start
+                    anchor = this.selection.end
+                } else {
+                    focusPos = this.selection.end  
+                    anchor = this.selection.start    
+                }
+
+                const caretPos = this.caretGetPositionFromSVGCoordinate(this.selectedNode, this.convertIndexToPos(focusPos, -1))
+
+                if (caretPos) {
+                    if (!event.shiftKey) {
+                        this.inputElement.selectionStart = caretPos
+                        this.inputElement.selectionEnd = caretPos  // caret bij start (omhoog)
+                        this.selection.direction = "none"
+                    } else {
+                        this.inputElement.selectionStart = Math.min(caretPos, anchor)
+                        this.inputElement.selectionEnd = Math.max(caretPos, anchor)
+                        this.selection.direction = caretPos < anchor ? "backward" : "forward"
+                    }
+                    console.log(caretPos < anchor, this.selection.direction)
+                }
+
+            } else {
+                //
+                // DOWN KEY
+                //
+
+                if (this.selection.direction === "backward") {
+                    focusPos = this.selection.start  
+                    anchor = this.selection.end      
+                } else {
+                    anchor = this.selection.start    
+                    focusPos = this.selection.end
+                }
+                const pos = this.convertIndexToPos(focusPos, 2)
+                let caretPos = this.caretGetPositionFromSVGCoordinate(this.selectedNode, pos)
+
+                if (caretPos) {
+                    // caretPos += 1
+                    if (!event.shiftKey) {
+                        this.inputElement.selectionEnd = caretPos
+                        this.inputElement.selectionStart = caretPos  // caret bij end (omlaag)
+                        this.selection.direction = "none"
+                    } else {
+                        this.inputElement.selectionStart = Math.min(caretPos, focusPos)
+                        this.inputElement.selectionEnd = Math.max(caretPos, focusPos)
+                        this.selection.direction = caretPos > focusPos ? "forward" : "backward"
+                    }
+                }
+            }
+        }
+
+        
+        window.requestAnimationFrame(() => {
+            if (!this.inputElement) return
+            this.selection.start = this.inputElement.selectionStart as number
+            this.selection.end = this.inputElement.selectionEnd as number
+            this.selection.direction = this.inputElement.selectionDirection || "none"
+        
+            //
+            // 3. Update SVG selection
+            //
+            this.updateSVGSelection()
+            this.updateSVGCaretPosition()
+        })
     }
     
     private onKeyUp = (fec: FlowchartEventContext) => {
@@ -495,45 +568,62 @@ export class EditNodeTextTool extends FlowchartTool {
             }
         }
 
-        // if (typeof this.inputElement.selectionStart === "number") {
-        //     this.selection.start = this.inputElement.selectionStart
-        // }
-        
-        // if (typeof this.inputElement.selectionEnd === "number") {
-        //     this.selection.end = this.inputElement.selectionEnd
-        // }
-
-        // First check if element is focused, if not, focus it (can happen when user clicks outside the window and back in)
-        
-
-        this.selection.start = this.inputElement.selectionStart as number
-        this.selection.end = this.inputElement.selectionEnd as number
-
-        this.updateSelection()
+        ///////////////////////////////////////////////////////////////////////
+        //                                                                   //
+        //   NO SELECTION UPDATE SINCE THAT IS ALREADY HANDLED IN KEYDOWN    //
+        //                                                                   //
+        ///////////////////////////////////////////////////////////////////////
     }
     
     private onDoubleClick = (fec: FlowchartEventContext) => {  
         if (!this.state.active) return
         if (!this.selectedNode) return
         if (!this.inputElement) return
+        
+        // Disable default double-click behavior (text selection)
         const mouseEvent = fec.originalEvent as MouseEvent
         mouseEvent.preventDefault()  // prevent browser native word selection
-
+        
+        // Escape method if there's no text at the clicked position
         const v = this.getWordAtIndex(this.inputElement.value, this.selection.start)
         if (!v) return
         
-        this.selection.start = v.start
-        this.selection.end = v.end
-        this.selection.direction = "forward"
+        //
+        // 1. Set focus to input element
+        //
+        this.inputElement.focus()
+        
 
-        this.updateSelection()
+        //
+        // 2. Update selection state
+        //
+        window.requestAnimationFrame(() => {
+            if (!this.inputElement) return
+
+            this.selection.start = v.start
+            this.selection.end = v.end
+            this.selection.direction = "forward"
+            
+            // Update the actual selection input
+            this.inputElement.setSelectionRange(this.selection.start, this.selection.end, this.selection.direction)
+            
+            //
+            // 3. Update SVG selection
+            //
+            this.updateSVGSelection()
+            this.updateSVGCaretPosition()
+        })
     }
 
     private onMouseDown = (fec: FlowchartEventContext) => {  
         if (!this.state.active) return
         const mousePos = this.flowchart.events.mousePos
-        const selectedNode = this.flowchart.nodes.find(node => node.shape.containsPoint(mousePos))
         
+        const e = fec.originalEvent as MouseEvent
+        e.preventDefault()
+        
+        const selectedNode = this.flowchart.nodes.find(node => node.shape.containsPoint(mousePos))
+
         if (this.selectedNode !== selectedNode && typeof selectedNode !== "undefined") {
             selectedNode.state.selected = false
             this.deselectNode()
@@ -550,21 +640,57 @@ export class EditNodeTextTool extends FlowchartTool {
         
         this.selectedNode = this.selectNode(selectedNode)
 
+        
+        //
+        // 1. Set focus to input element
+        //
         if (this.inputElement) {
             this.inputElement.focus()
         }
         
+
+        //
+        // 2. Update selection state
+        //
         const caretPos = this.caretGetPositionFromSVGCoordinate(this.selectedNode, mousePos)
         if (typeof caretPos === "number") {
-            this.selection.start = caretPos
-            this.selection.end = caretPos
+            if (e.shiftKey) {
+                const anchor = this.selection.start  // start = anchor, unchanged
+                if (caretPos < anchor) {
+                    this.selection.start     = caretPos
+                    this.selection.end       = anchor
+                    this.selection.direction = "backward"
+                } else if (caretPos > anchor) {
+                    this.selection.start     = anchor
+                    this.selection.end       = caretPos
+                    this.selection.direction = "forward"
+                } else {
+                    this.selection.direction = "none"
+                }
+            } else {
+                this.selection.start     = caretPos
+                this.selection.end       = caretPos
+                this.selection.direction = "none"
+                this.startMouseCaretPos  = caretPos  // ← only reset anchor on plain click
+            }
         }
 
-        this.selection.direction = "none"
 
-        this.updateInputSelection()
+
         window.requestAnimationFrame(() => {
-            this.updateSelection()
+            // 
+            // 3. Update the actual selection input
+            //
+            if (!this.inputElement) return
+            this.inputElement.setSelectionRange(this.selection.start, this.selection.end, this.selection.direction)
+            
+            //
+            // 4. Update SVG
+            //
+            window.requestAnimationFrame(() => {
+                this.updateSVGSelection()
+                this.updateSVGCaretPosition()
+            })
         })
     }
 
@@ -575,24 +701,59 @@ export class EditNodeTextTool extends FlowchartTool {
         const selectedNode = this.flowchart.nodes.find(node => node.shape.containsPoint(mousePos))
         this.state.mouseY = mousePos.y
 
-        if (this.flowchart.events.mouseDown) {
-            e.preventDefault()
-
-            if (this.selectedNode) {
-                const caretPos = this.caretGetPositionFromSVGCoordinate(this.selectedNode, mousePos)
-                if (typeof caretPos === "number") {
-                    this.selection.end = caretPos
-                }
-            }
-
-
-            this.updateInputSelection()
-            this.updateSelection()
-        }
 
         if (selectedNode) {
             fec.stopPropagation()
         }
+
+        if (!this.flowchart.events.mouseDown)  return
+        if (!this.selectedNode)  return
+
+        e.preventDefault()
+
+        
+        //
+        // 1. Set focus to input element
+        //
+        if (this.inputElement) {
+            this.inputElement.focus()
+        }
+        
+
+        //
+        // 2. Update selection state
+        //
+        const caretPos = this.caretGetPositionFromSVGCoordinate(this.selectedNode, mousePos)
+        if (typeof caretPos === "number" && typeof this.startMouseCaretPos === "number") {
+            if (caretPos > this.startMouseCaretPos) {
+                this.selection.start = this.startMouseCaretPos
+                this.selection.end = caretPos
+                this.selection.direction = "forward"
+            } else if (caretPos < this.startMouseCaretPos) {
+                // Omgewisseld: start = huidig (focus), end = anchor
+                this.selection.start = caretPos
+                this.selection.end = this.startMouseCaretPos
+                this.selection.direction = "backward"
+            } else {
+                this.selection.start = caretPos
+                this.selection.end = caretPos
+                this.selection.direction = "none"
+            }
+        }
+
+        window.requestAnimationFrame(() => {
+            // 
+            // 3. Update the actual selection input
+            //
+            if (!this.inputElement) return
+            this.inputElement.setSelectionRange(this.selection.start, this.selection.end, this.selection.direction)
+            
+            //
+            // 4. Update SVG
+            //
+            this.updateSVGSelection()
+            this.updateSVGCaretPosition()
+        })
     }
     
     private onNodeAdded = (fec: FlowchartEventContext) => {
