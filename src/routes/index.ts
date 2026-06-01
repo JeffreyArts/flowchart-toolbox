@@ -29,7 +29,6 @@ import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
 import Cytoscape from "./cytoscape.vue"
 import ShapeOutside from "./shape-outside.vue"
-import path from "path"
 
 const routes = [
     {
