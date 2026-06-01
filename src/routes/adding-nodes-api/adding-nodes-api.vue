@@ -444,7 +444,6 @@ export default defineComponent ({
 
                 const mouseMove = this.flowchart.addNode("start", {
                     text: "On Mouse Move",
-                    flowchart: this.flowchart,
                     x: 480 * 2,
                     y: "50",
                     options: { maxWidth: 320 }
