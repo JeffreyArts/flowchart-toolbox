@@ -27,7 +27,8 @@ export class EditNodeTextTool extends FlowchartTool {
     state = {
         active: true,
         mouseY: 0,
-        activeTextSelection: false
+        activeTextSelection: false,
+        caretStartPos: undefined as { x: number, y: number } | undefined,
     }
 
     private selection = { 
@@ -482,8 +483,20 @@ export class EditNodeTextTool extends FlowchartTool {
                 anchor = this.selection.end
             }
 
-            const pos1 = this.convertIndexToPos(anchor, yOffset)
+            if (!this.state.caretStartPos) {
+                this.state.caretStartPos = this.convertIndexToPos(anchor, 0)
+            }
+
+            let pos1 = this.convertIndexToPos(anchor, yOffset)
             const pos2 = this.convertIndexToPos(focusPos, yOffset)
+
+            if (this.state.caretStartPos) {
+                const tmp = this.caretGetPositionFromSVGCoordinate(this.selectedNode, { x: this.state.caretStartPos.x, y: pos1.y })
+                if (typeof tmp === "number") {
+                    pos1 = this.convertIndexToPos(tmp, yOffset)
+                }
+            }
+
             const caretPos = this.caretGetPositionFromSVGCoordinate(this.selectedNode, { x: pos1.x, y: pos2.y })
 
             if (typeof caretPos === "number") {
@@ -533,7 +546,9 @@ export class EditNodeTextTool extends FlowchartTool {
                     )
                 })
             }
-        } 
+        } else if (event.key !== "shift" && event.key !== "Meta" && event.key !== "Control" && event.key !== "Alt") {
+            this.state.caretStartPos = undefined
+        }
         // if (event.key === "ArrowDown") {
         //     //
         //     // Down KEY
@@ -670,6 +685,7 @@ export class EditNodeTextTool extends FlowchartTool {
     private onMouseDown = (fec: FlowchartEventContext) => {  
         if (!this.state.active) return
         const mousePos = this.flowchart.events.mousePos
+        this.state.caretStartPos = undefined
         
         const e = fec.originalEvent as MouseEvent
         const target = e.target as HTMLElement
