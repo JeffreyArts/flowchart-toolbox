@@ -35,7 +35,6 @@ export default class Joffa extends Flowchart {
         
         // Default tools
         this.register("tool","zoom", ZoomTool)
-        this.register("tool","move-node", MoveNodeTool)
         this.register("tool","add-node", AddNodeTool, { 
             segments: 16, 
             smartNodes: {
@@ -50,6 +49,7 @@ export default class Joffa extends Flowchart {
         this.register("tool","edit-node-text", EditNodeTextTool, {
             selectionColor: "#58f208",
         })
+        this.register("tool","move-node", MoveNodeTool) // This should be added AFTER edit-node-text so they won't collide with each other
         
         // Default Nodes
         this.register("node", "process", ProcessNode, { shape: { class: "▭" }})

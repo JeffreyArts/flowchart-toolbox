@@ -26,7 +26,8 @@ export class EditNodeTextTool extends FlowchartTool {
 
     state = {
         active: true,
-        mouseY: 0
+        mouseY: 0,
+        activeTextSelection: false
     }
 
     private selection = { 
@@ -57,8 +58,9 @@ export class EditNodeTextTool extends FlowchartTool {
 
         this.flowchart.events.add("nodeAdded", this.onNodeAdded)
         this.flowchart.events.add("doubleClick", this.onDoubleClick)
-        this.flowchart.events.add("mouseDown", this.onMouseDown, -1)
-        this.flowchart.events.add("mouseMove", this.onMouseMove, -1)
+        this.flowchart.events.add("mouseDown", this.onMouseDown)
+        this.flowchart.events.add("mouseUp", this.onMouseUp)
+        this.flowchart.events.add("mouseMove", this.onMouseMove)
         this.flowchart.events.add("keyDown", this.onKeyDown)
         this.flowchart.events.add("keyUp", this.onKeyUp)
     }
@@ -424,7 +426,6 @@ export class EditNodeTextTool extends FlowchartTool {
         const node = this.selectedNode
         const caret = this.convertIndexToPos()
 
-        console.log("updateSVGCaretPosition",this.selection.direction, this.selection.start, this.selection.end, caret)
         const textEl = this.flowchart.chart.querySelector(`[id="${node.id}"] text`) as SVGTextElement | null
         const fontSize = parseFloat(getComputedStyle(textEl ?? node.svgGroup).fontSize) || 16
 
@@ -687,9 +688,17 @@ export class EditNodeTextTool extends FlowchartTool {
         const mousePos = this.flowchart.events.mousePos
         
         const e = fec.originalEvent as MouseEvent
+        const target = e.target as HTMLElement
         e.preventDefault()
         
         const selectedNode = this.flowchart.nodes.find(node => node.shape.containsPoint(mousePos))
+        
+        // Escape when clicking outside of the text-area of the node
+        if (target && (!target.classList.contains("flowchart-shape-text") && !target.closest(".flowchart-shape-text"))) {
+            return 
+        }
+        
+        this.state.activeTextSelection = true
 
         if (this.selectedNode !== selectedNode && typeof selectedNode !== "undefined") {
             selectedNode.state.selected = false
@@ -761,15 +770,19 @@ export class EditNodeTextTool extends FlowchartTool {
         })
     }
 
+    private onMouseUp = () => {
+        if (!this.state.active) return
+        this.state.activeTextSelection = false
+    }   
+
     private onMouseMove = (fec: FlowchartEventContext) => {
         if (!this.state.active) return
         const e = fec.originalEvent as MouseEvent
         const mousePos = this.flowchart.events.mousePos
-        const selectedNode = this.flowchart.nodes.find(node => node.shape.containsPoint(mousePos))
+        
         this.state.mouseY = mousePos.y
 
-
-        if (selectedNode) {
+        if (this.state.activeTextSelection) {
             fec.stopPropagation()
         }
 
@@ -790,21 +803,23 @@ export class EditNodeTextTool extends FlowchartTool {
         //
         // 2. Update selection state
         //
-        const caretPos = this.caretGetPositionFromSVGCoordinate(this.selectedNode, mousePos)
-        if (typeof caretPos === "number" && typeof this.startMouseCaretPos === "number") {
-            if (caretPos > this.startMouseCaretPos) {
-                this.selection.start = this.startMouseCaretPos
-                this.selection.end = caretPos
-                this.selection.direction = "forward"
-            } else if (caretPos < this.startMouseCaretPos) {
-                // Omgewisseld: start = huidig (focus), end = anchor
-                this.selection.start = caretPos
-                this.selection.end = this.startMouseCaretPos
-                this.selection.direction = "backward"
-            } else {
-                this.selection.start = caretPos
-                this.selection.end = caretPos
-                this.selection.direction = "none"
+        if (this.state.activeTextSelection) {
+            const caretPos = this.caretGetPositionFromSVGCoordinate(this.selectedNode, mousePos)
+            if (typeof caretPos === "number" && typeof this.startMouseCaretPos === "number") {
+                if (caretPos > this.startMouseCaretPos) {
+                    this.selection.start = this.startMouseCaretPos
+                    this.selection.end = caretPos
+                    this.selection.direction = "forward"
+                } else if (caretPos < this.startMouseCaretPos) {
+                    // Omgewisseld: start = huidig (focus), end = anchor
+                    this.selection.start = caretPos
+                    this.selection.end = this.startMouseCaretPos
+                    this.selection.direction = "backward"
+                } else {
+                    this.selection.start = caretPos
+                    this.selection.end = caretPos
+                    this.selection.direction = "none"
+                }
             }
         }
 
@@ -813,7 +828,9 @@ export class EditNodeTextTool extends FlowchartTool {
             // 3. Update the actual selection input
             //
             if (!this.inputElement) return
-            this.inputElement.setSelectionRange(this.selection.start, this.selection.end, this.selection.direction)
+            if (this.state.activeTextSelection) {
+                this.inputElement.setSelectionRange(this.selection.start, this.selection.end, this.selection.direction)
+            }
             
             //
             // 4. Update SVG
