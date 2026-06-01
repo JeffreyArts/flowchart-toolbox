@@ -63,7 +63,7 @@ export type FlowchartNodeTextBox = {
 export class FlowchartNode {
     prevTextHelper = undefined as TextHelper | undefined
     id: string = crypto.randomUUID()
-    type: string
+    // type: string
     shape: FlowchartShape
     flowchart: Flowchart | null = null
     children: FlowchartNode[] = []
@@ -154,6 +154,7 @@ export class FlowchartNode {
         }
     })
 
+    private _type = ""
     private _x = "0"
     private _y = "0"
     private _text = ""
@@ -168,7 +169,7 @@ export class FlowchartNode {
             throw new Error("FlowchartNode must be initialized with a flowchart reference in options or by adding a parent with a flowchart reference")
         }
 
-        const matchedType = this.flowchart.registered.nodes.find(node => node.type === type)
+        const matchedType = this.flowchart?.registered.nodes.find(node => node.type === type)
         if (!matchedType) {
             throw new Error(`Invalid node type: ${type}`)
         }
@@ -189,7 +190,10 @@ export class FlowchartNode {
             this.text = options.text.value
         }
 
-        this.flowchart.addNode(this)
+        if (this.flowchart) {
+            this.flowchart.addNode(this)
+        }
+        
         this.updatePosition()
 
         if (!this.flowchart.events.ignore.nodeAdded) {
@@ -563,6 +567,29 @@ export class FlowchartNode {
         this.events = this.events.filter(e => e.name !== eventName)
     }
 
+    get type(): string {
+        return this._type
+    }
+
+    set type (value: string ) {
+        this.setType(value)
+    }
+
+    private setType(type: string) {
+        if (type !== this._type && this._type !== "") {
+            const matchedType = this.flowchart?.registered.nodes.find(n => n.type === type)
+            if (!matchedType) {
+                throw new Error(`Invalid node type: ${type}`)
+            }
+            console.log("matchedType", matchedType, this._type)
+            if (this.flowchart) {
+                this.flowchart.replaceNode(this, new FlowchartNode(type, { ...matchedType.options, flowchart: this.flowchart }))
+            }
+        }
+        console.log("set type", type)
+
+        this._type = type
+    }
     /** Position & dimensions **/
     get x(): number {
         return parseFloat(this._x)
