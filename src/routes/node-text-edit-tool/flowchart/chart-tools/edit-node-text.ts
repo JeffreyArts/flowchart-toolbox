@@ -75,23 +75,7 @@ export class EditNodeTextTool extends FlowchartTool {
             Object.assign(this.options, options)
         }
     }
-
-    private updateInputSelection() {
-        if (!this.inputElement) return
-
-        this.inputElement.setSelectionRange(this.selection.start, this.selection.end, this.selection.direction)
-            
-        // if (this.selection.direction == "backward") {
-        //     this.inputElement.setSelectionRange(this.selection.end, this.selection.start)
-        // } else if (this.selection.direction == "forward") {
-        //     this.inputElement.setSelectionRange(this.selection.start, this.selection.end)
-        // } else {
-        //     this.inputElement.setSelectionRange(this.selection.start, this.selection.end)
-        // }
-
-        // this.inputElement.selectionDirection = this.selection.direction
-    }
-
+    
     private selectNode(node: FlowchartNode) {
         this.selectedNode = node
         this.selectedNode.state.selected = true
