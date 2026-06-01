@@ -1,6 +1,6 @@
 
 
-import FlowchartNode, { type FlowchartNodeOptions, type FlowchartTypeMethod } from "./nodes/index"
+import FlowchartNode, { type FlowchartNodeOptions, type FlowchartTypeMethod, type FlowchartNodeConstructOptions } from "./nodes/index"
 import FlowchartEdge, { type FlowchartEdgeOptions } from "./edges/index"
 import FlowchartEvents from "./events"
 import { type DrawEdgeType } from "./edges/index"
@@ -228,8 +228,27 @@ export class Flowchart {
     // ▐▌ ▝▜▌▐▌ ▐▌▐▌  █▐▛▀▀▘ ▝▀▚▖
     // ▐▌  ▐▌▝▚▄▞▘▐▙▄▄▀▐▙▄▄▖▗▄▄▞▘
 
-    addNode(node: FlowchartNode, parent?: FlowchartNode | string) {
+    addNode(node: FlowchartNode | string, parent?: FlowchartNode | string | Partial<FlowchartNodeConstructOptions>) {
         if (!this.parentElement) return
+
+        if (typeof node === "string") {
+            const registeredNode = this.registered.nodes.find(n => n.type === node)
+            if (!registeredNode) {
+                throw new Error(`Node type "${node}" is not registered`)
+            }
+
+            let nodeOptions = {} as Partial<FlowchartNodeConstructOptions>
+            if (parent && typeof parent === "object" && !("id" in parent)) {
+                nodeOptions = { ...parent }
+                if (parent.flowchart) {
+                    delete nodeOptions.flowchart
+                    console.warn("Flowchart reference in node options is not allowed when using addNode externally and will be ignored")
+                }
+            }
+            node = new FlowchartNode(registeredNode.type, { ...registeredNode.options, ...nodeOptions, flowchart: this })
+        }
+
+
         if (parent) {
             if (typeof parent === "string") {
                 parent = this.nodes.find(n => n.id === parent) as FlowchartNode

@@ -340,18 +340,18 @@ export default defineComponent ({
                 }
 
                 this.flowchart = markRaw(new Joffa("#segments-canvas", flowchartOptions))
+                
                 let names = ["Edges", "Nodes", "Tools"]
                 let nodeWidth = 200
                 let nodes = []
-                const mouseDown = new FlowchartNode("start", {
+                const mouseDown = this.flowchart.addNode("start", {
                     text: "On Mouse Down",
-                    flowchart: this.flowchart,
                     x: 0 ,
                     y: "50",
                     options: { maxWidth: 320 }
                 })
 
-                const mouseDownDecision1 = new FlowchartNode("decision", {
+                const mouseDownDecision1 =  this.flowchart.addNode("decision", {
                     text: "If mousePos is within the node",
                     y: mouseDown.y + 250,
                     x: mouseDown.x,
@@ -359,7 +359,7 @@ export default defineComponent ({
                     options: { maxWidth: 320 }
                 })
 
-                const mouseDownDecisionYes = new FlowchartNode("process", {
+                const mouseDownDecisionYes = this.flowchart.addNode("process", {
                     text: "YES",
                     y: mouseDown.y + 450,
                     x: mouseDown.x - 250,
@@ -368,14 +368,15 @@ export default defineComponent ({
                 })
 
                 
-                new FlowchartNode("end", {
+                this.flowchart.addNode("end", {
                     text: "Set selection.start based on the index at the mouse position",
                     y: mouseDownDecisionYes.y + 150,
                     x: mouseDownDecisionYes.x - 320,
                     parent: mouseDownDecisionYes,
                     options: { maxWidth: 320 }
                 })
-                new FlowchartNode("end", {
+                
+                this.flowchart.addNode("end", {
                     text: "Create input element",
                     y: mouseDownDecisionYes.y + 300,
                     x: mouseDownDecisionYes.x - 120,
@@ -383,7 +384,7 @@ export default defineComponent ({
                     options: { maxWidth: 320 }
                 })
 
-                new FlowchartNode("end", {
+                this.flowchart.addNode("end", {
                     text: "Create SVG caret",
                     y: mouseDownDecisionYes.y + 150,
                     x: mouseDownDecisionYes.x + 80,
@@ -392,7 +393,7 @@ export default defineComponent ({
                 })
 
 
-                const MouseDownDecisionNo = new FlowchartNode("process", {
+                const MouseDownDecisionNo = this.flowchart.addNode("process", {
                     text: "NO",
                     y: mouseDown.y + 450,
                     x: mouseDown.x + 250,
@@ -401,7 +402,7 @@ export default defineComponent ({
                 })
 
 
-                new FlowchartNode("end", {
+                this.flowchart.addNode("end", {
                     text: "Remove caretEl",
                     y: MouseDownDecisionNo.y + 150,
                     x: MouseDownDecisionNo.x - 160,
@@ -409,7 +410,7 @@ export default defineComponent ({
                     options: { maxWidth: 320 }
                 })
 
-                new FlowchartNode("end", {
+                this.flowchart.addNode("end", {
                     text: "Set inputElement to undefined",
                     y: MouseDownDecisionNo.y + 320,
                     x: MouseDownDecisionNo.x - 20,
@@ -417,7 +418,7 @@ export default defineComponent ({
                     options: { maxWidth: 240 }
                 })
 
-                new FlowchartNode("end", {
+                this.flowchart.addNode("end", {
                     text: "Set selectedNode to undefined",
                     y: MouseDownDecisionNo.y + 200,
                     x: MouseDownDecisionNo.x + 120,
@@ -426,15 +427,14 @@ export default defineComponent ({
                 })
 
 
-                const mouseUp = new FlowchartNode("start", {
+                const mouseUp = this.flowchart.addNode("start", {
                     text: "On Mouse Up",
-                    flowchart: this.flowchart,
                     x: 480,
                     y: "50",
                     options: { maxWidth: 320 }
                 })
                 
-                new FlowchartNode("process", {
+                this.flowchart.addNode("process", {
                     text: "Set selection.end based on the index at the mouse position",
                     y: mouseUp.y + 150,
                     x: mouseUp.x,
@@ -442,7 +442,7 @@ export default defineComponent ({
                     options: { maxWidth: 320 }
                 })
 
-                const mouseMove = new FlowchartNode("start", {
+                const mouseMove = this.flowchart.addNode("start", {
                     text: "On Mouse Move",
                     flowchart: this.flowchart,
                     x: 480 * 2,
@@ -450,7 +450,7 @@ export default defineComponent ({
                     options: { maxWidth: 320 }
                 })
 
-                const mouseMoveDecision1 = new FlowchartNode("decision", {
+                const mouseMoveDecision1 = this.flowchart.addNode("decision", {
                     text: "If mouseButton is down",
                     y: mouseMove.y + 250,
                     x: mouseMove.x,
@@ -458,7 +458,7 @@ export default defineComponent ({
                     options: { maxWidth: 320 }
                 })
 
-                new FlowchartNode("process", {
+                this.flowchart.addNode("process", {
                     text: "YES: Set selection.end based on the index at the mouse position + update selection.direction",
                     y: mouseMove.y + 500,
                     x: mouseMove.x - 300,
@@ -466,7 +466,7 @@ export default defineComponent ({
                     options: { maxWidth: 320 }
                 })
 
-                new FlowchartNode("process", {
+                this.flowchart.addNode("process", {
                     text: "NO: do nothing",
                     y: mouseMove.y + 500,
                     x: mouseMove.x + 300,
