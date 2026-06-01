@@ -307,10 +307,25 @@ export class FlowchartNode {
         if (!options) return
         
         if (options.flowchart) { this.flowchart = options.flowchart}
-        if (options.parent) { this.addParent(options.parent) }
         if (options.x) { this.setX(options.x) }
         if (options.y) { this.setY(options.y) }
         if (options.class) { this.updateOptionClass(options.class) }
+        
+        
+        // Check if options.parent is already a parent to avoid duplicate connections
+        if (options.parent) { 
+            if (Array.isArray(options.parent)) {
+                options.parent.forEach(parent => {
+                    if (!this.parents.includes(parent)) {
+                        this.addParent(parent)
+                    }
+                })
+            } else {
+                if (!this.parents.includes(options.parent)) {
+                    this.addParent(options.parent)
+                }
+            }
+        }
         
         // First load options from FLOWCHART DEFAULTS
         const flowchartNodeOptions = this.flowchart?.options.nodes
