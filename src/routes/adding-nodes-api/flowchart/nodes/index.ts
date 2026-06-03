@@ -155,6 +155,7 @@ export class FlowchartNode {
     })
 
     private _type = ""
+    private _typeChange = false
     private _x = "0"
     private _y = "0"
     private _text = ""
@@ -572,21 +573,31 @@ export class FlowchartNode {
     }
 
     set type (value: string ) {
+
         this.setType(value)
     }
 
     private setType(type: string) {
+        
         if (type !== this._type && this._type !== "") {
+            // Prevent type trigger by replaceNode method
+            if (this._typeChange) {
+                this._typeChange = false
+                return
+            }
+
             const matchedType = this.flowchart?.registered.nodes.find(n => n.type === type)
             if (!matchedType) {
                 throw new Error(`Invalid node type: ${type}`)
             }
-            console.log("matchedType", matchedType, this._type)
             if (this.flowchart) {
-                this.flowchart.replaceNode(this, new FlowchartNode(type, { ...matchedType.options, flowchart: this.flowchart }))
+                // Code below is the problem
+                // No idea yet why though
+                // this.flowchart.replaceNode(this, new FlowchartNode(type, { ...matchedType.options, flowchart: this.flowchart }))
+                this._typeChange = true
             }
         }
-        console.log("set type", type)
+        console.log("set type", this.id, type)
 
         this._type = type
     }
@@ -624,34 +635,48 @@ export class FlowchartNode {
     }
 
     /** Parents */
-    addParent(node: FlowchartNode | FlowchartNode[]) {
-        if (Array.isArray(node)) {
-            node.forEach(n => this.addParent(n))
+    addParent(parentNode: FlowchartNode | FlowchartNode[]) {
+
+        if (Array.isArray(parentNode)) {
+            parentNode.forEach(n => this.addParent(n))
             return
         }
 
-        if (this.parents.find(n => n.id === node.id)) {
-            console.warn(`Node with id "${node.id}" is already a parent of node with id "${this.id}", skipping connection`)
+        if (this.parents.find(n => n.id === parentNode.id)) {
+            // console.warn(`Node with id "${parentNode.id}" is already a parent of node with id "${this.id}", skipping connection`)
             return
+        } else {
+            this.parents.push(parentNode)
         }
         
-        if (!this.flowchart && node.flowchart) {
-            this.flowchart = node.flowchart
+        if (!this.flowchart && parentNode.flowchart) {
+            this.flowchart = parentNode.flowchart
             this.flowchart.addNode(this)
         }
 
         // Create edge if both nodes are in the same flowchart
-        if (this.flowchart && node.flowchart && this.flowchart === node.flowchart) {
-            const edge = new FlowchartEdge( node, this, { ... this.flowchart.options.edges } )
+        if (this.flowchart && parentNode.flowchart && this.flowchart === parentNode.flowchart) {
+            const edge = new FlowchartEdge( parentNode, this, { ... this.flowchart.options.edges } )
             this.flowchart.addEdge(edge)   
         }
     }
 
     removeParent(node: FlowchartNode | string) {
+        let removedNode = null
+        let nodeId = undefined as string | undefined
         if (typeof node === "string") {
-            this.parents = this.parents.filter(n => n.id !== node)
+            nodeId = node
         } else {
-            this.parents = this.parents.filter(n => n.id !== node.id)
+            nodeId = node.id
+        }
+        removedNode = this.parents.find(n => n.id === nodeId) || null
+        this.parents = this.parents.filter(n => n.id !== nodeId)
+
+        if (removedNode && this.flowchart) {
+            const edgeToRemove = this.flowchart.edges.find(e => e.startNode.id === nodeId && e.endNode.id === this.id)
+            if (edgeToRemove) {
+                this.flowchart.removeEdge(edgeToRemove)
+            }
         }
     }
 

@@ -14,7 +14,7 @@ export type AddNodeToolOptions = {
     disableOnSelect: boolean,
     smartNodes?: {
         start: string
-        normal: string
+        process: string
         decision: string
         end: string
     }
@@ -75,61 +75,66 @@ export class AddNodeTool extends FlowchartTool {
             if (!this.options.smartNodes.decision) { 
                 console.warn("AddNodeTool: smartNodes option is missing 'decision' type. Could cause problems")
             }
-            if (!this.options.smartNodes.normal) {
-                console.warn("AddNodeTool: smartNodes option is missing 'normal' type. Could cause problems")
+            if (!this.options.smartNodes.process) {
+                console.warn("AddNodeTool: smartNodes option is missing 'process' type. Could cause problems")
             }
         }
     }
     
+    public getSmartNodeType(node: FlowchartNode): string {
+        const parentCount = node.parents.length
+        const childCount = node.children.length
+        console.log("Determining smart node type for node with", parentCount, "parents and", childCount, "children")
+        console.log("Start:", parentCount === 0 && childCount <= 1)
+        console.log("Process:", parentCount > 0 && childCount === 1)
+        console.log("Decision:", parentCount > 0 && childCount > 0)
+        console.log("End:", parentCount > 0 && childCount === 0)
+        // Do not change type if smartNodes are not enabled
+        if (!this.options.smartNodes) {
+            return node.type
+        }
+
+        if (parentCount === 0 && childCount <= 1) {
+            if (this.options.smartNodes.start) {
+                return this.options.smartNodes.start
+            }
+        } else if (parentCount > 0 && childCount === 1) {
+            if (this.options.smartNodes.process) {
+                return this.options.smartNodes.process
+            }
+        } else if (parentCount >= 0 && childCount >= 2 ) {
+            if (this.options.smartNodes.decision) {
+                return this.options.smartNodes.decision
+            }
+        } else if (parentCount > 0 ) {
+            if (this.options.smartNodes.end) {
+                return this.options.smartNodes.end
+            }
+        }
+        
+        return this.options.defaultNodeType
+    }
+
     private addNewNode() {
         if (!this.state.selectedNode) return
         const mousePos = this.flowchart.events.mousePos
         const borderDistance = this.state.selectedNode.calculateEdgeStart(mousePos, this.options.defaultDistance)
 
-        const newNode = new FlowchartNode(this.options.defaultNodeType, {
+
+        const newNodeOptions = {
             text: "New node",
-            parent: this.state.selectedNode,
+            flowchart: this.flowchart,
             x: borderDistance.x,
             y: borderDistance.y,
-            options: { maxWidth: 200 }
-        })
+            parent: this.state.selectedNode,
+            options: { ...{ maxWidth: 200 }, ...this.state.selectedNode.options }
+        }   
+            
+        const newNode = new FlowchartNode(this.options.defaultNodeType, newNodeOptions)
+        newNode.type = this.getSmartNodeType(newNode)
+
         this.flowchart.addNode(newNode)
-
-
-
-        if (this.options.smartNodes) {
-            const parentCount = this.state.selectedNode.parents.length
-            const childCount = this.state.selectedNode.children.length
-            const newNodeOptions = {
-                flowchart: this.flowchart,
-                x: this.state.selectedNode.x,
-                y: this.state.selectedNode.y,
-                options: this.state.selectedNode.options
-            }
-            let newNodeType = this.options.defaultNodeType
-            let addNode = false
-
-            if (parentCount === 0 && this.state.selectedNode.type !== this.options.smartNodes.start) {
-                if (this.options.smartNodes.start) {
-                    newNodeType = this.options.smartNodes.start
-                }
-                addNode = true
-            } else if (childCount === 1 && parentCount > 0 && this.state.selectedNode.type !== this.options.smartNodes.normal) {
-                if (this.options.smartNodes.normal) {
-                    newNodeType = this.options.smartNodes.normal
-                }
-                addNode = true
-            } else if (childCount > 1 && parentCount > 0 && this.state.selectedNode.type !== this.options.smartNodes.decision) {
-                if (this.options.smartNodes.decision) {
-                    newNodeType = this.options.smartNodes.decision
-                }
-                addNode = true
-            }
-
-            if (addNode) {
-                this.flowchart.replaceNode(this.state.selectedNode, new FlowchartNode(newNodeType, newNodeOptions))
-            }
-        }
+        this.state.selectedNode.type = this.getSmartNodeType(this.state.selectedNode)
         
         if (this.options.autoFit) {
             const zoomTool = this.flowchart.getTool("zoom") as unknown as ZoomTool | undefined

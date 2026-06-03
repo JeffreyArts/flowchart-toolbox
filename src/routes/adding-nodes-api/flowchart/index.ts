@@ -1,8 +1,7 @@
-
-
 import FlowchartNode, { type FlowchartNodeOptions, type FlowchartTypeMethod, type FlowchartNodeConstructOptions } from "./nodes/index"
 import FlowchartEdge, { type FlowchartEdgeOptions } from "./edges/index"
 import FlowchartEvents from "./events"
+import { type AddNodeTool } from "./chart-tools/add-node"
 import { type DrawEdgeType } from "./edges/index"
 import { type FlowchartTool } from "./chart-tools/index"
 import { SelectTool } from "./chart-tools/select-node"
@@ -228,6 +227,35 @@ export class Flowchart {
     // ▐▌ ▝▜▌▐▌ ▐▌▐▌  █▐▛▀▀▘ ▝▀▚▖
     // ▐▌  ▐▌▝▚▄▞▘▐▙▄▄▀▐▙▄▄▖▗▄▄▞▘
 
+    add(nodeOptions: Partial<FlowchartNodeConstructOptions>) {
+        let nodeType =  "default"
+        
+        if (this.registered.nodes.length === 0) {
+            throw new Error("No node types registered. Please register at least one node type before adding nodes.")
+        }
+
+        // Select first registered node if default node type is not registered
+        if (this.registered.nodes.filter(n => n.type === nodeType).length === 0 && this.registered.nodes[0]) {
+            nodeType = this.registered.nodes[0].type
+        }
+
+        const newNode = new FlowchartNode(nodeType, { ...nodeOptions, flowchart: this })
+        
+        const addNodeTool = this.getTool("add-node") as AddNodeTool
+        if (addNodeTool) {
+            newNode.type = addNodeTool.getSmartNodeType(newNode)
+            
+            if (newNode.parents.length > 0) {
+                newNode.parents.forEach(parent => {
+                    parent.type = addNodeTool.getSmartNodeType(parent)
+                })
+            }
+        }
+
+        return newNode
+
+    }
+
     addNode(node: FlowchartNode | string, parent?: FlowchartNode | string | Partial<FlowchartNodeConstructOptions>) {
         if (!this.parentElement) return
 
@@ -326,9 +354,8 @@ export class Flowchart {
                 childNode.addParent(newNode)
             })
         }
-
-        newNode.options.segments = oldNode.options.segments
-        newNode.options.maxWidth = oldNode.options.maxWidth
+        
+        newNode.options = { ...newNode.options, ...oldNode.options }
         newNode.x = oldNode.x
         newNode.y = oldNode.y
         newNode.text = oldNode.text

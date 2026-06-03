@@ -39,7 +39,7 @@ export default class Joffa extends Flowchart {
             segments: 16, 
             smartNodes: {
                 start: "start",
-                normal: "process",
+                process: "process",
                 decision: "decision",
                 end: "end",
             }
