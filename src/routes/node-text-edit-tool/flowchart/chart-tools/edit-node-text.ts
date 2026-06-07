@@ -637,6 +637,10 @@ export class EditNodeTextTool extends FlowchartTool {
             }
         }
 
+        // Update caret + selection SVG
+        this.updateSVGCaretPosition()
+        this.updateSVGSelection()
+
         ///////////////////////////////////////////////////////////////////////
         //                                                                   //
         //   NO SELECTION UPDATE SINCE THAT IS ALREADY HANDLED IN KEYDOWN    //
