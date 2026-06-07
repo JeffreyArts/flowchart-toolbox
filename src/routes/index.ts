@@ -25,6 +25,7 @@ import ResizeNode from "./resize-node/resize-node.vue"
 import ToolOptions from "./tool-options/tool-options.vue"
 import NodeTextEditTool from "./node-text-edit-tool/node-text-edit-tool.vue"
 import AddingNodesApi from "./adding-nodes-api/adding-nodes-api.vue"
+import AddingNodesApiV2 from "./adding-nodes-api-v2/adding-nodes-api-v2.vue"
 import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
 import Cytoscape from "./cytoscape.vue"
@@ -177,10 +178,15 @@ const routes = [
         component: AddingNodesApi
     },
     {
+        path: "/adding-nodes-api-v2",
+        name: "28) Add options.parents on Node",
+        component: AddingNodesApiV2
+    },
+    {
         path: "/options-overview",
         name: "Options overview",
         component: OptionsOverview
-    },
+    }
 ]
 
 
