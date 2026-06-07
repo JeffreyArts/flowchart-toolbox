@@ -185,12 +185,6 @@ export class FlowchartNode {
         this.parseShapeOptions(options)
         this.parseTextOptions(options)
 
-        if (typeof options.text === "string") {
-            this.text = options.text
-        } else if (typeof options.text === "object" && typeof options.text.value === "string") {
-            this.text = options.text.value
-        }
-
         if (this.flowchart) {
             this.flowchart.addNode(this)
         }
@@ -260,6 +254,12 @@ export class FlowchartNode {
                     this.shape.textEl.classList.add(options.text.class)
                 }
             }
+        }
+
+        if (typeof options.text === "string") {
+            this.text = options.text
+        } else if (typeof options.text === "object" && typeof options.text.value === "string") {
+            this.text = options.text.value
         }
     }
 
@@ -532,6 +532,25 @@ export class FlowchartNode {
         this.updatePosition(false)
     }
 
+    private replaceShape(matchedType: { type: string, shape: FlowchartTypeMethod, options?: Partial<FlowchartNodeOptions> }) {
+        // Clear old SVG element
+        this.svgGroup.innerHTML = ""
+
+        // Create new shape
+        const newShape = matchedType.shape(this)
+        this.shape = newShape
+
+        // Update text to match original style
+        this.parseTextOptions({
+            text: {
+                style: this.textBox.style,
+                class: this.textBox.class,
+                value: this.text
+            }
+        })
+        this.updateTextBox()
+    }
+
     // █████▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄    ▄▄  ▄▄▄▄ 
     // ██▄▄█▀ ██ ██ ██▄██ ██    ██ ██▀▀▀ 
     // ██     ▀███▀ ██▄█▀ ██▄▄▄ ██ ▀████  
@@ -591,9 +610,7 @@ export class FlowchartNode {
                 throw new Error(`Invalid node type: ${type}`)
             }
             if (this.flowchart) {
-                // Code below is the problem
-                // No idea yet why though
-                // this.flowchart.replaceNode(this, new FlowchartNode(type, { ...matchedType.options, flowchart: this.flowchart }))
+                this.replaceShape(matchedType)
                 this._typeChange = true
             }
         }

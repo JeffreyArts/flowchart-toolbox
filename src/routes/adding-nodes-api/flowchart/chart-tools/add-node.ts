@@ -84,11 +84,7 @@ export class AddNodeTool extends FlowchartTool {
     public getSmartNodeType(node: FlowchartNode): string {
         const parentCount = node.parents.length
         const childCount = node.children.length
-        console.log("Determining smart node type for node with", parentCount, "parents and", childCount, "children")
-        console.log("Start:", parentCount === 0 && childCount <= 1)
-        console.log("Process:", parentCount > 0 && childCount === 1)
-        console.log("Decision:", parentCount > 0 && childCount > 0)
-        console.log("End:", parentCount > 0 && childCount === 0)
+        
         // Do not change type if smartNodes are not enabled
         if (!this.options.smartNodes) {
             return node.type
