@@ -345,172 +345,19 @@ export default defineComponent ({
                 let nodeWidth = 200
                 let nodes = []
                 const mouseDown = this.flowchart.add({
-                    text: "On Mouse Down",
+                    text: "Start node",
                     x: 0 ,
                     y: 50,
                     options: { maxWidth: 320 }
                 })
                 this.flowchart.add({
-                    text: "On Mouse Down",
+                    text: "Add new child nodes by clicking on the + button around a node",
                     x: -400,
                     parent: mouseDown,
                     y: 250,
                     options: { maxWidth: 320 }
                 })
-
-                this.flowchart.add({
-                    text: "On Mouse Down",
-                    x: -200,
-                    parent: mouseDown,
-                    y: 250,
-                    options: { maxWidth: 320 }
-                })
-                // this.flowchart.addNode("process",{
-                //     text: "On Mouse Down",
-                //     x: -200,
-                //     parent: mouseDown,
-                //     y: 250,
-                //     options: { maxWidth: 320 }
-                // })
-                // this.flowchart.add({
-                //     text: "On Mouse Down",
-                //     x: 0,
-                //     parent: mouseDown,
-                //     y: 250,
-                //     options: { maxWidth: 320 }
-                // })
-
-                // const mouseDownDecision1 =  this.flowchart.add({
-                //     text: "If mousePos is within the node",
-                //     y: mouseDown.y + 250,
-                //     x: mouseDown.x,
-                //     parent: mouseDown,
-                //     options: { maxWidth: 320 }
-                // })
-
-                // const mouseDownDecisionYes = this.flowchart.add({
-                //     text: "YES",
-                //     y: mouseDown.y + 450,
-                //     x: mouseDown.x - 250,
-                //     parent: mouseDownDecision1,
-                //     options: { maxWidth: 320 }
-                // })
-
                 
-                // this.flowchart.add({
-                //     text: "Set selection.start based on the index at the mouse position",
-                //     y: mouseDownDecisionYes.y + 150,
-                //     x: mouseDownDecisionYes.x - 320,
-                //     parent: mouseDownDecisionYes,
-                //     options: { maxWidth: 320 }
-                // })
-                
-                // this.flowchart.add({
-                //     text: "Create input element",
-                //     y: mouseDownDecisionYes.y + 300,
-                //     x: mouseDownDecisionYes.x - 120,
-                //     parent: mouseDownDecisionYes,
-                //     options: { maxWidth: 320 }
-                // })
-
-                // this.flowchart.add({
-                //     text: "Create SVG caret",
-                //     y: mouseDownDecisionYes.y + 150,
-                //     x: mouseDownDecisionYes.x + 80,
-                //     parent: mouseDownDecisionYes,
-                //     options: { maxWidth: 320 }
-                // })
-
-                // this.flowchart.add({
-                //     text: "Create SVG caret",
-                //     y: mouseDownDecisionYes.y + 150,
-                //     x: mouseDownDecisionYes.x + 80,
-                //     parent: mouseDownDecisionYes,
-                //     options: { maxWidth: 320 }
-                // })
-
-
-                // const MouseDownDecisionNo = this.flowchart.add({
-                //     text: "NO",
-                //     y: mouseDown.y + 450,
-                //     x: mouseDown.x + 250,
-                //     parent: mouseDownDecision1,
-                //     options: { maxWidth: 320 }
-                // })
-
-
-                // this.flowchart.add({
-                //     text: "Remove caretEl",
-                //     y: MouseDownDecisionNo.y + 150,
-                //     x: MouseDownDecisionNo.x - 160,
-                //     parent: MouseDownDecisionNo,
-                //     options: { maxWidth: 320 }
-                // })
-
-                // this.flowchart.add({
-                //     text: "Set inputElement to undefined",
-                //     y: MouseDownDecisionNo.y + 320,
-                //     x: MouseDownDecisionNo.x - 20,
-                //     parent: MouseDownDecisionNo,
-                //     options: { maxWidth: 240 }
-                // })
-
-                // this.flowchart.add({
-                //     text: "Set selectedNode to undefined",
-                //     y: MouseDownDecisionNo.y + 200,
-                //     x: MouseDownDecisionNo.x + 120,
-                //     parent: MouseDownDecisionNo,
-                //     options: { maxWidth: 200 }
-                // })
-
-
-                // const mouseUp = this.flowchart.add({
-                //     text: "On Mouse Up",
-                //     x: 480,
-                //     y: "50",
-                //     options: { maxWidth: 320 }
-                // })
-                
-                // this.flowchart.add({
-                //     text: "Set selection.end based on the index at the mouse position",
-                //     y: mouseUp.y + 150,
-                //     x: mouseUp.x,
-                //     parent: mouseUp,
-                //     options: { maxWidth: 320 }
-                // })
-
-                // const mouseMove = this.flowchart.add({
-                //     text: "On Mouse Move",
-                //     x: 480 * 2,
-                //     y: "50",
-                //     options: { maxWidth: 320 }
-                // })
-
-                // const mouseMoveDecision1 = this.flowchart.add({
-                //     text: "If mouseButton is down",
-                //     y: mouseMove.y + 250,
-                //     x: mouseMove.x,
-                //     parent: mouseMove,
-                //     options: { maxWidth: 320 }
-                // })
-
-                // this.flowchart.add({
-                //     text: "YES: Set selection.end based on the index at the mouse position + update selection.direction",
-                //     y: mouseMove.y + 500,
-                //     x: mouseMove.x - 300,
-                //     parent: mouseMoveDecision1,
-                //     options: { maxWidth: 320 }
-                // })
-
-                // this.flowchart.add({
-                //     text: "NO: do nothing",
-                //     y: mouseMove.y + 500,
-                //     x: mouseMove.x + 300,
-                //     parent: mouseMoveDecision1,
-                //     options: { maxWidth: 320 }
-                // })
-
-
 
                 const zoomTool = this.flowchart.getTool("zoom")
                 setTimeout(() => {
