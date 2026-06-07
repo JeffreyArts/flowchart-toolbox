@@ -344,7 +344,7 @@ export default defineComponent ({
                 let names = ["Edges", "Nodes", "Tools"]
                 let nodeWidth = 200
                 let nodes = []
-                const parentA = this.flowchart.add({
+                this.flowchart.add({
                     text: "Parent A",
                     x: 0,
                     y: 0,
@@ -369,7 +369,7 @@ export default defineComponent ({
                                 x: 200 + 200,
                                 y: 150,
                                 parent: {
-                                    text: "Parent Weirdo",
+                                    text: "Parent weirdo",
                                     x: 200 + 200,
                                     y: 0,
                                 }
