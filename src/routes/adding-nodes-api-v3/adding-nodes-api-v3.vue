@@ -345,15 +345,39 @@ export default defineComponent ({
                 let nodeWidth = 200
                 let nodes = []
                 const parentA = this.flowchart.add({
-                    text: "parent A",
+                    text: "Parent A",
                     x: 0,
                     y: 0,
-                    child: [{
+                    children: [{
                         text: "Child A",
                         x: -200,
                         y: 150,
+                    },{
+                        text: "Child B",
+                        x: 200,
+                        y: 150,
+                        children: [{
+                            text: "Child B.1",
+                            x: 200-200,
+                            y: 150 + 150,
+                        },{
+                            text: "Child B.2",
+                            x: 200 + 200,
+                            y: 150 + 150,
+                            parent: {
+                                text: "Weirdo",
+                                x: 200 + 200,
+                                y: 150,
+                                parent: {
+                                    text: "Parent Weirdo",
+                                    x: 200 + 200,
+                                    y: 0,
+                                }
+                            }
+                        }]
                     }]
                 })
+                
                 
                 // const parentB = this.flowchart.add({
                 //     text: "Parent B",

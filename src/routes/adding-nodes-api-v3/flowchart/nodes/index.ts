@@ -3,6 +3,7 @@ import FlowchartEdge from "../edges/index"
 
 import TextHelper from "../shapes/text-helper"
 import type FlowchartShape from "../shapes/index"
+import type { AddNodeTool } from "../chart-tools/add-node"
 
 export type FlowchartNodeEventType = "positionChange" | "segmentsChange" | "beforeTextChange" | "afterTextChange" | "mouseOver" | "mouseEntered" | "mouseLeft" | "show" | "hide" | "dimensionChange" | "selected" | "deselected"
 export type FlowchartTypeMethod = (node: FlowchartNode) => FlowchartShape
@@ -665,19 +666,41 @@ export class FlowchartNode {
         if (this.parents.find(n => n.id === parentNode.id)) {
             // console.warn(`Node with id "${parentNode.id}" is already a parent of node with id "${this.id}", skipping connection`)
             return
-        } else {
-            this.parents.push(parentNode)
-        }
+        } 
         
         if (!this.flowchart && parentNode.flowchart) {
             this.flowchart = parentNode.flowchart
             this.flowchart.addNode(this)
         }
 
+
         // Create edge if both nodes are in the same flowchart
         if (this.flowchart && parentNode.flowchart && this.flowchart === parentNode.flowchart) {
             const edge = new FlowchartEdge( parentNode, this, { ... this.flowchart.options.edges } )
             this.flowchart.addEdge(edge)   
+        }
+
+
+        // Dynamically update type
+        if (this.flowchart) {
+            const addNodeTool = this.flowchart.getTool("add-node") as AddNodeTool
+            if (addNodeTool) {
+                console.log("Updating type for node", this.id, "based on new parent", parentNode.id)
+                parentNode.type = addNodeTool.getSmartNodeType(parentNode)
+                this.type = addNodeTool.getSmartNodeType(this)
+                
+                if (parentNode.parents.length > 0) {
+                    parentNode.parents.forEach(parent => {
+                        parent.type = addNodeTool.getSmartNodeType(parent)
+                    })
+                }
+                
+                if (parentNode.children.length > 0) {
+                    parentNode.children.forEach(child => {
+                        child.type = addNodeTool.getSmartNodeType(child)
+                    })
+                }
+            }
         }
     }
 
@@ -725,13 +748,32 @@ export class FlowchartNode {
         if (this.children.find(n => n.id === childNode.id)) {
             // console.warn(`Node with id "${childNode.id}" is already a child of node with id "${this.id}", skipping connection`)
             return
-        } else {
-            this.children.push(childNode)
-        }
+        } 
         
         if (this.flowchart && childNode.flowchart && this.flowchart === childNode.flowchart) {
             const edge = new FlowchartEdge( this, childNode, { ... this.flowchart.options.edges } )
             this.flowchart.addEdge(edge)
+        }
+
+        // Dynamically update type
+        if (this.flowchart) {
+            const addNodeTool = this.flowchart.getTool("add-node") as AddNodeTool
+            if (addNodeTool) {
+                childNode.type = addNodeTool.getSmartNodeType(childNode)
+                this.type = addNodeTool.getSmartNodeType(this)
+                
+                if (childNode.parents.length > 0) {
+                    childNode.parents.forEach(parent => {
+                        parent.type = addNodeTool.getSmartNodeType(parent)
+                    })
+                }
+                
+                if (childNode.children.length > 0) {
+                    childNode.children.forEach(child => {
+                        child.type = addNodeTool.getSmartNodeType(child)
+                    })
+                }
+            }
         }
     }
 

@@ -240,23 +240,6 @@ export class Flowchart {
         }
 
         const newNode = new FlowchartNode(nodeType, { ...nodeOptions, flowchart: this })
-        
-        const addNodeTool = this.getTool("add-node") as AddNodeTool
-        if (addNodeTool) {
-            newNode.type = addNodeTool.getSmartNodeType(newNode)
-            
-            if (newNode.parents.length > 0) {
-                newNode.parents.forEach(parent => {
-                    parent.type = addNodeTool.getSmartNodeType(parent)
-                })
-            }
-
-            if (newNode.children.length > 0) {
-                newNode.children.forEach(child => {
-                    child.type = addNodeTool.getSmartNodeType(child)
-                })
-            }
-        }
 
         return newNode
 
