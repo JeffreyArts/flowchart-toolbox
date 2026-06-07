@@ -344,25 +344,28 @@ export default defineComponent ({
                 let names = ["Edges", "Nodes", "Tools"]
                 let nodeWidth = 200
                 let nodes = []
-                const mouseDown = this.flowchart.add({
-                    text: "Start node",
+                const parentA = this.flowchart.add({
+                    text: "parent A",
                     x: 0 ,
                     y: 50,
-                    options: { maxWidth: 320 }
                 })
-                const node1 = this.flowchart.add({
-                    text: "Process node",
+                const parentB = this.flowchart.add({
+                    text: "Parent B",
                     x: 0,
                     y: 250,
-                    options: { maxWidth: 320 }
                 })
 
                 this.flowchart.add({
-                    text: "Add new child nodes by clicking on the + button around a node",
-                    x: -400,
-                    parents: [mouseDown, node1],
+                    text: "Child B",
+                    x: 800,
                     y: 150,
-                    options: { maxWidth: 320 }
+
+                    parent: {
+                        text: "Child A",
+                        x: 400,
+                        parents: [parentA, parentB],
+                        y: 150,
+                    },
                 })
                 
 
