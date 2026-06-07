@@ -381,6 +381,28 @@ export class Flowchart {
 
         startNode.children.push(endNode)
         endNode.parents.push(startNode)
+
+        // Dynamically update type
+        const flowchart = startNode.flowchart
+        if (flowchart) {
+            const addNodeTool = flowchart.getTool("add-node") as AddNodeTool
+            if (addNodeTool) {
+                endNode.type = addNodeTool.getSmartNodeType(endNode)
+                startNode.type = addNodeTool.getSmartNodeType(startNode)
+                
+                // if (startNode.parents.length > 0) {
+                //     startNode.parents.forEach(parent => {
+                //         parent.type = addNodeTool.getSmartNodeType(parent)
+                //     })
+                // }
+                
+                // if (endNode.children.length > 0) {
+                //     endNode.children.forEach(child => {
+                //         child.type = addNodeTool.getSmartNodeType(child)
+                //     })
+                // }
+            }
+        }
     }
 
     removeEdge(edge: FlowchartEdge) {
