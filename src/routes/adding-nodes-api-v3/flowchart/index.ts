@@ -390,17 +390,17 @@ export class Flowchart {
                 endNode.type = addNodeTool.getSmartNodeType(endNode)
                 startNode.type = addNodeTool.getSmartNodeType(startNode)
                 
-                // if (startNode.parents.length > 0) {
-                //     startNode.parents.forEach(parent => {
-                //         parent.type = addNodeTool.getSmartNodeType(parent)
-                //     })
-                // }
+                if (endNode.parents.length > 0) {
+                    endNode.parents.forEach(parent => {
+                        parent.type = addNodeTool.getSmartNodeType(parent)
+                    })
+                }
                 
-                // if (endNode.children.length > 0) {
-                //     endNode.children.forEach(child => {
-                //         child.type = addNodeTool.getSmartNodeType(child)
-                //     })
-                // }
+                if (startNode.children.length > 0) {
+                    startNode.children.forEach(child => {
+                        child.type = addNodeTool.getSmartNodeType(child)
+                    })
+                }
             }
         }
     }
