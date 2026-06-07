@@ -141,6 +141,12 @@ export class AddNodeTool extends FlowchartTool {
             }
         }
 
+        if (newNode.parents.length > 0) {
+            newNode.parents.forEach(parent => {
+                parent.type = this.getSmartNodeType(parent)
+            })
+        }
+
         this.removeButton()
     }
 
