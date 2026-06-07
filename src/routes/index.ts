@@ -26,6 +26,7 @@ import ToolOptions from "./tool-options/tool-options.vue"
 import NodeTextEditTool from "./node-text-edit-tool/node-text-edit-tool.vue"
 import AddingNodesApi from "./adding-nodes-api/adding-nodes-api.vue"
 import AddingNodesApiV2 from "./adding-nodes-api-v2/adding-nodes-api-v2.vue"
+import AddingNodesApiV3 from "./adding-nodes-api-v3/adding-nodes-api-v3.vue"
 import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
 import Cytoscape from "./cytoscape.vue"
@@ -181,6 +182,11 @@ const routes = [
         path: "/adding-nodes-api-v2",
         name: "28) Add options.parents on Node",
         component: AddingNodesApiV2
+    },
+    {
+        path: "/adding-nodes-api-v3",
+        name: "29) Add options.child on Node",
+        component: AddingNodesApiV3
     },
     {
         path: "/options-overview",
