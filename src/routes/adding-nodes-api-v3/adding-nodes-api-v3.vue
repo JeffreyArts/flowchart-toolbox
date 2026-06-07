@@ -346,27 +346,33 @@ export default defineComponent ({
                 let nodes = []
                 const parentA = this.flowchart.add({
                     text: "parent A",
-                    x: 0 ,
-                    y: 50,
-                })
-                const parentB = this.flowchart.add({
-                    text: "Parent B",
                     x: 0,
-                    y: 250,
-                })
-
-                this.flowchart.add({
-                    text: "Child B",
-                    x: 800,
-                    y: 150,
-
-                    parent: {
+                    y: 0,
+                    child: [{
                         text: "Child A",
-                        x: 400,
-                        parents: [parentA, parentB],
+                        x: -200,
                         y: 150,
-                    },
+                    }]
                 })
+                
+                // const parentB = this.flowchart.add({
+                //     text: "Parent B",
+                //     x: 0,
+                //     y: 250,
+                // })
+
+                // this.flowchart.add({
+                //     text: "Child B",
+                //     x: 800,
+                //     y: 150,
+
+                //     parent: {
+                //         text: "Child A",
+                //         x: 400,
+                //         parents: [parentA, parentB],
+                //         y: 150,
+                //     },
+                // })
                 
 
                 const zoomTool = this.flowchart.getTool("zoom")

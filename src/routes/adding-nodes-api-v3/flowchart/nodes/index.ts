@@ -26,7 +26,9 @@ export type FlowchartNodeEvent = { name: FlowchartNodeEventType, handler: (node:
 
 export type FlowchartNodeConstructOptions = {
     parent?: FlowchartNode | FlowchartNodeConstructOptions
-    parents?: FlowchartNode[]
+    parents?: FlowchartNode[] | FlowchartNodeConstructOptions[]
+    child?: FlowchartNode | FlowchartNodeConstructOptions
+    children?: FlowchartNode[] | FlowchartNodeConstructOptions[]
     flowchart?: Flowchart
     x?: number | string
     y?: number | string
@@ -320,12 +322,11 @@ export class FlowchartNode {
         
         
         // Check if options.parent is already a parent to avoid duplicate connections
-        if (options.parent) { 
-            this.addParent(options.parent) }
-        if (options.parents) { 
-            this.addParent(options.parents) 
-        }
-        
+        if (options.parent) { this.addParent(options.parent) }
+        if (options.parents) { this.addParent(options.parents)  }
+        if (options.child) { this.addChild(options.child) }
+        if (options.children) { this.addChild(options.children) }
+
         // First load options from FLOWCHART DEFAULTS
         const flowchartNodeOptions = this.flowchart?.options.nodes
         if (flowchartNodeOptions) {
@@ -707,26 +708,31 @@ export class FlowchartNode {
     }
 
     /** Children */
-    addChild(node: FlowchartNode | FlowchartNode[]) {
-        if (Array.isArray(node)) {
-            node.forEach(n => this.addChild(n))
-            return
+    addChild(childNode: FlowchartNode | FlowchartNode[] | FlowchartNodeConstructOptions | FlowchartNodeConstructOptions[]) {
+        if (Array.isArray(childNode)) {
+            return childNode.forEach(n => this.addChild(n))
         }
 
-        if (this.children.find(n => n.id === node.id)) {
-            console.warn(`Node with id "${node.id}" is already a child of node with id "${this.id}", skipping connection`)
+        if (!(childNode instanceof FlowchartNode)) {
+            const childNodeOptions = childNode as FlowchartNodeConstructOptions
+            if (!this.flowchart) {
+                console.warn("Cannot add child node from options without a flowchart reference, skipping parent connection")
+                return
+            }
+            childNode = this.flowchart.add(childNodeOptions)
+        }
+
+        if (this.children.find(n => n.id === childNode.id)) {
+            // console.warn(`Node with id "${childNode.id}" is already a child of node with id "${this.id}", skipping connection`)
             return
+        } else {
+            this.children.push(childNode)
         }
         
-        if (!this.flowchart && node.flowchart) {
-            this.flowchart = node.flowchart
-            this.flowchart.addNode(this, node)
-
-            const edge = new FlowchartEdge( node, this, { showArrow: true } )
+        if (this.flowchart && childNode.flowchart && this.flowchart === childNode.flowchart) {
+            const edge = new FlowchartEdge( this, childNode, { ... this.flowchart.options.edges } )
             this.flowchart.addEdge(edge)
         }
-
-        this.children.push(node)
     }
 
     removeChild(node: FlowchartNode | string) {

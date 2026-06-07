@@ -102,7 +102,7 @@ export class AddNodeTool extends FlowchartTool {
             if (this.options.smartNodes.decision) {
                 return this.options.smartNodes.decision
             }
-        } else if (parentCount > 0 ) {
+        } else if (parentCount > 0  && childCount === 0) {
             if (this.options.smartNodes.end) {
                 return this.options.smartNodes.end
             }

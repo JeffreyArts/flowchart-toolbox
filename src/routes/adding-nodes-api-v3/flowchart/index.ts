@@ -250,6 +250,12 @@ export class Flowchart {
                     parent.type = addNodeTool.getSmartNodeType(parent)
                 })
             }
+
+            if (newNode.children.length > 0) {
+                newNode.children.forEach(child => {
+                    child.type = addNodeTool.getSmartNodeType(child)
+                })
+            }
         }
 
         return newNode
