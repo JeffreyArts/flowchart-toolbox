@@ -350,11 +350,18 @@ export default defineComponent ({
                     y: 50,
                     options: { maxWidth: 320 }
                 })
+                const node1 = this.flowchart.add({
+                    text: "Process node",
+                    x: 0,
+                    y: 250,
+                    options: { maxWidth: 320 }
+                })
+
                 this.flowchart.add({
                     text: "Add new child nodes by clicking on the + button around a node",
                     x: -400,
-                    parent: mouseDown,
-                    y: 250,
+                    parents: [mouseDown, node1],
+                    y: 150,
                     options: { maxWidth: 320 }
                 })
                 

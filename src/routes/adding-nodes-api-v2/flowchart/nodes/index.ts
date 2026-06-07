@@ -26,6 +26,7 @@ export type FlowchartNodeEvent = { name: FlowchartNodeEventType, handler: (node:
 
 export type FlowchartNodeConstructOptions = {
     parent?: FlowchartNode
+    parents?: FlowchartNode[]
     flowchart?: Flowchart
     x?: number | string
     y?: number | string
@@ -318,19 +319,8 @@ export class FlowchartNode {
         
         
         // Check if options.parent is already a parent to avoid duplicate connections
-        if (options.parent) { 
-            if (Array.isArray(options.parent)) {
-                options.parent.forEach(parent => {
-                    if (!this.parents.includes(parent)) {
-                        this.addParent(parent)
-                    }
-                })
-            } else {
-                if (!this.parents.includes(options.parent)) {
-                    this.addParent(options.parent)
-                }
-            }
-        }
+        if (options.parent) { this.addParent(options.parent) }
+        if (options.parents) { this.addParent(options.parents) }
         
         // First load options from FLOWCHART DEFAULTS
         const flowchartNodeOptions = this.flowchart?.options.nodes
