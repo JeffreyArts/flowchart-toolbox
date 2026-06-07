@@ -24,11 +24,11 @@ import Grid from "./grid/grid.vue"
 import ResizeNode from "./resize-node/resize-node.vue"
 import ToolOptions from "./tool-options/tool-options.vue"
 import NodeTextEditTool from "./node-text-edit-tool/node-text-edit-tool.vue"
+import AddingNodesApi from "./adding-nodes-api/adding-nodes-api.vue"
 import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
 import Cytoscape from "./cytoscape.vue"
 import ShapeOutside from "./shape-outside.vue"
-import path from "path"
 
 const routes = [
     {
@@ -170,6 +170,11 @@ const routes = [
         path: "/node-text-edit-tool",
         name: "26) Node text edit",
         component: NodeTextEditTool
+    },
+    {
+        path: "/adding-nodes-api",
+        name: "27) Adding Nodes API",
+        component: AddingNodesApi
     },
     {
         path: "/options-overview",
