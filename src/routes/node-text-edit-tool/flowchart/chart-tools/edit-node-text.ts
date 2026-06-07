@@ -167,6 +167,8 @@ export class EditNodeTextTool extends FlowchartTool {
         inputElement.style.height = `${node.height}px`
         inputElement.style.fontSize = fontSize + "px"
         inputElement.style.fontFamily = fontFamily
+        inputElement.style.opacity = "0"
+        inputElement.style.pointerEvents = "none"
 
         document.body.appendChild(inputElement)
 
@@ -699,11 +701,6 @@ export class EditNodeTextTool extends FlowchartTool {
         }
         
         this.state.activeTextSelection = true
-
-        if (this.selectedNode !== selectedNode && typeof selectedNode !== "undefined") {
-            selectedNode.state.selected = false
-            this.deselectNode()
-        }
         
         if (!selectedNode) {
             this.blinkInterval = undefined
@@ -856,6 +853,7 @@ export class EditNodeTextTool extends FlowchartTool {
     
         
     private onNodeDeselected = (_node: FlowchartNode) => {
+        this.deselectNode()
         if (!this.state.active) return
     }
 }
