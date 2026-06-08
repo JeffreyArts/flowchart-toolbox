@@ -27,7 +27,7 @@ import NodeTextEditTool from "./node-text-edit-tool/node-text-edit-tool.vue"
 import AddingNodesApi from "./adding-nodes-api/adding-nodes-api.vue"
 import AddingNodesApiV2 from "./adding-nodes-api-v2/adding-nodes-api-v2.vue"
 import AddingNodesApiV3 from "./adding-nodes-api-v3/adding-nodes-api-v3.vue"
-import StraightEdgeBugfix from "./straight-edge-bugfix/straight-edge-bugfix.vue"
+import Bugfixes1 from "./bugfixes-1/bugfixes-1.vue"
 import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
 import Cytoscape from "./cytoscape.vue"
@@ -190,9 +190,9 @@ const routes = [
         component: AddingNodesApiV3
     },
     {
-        path: "/straight-edge-bugfix",
-        name: "30) Straight Edge Bugfix",
-        component: StraightEdgeBugfix
+        path: "/bugfixes-1",
+        name: "30) Bugfixes 1",
+        component: Bugfixes1
     },
     {
         path: "/options-overview",

@@ -1,8 +1,7 @@
 <template>
-    <div class="straight-edge-bugfix" @click="updateSelectedNodes" @mousemove="updateSelectedNodes">
+    <div class="bugfixes-1" @click="updateSelectedNodes" @mousemove="updateSelectedNodes">
         <header class="title">
-            <h1>Straight Edge Bugfix</h1>
-            <p>In certain edge cases the arrow of the edges are just drawn wrong</p>
+            <h1>Bugfixes 1</h1>
         </header>
 
         <hr>
@@ -16,6 +15,15 @@
 
         <aside class="sidebar">
             <div class="options">
+                <div class="option-group" name="Buglist" >
+                    <div class="option">                   
+                        <ul style="padding:0 0 0 10px">
+                            <li>✅ Fix straight edge bug on elbow</li>
+                            <li>❌ Prevent default on mouseDown <small>(forces double click on select box)</small></li>
+                        </ul>
+                    </div>
+                </div>
+
                 <div class="option-group" name="Selected node(s)" >
                     <div v-for="selectedNode in selectedNodes" :key="selectedNode.id">
                         <div class="option">
@@ -640,7 +648,7 @@ export default defineComponent ({
 
 <style lang="scss">
 
-.straight-edge-bugfix { 
+.bugfixes-1 { 
     @media all and (min-width: 1440px) {
         .sidebar .options {
             gap: 0px 16px;
