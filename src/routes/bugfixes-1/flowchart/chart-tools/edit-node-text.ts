@@ -695,7 +695,9 @@ export class EditNodeTextTool extends FlowchartTool {
         
         const e = fec.originalEvent as MouseEvent
         const target = e.target as HTMLElement
-        e.preventDefault()
+        if (this.flowchart.events.isWithinChart) {
+            e.preventDefault()
+        }
         
         const selectedNode = this.flowchart.nodes.find(node => node.shape.containsPoint(mousePos))
         
