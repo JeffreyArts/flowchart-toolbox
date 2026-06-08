@@ -19,6 +19,7 @@
                     <div class="option">                   
                         <ul style="padding:0 0 0 10px">
                             <li>✅ Fix straight edge bug on elbow</li>
+                            <li>✅ Fix straight edge bug on zigzag</li>
                             <li>❌ Prevent default on mouseDown <small>(forces double click on select box)</small></li>
                         </ul>
                     </div>
