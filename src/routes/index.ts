@@ -27,6 +27,7 @@ import NodeTextEditTool from "./node-text-edit-tool/node-text-edit-tool.vue"
 import AddingNodesApi from "./adding-nodes-api/adding-nodes-api.vue"
 import AddingNodesApiV2 from "./adding-nodes-api-v2/adding-nodes-api-v2.vue"
 import AddingNodesApiV3 from "./adding-nodes-api-v3/adding-nodes-api-v3.vue"
+import StraightEdgeBugfix from "./straight-edge-bugfix/straight-edge-bugfix.vue"
 import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
 import Cytoscape from "./cytoscape.vue"
@@ -187,6 +188,11 @@ const routes = [
         path: "/adding-nodes-api-v3",
         name: "29) Add options.child on Node",
         component: AddingNodesApiV3
+    },
+    {
+        path: "/straight-edge-bugfix",
+        name: "30) Straight Edge Bugfix",
+        component: StraightEdgeBugfix
     },
     {
         path: "/options-overview",
