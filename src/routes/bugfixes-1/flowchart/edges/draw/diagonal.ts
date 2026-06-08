@@ -1,13 +1,13 @@
 import { type DrawEdgeType } from "../index"
 
 export const drawDiagonalEdge: DrawEdgeType = (start, end, edge) => {
+    // Max = .99 to prevent `end` object to be equal to `t2` object 
+    const strength = Math.min(edge.options.curvatureStrength ?? 0.5, .99) 
     
-    const strength = edge.options.curvatureStrength * 0.99
-    
-    let endPointHor = false
+    let horizontal = false
     if (edge.endNode.shape?.width) {
         if (end.x < edge.endNode.x - edge.endNode.shape.width / 2 || end.x > edge.endNode.x + edge.endNode.shape.width / 2) {
-            endPointHor = true
+            horizontal = true
         }
     }
 
@@ -17,31 +17,44 @@ export const drawDiagonalEdge: DrawEdgeType = (start, end, edge) => {
     const signX = remainX > 0 ? 1 : -1
     const signY = remainY > 0 ? 1 : -1
 
-    if (diagOffset < 10) {
+    let offset = 4
+    if (edge.markerEl) {
+        if (horizontal) {
+            offset = parseInt(edge.markerEl.getAttribute("markerWidth") || "", 10)
+        } else {
+            offset = parseInt(edge.markerEl.getAttribute("markerHeight") || "", 10) 
+        }
+    }
+
+    if (diagOffset < offset) {
         return `M${start.x} ${start.y} L${end.x} ${end.y}`
     }
 
-    let midPoint = {
+    let breakPoint = {
         x: start.x,
         y: end.y - signY * diagOffset
     }
     
-    if (endPointHor) {
-        midPoint = {
+    if (horizontal) {
+        breakPoint = {
             x: end.x - signX * diagOffset,
             y: start.y
         }
     }
 
-    // Punt op de lijn start→midPoint, dicht bij midPoint
-    const t1x = midPoint.x + (start.x - midPoint.x) * strength
-    const t1y = midPoint.y + (start.y - midPoint.y) * strength
+    // Punt op de lijn start→breakPoint, dicht bij breakPoint
+    const t1 = {
+        x: breakPoint.x + (start.x - breakPoint.x) * strength,
+        y: breakPoint.y + (start.y - breakPoint.y) * strength
+    }
 
-    // Punt op de lijn midPoint→end, dicht bij midPoint
-    const t2x = midPoint.x + (end.x - midPoint.x) * strength
-    const t2y = midPoint.y + (end.y - midPoint.y) * strength
+    // Punt op de lijn breakPoint→end, dicht bij breakPoint
+    const t2 = {
+        x: breakPoint.x + (end.x - breakPoint.x) * strength,
+        y: breakPoint.y + (end.y - breakPoint.y) * strength
+    }
 
-    return `M${start.x} ${start.y} L${t1x} ${t1y} Q${midPoint.x} ${midPoint.y} ${t2x} ${t2y} L${end.x} ${end.y}`
+    return `M${start.x} ${start.y} L${t1.x} ${t1.y} Q${breakPoint.x} ${breakPoint.y} ${t2.x} ${t2.y} L${end.x} ${end.y}`
 }
     
 export default drawDiagonalEdge
