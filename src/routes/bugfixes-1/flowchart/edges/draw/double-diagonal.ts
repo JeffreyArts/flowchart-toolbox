@@ -4,10 +4,10 @@ export const drawDoubleDiagonalEdge: DrawEdgeType = (start, end, edge) => {
     
     const strength = edge.options.curvatureStrength / 2 
     
-    let endPointHor = false
+    let horizontal = false
     if (edge.endNode.shape?.width) {
         if (end.x < edge.endNode.x - edge.endNode.shape.width / 2 || end.x > edge.endNode.x + edge.endNode.shape.width / 2) {
-            endPointHor = true
+            horizontal = true
         }
     }
     
@@ -17,6 +17,19 @@ export const drawDoubleDiagonalEdge: DrawEdgeType = (start, end, edge) => {
 
     const signX = end.x > start.x ? 1 : -1
     const signY = end.y > start.y ? 1 : -1
+
+    let offset = 4
+    if (edge.markerEl) {
+        if (horizontal) {
+            offset = parseInt(edge.markerEl.getAttribute("markerWidth") || "", 10)
+        } else {
+            offset = parseInt(edge.markerEl.getAttribute("markerHeight") || "", 10) 
+        }
+    }
+
+    if (diagOffset < offset) {
+        return `M${start.x} ${start.y} L${end.x} ${end.y}`
+    }
 
     const mid1 = { 
         x: start.x + signX * diagOffset, 
