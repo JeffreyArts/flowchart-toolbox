@@ -167,21 +167,6 @@ export class ResizeNodeTool extends FlowchartTool {
     }
 
     private updateHandles = (node: FlowchartNode) => {
-        // const nodeStyle = getComputedStyle(node.shape.svgEl)
-        // const strokeWidth = parseFloat(nodeStyle.strokeWidth)  || 0
-        // const x = node.x - node.width / 2 - strokeWidth / 2
-        // const y = node.y - node.height / 2 - strokeWidth / 2
-        // const width =  node.width + strokeWidth
-        // const height = node.height + strokeWidth
-
-        // const outerBox = node.boundingBox.querySelector("rect")
-        // if (outerBox) {
-        //     outerBox.setAttribute("x", x.toString())
-        //     outerBox.setAttribute("y", y.toString())
-        //     outerBox.setAttribute("width", width.toString())
-        //     outerBox.setAttribute("height", height.toString())
-        // }
-
         // Update handle positions
         
         const handles = node.boundingBox.querySelectorAll(".handle")
@@ -195,12 +180,6 @@ export class ResizeNodeTool extends FlowchartTool {
             handle.setAttribute("height", pos.height.toString())
         })
     }
-
-    // private removeSelectionBox(node: FlowchartNode) {
-    //     if (node.boundingBox) {
-    //         node.boundingBox.querySelectorAll("[tool='resize-node-tool']").forEach(el => el.remove())
-    //     }
-    // }
 
     private isLeftHandle() {
         if (!this.selectedNode) return false

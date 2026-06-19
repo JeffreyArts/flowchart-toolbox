@@ -57,17 +57,23 @@ export abstract class FlowchartShape {
     public updateBoundingBox() {
         const boundingBox = this.node.boundingBox
         const outline = boundingBox.querySelector("#outline")
+        const nodeStyle = getComputedStyle(this.node.shape.svgEl)
+        const strokeWidth = parseFloat(nodeStyle.strokeWidth)  || 0
+        const x = this.node.x - this.node.width / 2 - strokeWidth / 2
+        const y = this.node.y - this.node.height / 2 - strokeWidth / 2
+        const width =  this.node.width + strokeWidth
+        const height = this.node.height + strokeWidth
 
-        boundingBox.setAttribute("x", this.node.x - this.width / 2 + "px")
-        boundingBox.setAttribute("y", this.node.y - this.height / 2 + "px")
-        boundingBox.setAttribute("width", this.width + "px")
-        boundingBox.setAttribute("height", this.height + "px")
+        boundingBox.setAttribute("x", x+ "px")
+        boundingBox.setAttribute("y", y + "px")
+        boundingBox.setAttribute("width", width + "px")
+        boundingBox.setAttribute("height", height + "px")
 
         if (outline) {
-            outline.setAttribute("x", this.node.x - this.width / 2 + "px")
-            outline.setAttribute("y", this.node.y - this.height / 2 + "px")
-            outline.setAttribute("width", this.width + "px")
-            outline.setAttribute("height", this.height + "px")
+            outline.setAttribute("x", x + "px")
+            outline.setAttribute("y", y + "px")
+            outline.setAttribute("width", width + "px")
+            outline.setAttribute("height", height + "px")
         }
 
     }

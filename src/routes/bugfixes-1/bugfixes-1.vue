@@ -22,7 +22,8 @@
                             <li>✅ Fix straight edge bug on zigzag</li>
                             <li>✅ Prevent default on mouseDown <small>(forces double click on select box)</small></li>
                             <li>✅ Fix straight edge bug on double-diagonal</li>
-                            <li>❌ Allow for multiple selection boxes</li>
+                            <li>✅ Allow for multiple selection boxes</li>
+                            <li>✅ Add offset for bounding box </li>
                         </ul>
                     </div>
                 </div>
