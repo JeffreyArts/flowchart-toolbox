@@ -71,6 +71,7 @@ export class FlowchartNode {
     flowchart: Flowchart | null = null
     children: FlowchartNode[] = []
     parents: FlowchartNode[] = []
+    boundingBox: SVGElement = document.createElementNS("http://www.w3.org/2000/svg", "g")
     textBox: FlowchartNodeTextBox = { width: 0, height: 0, lines: [], lineHeight: 0, class: "", style: {}}
     svgGroup: SVGElement = document.createElementNS("http://www.w3.org/2000/svg", "g")
     
@@ -147,6 +148,8 @@ export class FlowchartNode {
             
             if (prop === "selected") {
                 if (!!previousValue === !!value) return true // prevent double triggering when value doesn't change
+                this.changeBoundingBoxVisibility()
+
                 if (value === true) {
                     this.triggerEvent("selected")
                 } else if (value === false) {
@@ -195,6 +198,8 @@ export class FlowchartNode {
         
         this.updatePosition()
 
+        this.initiateBoundingBox()
+
         if (!this.flowchart.events.ignore.nodeAdded) {
             this.flowchart.events.trigger("nodeAdded", { node: this })
         }
@@ -203,6 +208,29 @@ export class FlowchartNode {
     // █████▄ ▄▄▄▄  ▄▄ ▄▄ ▄▄  ▄▄▄ ▄▄▄▄▄▄ ▄▄▄▄▄ 
     // ██▄▄█▀ ██▄█▄ ██ ██▄██ ██▀██  ██   ██▄▄  
     // ██     ██ ██ ██  ▀█▀  ██▀██  ██   ██▄▄▄ 
+
+    private initiateBoundingBox() {
+        this.boundingBox.setAttribute("name", "bounding-box")
+        this.changeBoundingBoxVisibility()
+        this.svgGroup.appendChild(this.boundingBox)
+    }
+
+    private changeBoundingBoxVisibility() {
+        const isSelected = this.state.selected
+
+        let outline = this.boundingBox.querySelector("#outline") as SVGRectElement | null
+        if (isSelected && !outline) {
+            outline = document.createElementNS("http://www.w3.org/2000/svg", "rect")
+            outline.setAttribute("id", "outline")
+            outline.setAttribute("fill", "rgba(0, 0, 0, 0.0)")
+            outline.setAttribute("stroke", "rgba(0, 0, 0, 0.4)")
+            outline.setAttribute("stroke-width", ".5")
+            this.boundingBox.appendChild(outline)
+        } else if (!isSelected && outline) {
+            outline.remove()
+        }
+        this.shape.updateBoundingBox()
+    }
 
     private parseTextOptions(options: Partial<FlowchartNodeConstructOptions>) {
         const flowchartTextOptions = this.flowchart?.options.nodes?.text
@@ -544,6 +572,7 @@ export class FlowchartNode {
             }
         })
         this.updateTextBox()
+        this.initiateBoundingBox()
     }
 
     // █████▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄    ▄▄  ▄▄▄▄ 

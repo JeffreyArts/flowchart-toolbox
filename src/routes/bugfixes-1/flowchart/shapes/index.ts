@@ -53,6 +53,24 @@ export abstract class FlowchartShape {
             }
         }
     }
+    
+    public updateBoundingBox() {
+        const boundingBox = this.node.boundingBox
+        const outline = boundingBox.querySelector("#outline")
+
+        boundingBox.setAttribute("x", this.node.x - this.width / 2 + "px")
+        boundingBox.setAttribute("y", this.node.y - this.height / 2 + "px")
+        boundingBox.setAttribute("width", this.width + "px")
+        boundingBox.setAttribute("height", this.height + "px")
+
+        if (outline) {
+            outline.setAttribute("x", this.node.x - this.width / 2 + "px")
+            outline.setAttribute("y", this.node.y - this.height / 2 + "px")
+            outline.setAttribute("width", this.width + "px")
+            outline.setAttribute("height", this.height + "px")
+        }
+
+    }
 
     private addSvgEl() {
         if (this.class) {
@@ -189,9 +207,19 @@ export abstract class FlowchartShape {
         return (low + high) / 2
     }
 
-    onDimensionChange       = this.updateShape.bind(this)
-    onPositionChange        = this.updatePosition.bind(this)
-    onAfterTextChange       = this.updateText.bind(this)
+    onDimensionChange = () => {
+        this.updateShape()
+    }
+    
+    onPositionChange = () => {
+        this.updatePosition()
+        this.updateBoundingBox()
+    }
+    
+
+    onAfterTextChange = () => {
+        this.updateText()
+    }
     
     onDocumentMouseMove     = this.setMouseOver.bind(this)
 

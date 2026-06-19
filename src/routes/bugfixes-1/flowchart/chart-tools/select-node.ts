@@ -4,23 +4,25 @@ import FlowchartNode from "../nodes/index"
 import type { FlowchartEventContext } from "../events"
 
 export type SelectToolOptions = {
-    mouseClick: boolean
-    multipleClick: boolean
-    selectBox: boolean
+    mouseClick: boolean // Allow nodes to be (de-)selected via mouse click
+    doubleClick: boolean // Select all nodes on double click
+    multipleClick: boolean // Allow multiple nodes to be selected via shift+click
+    selectBox: boolean // Allow multiple nodes to be selected via click-and-drag selection box
 }
 
 export class SelectTool extends FlowchartTool {
     name = "select-node"
-    selectedNodes = [] as FlowchartNode[]
     selectionBox = undefined as SVGRectElement | undefined
 
     state = {
         active: true,
     }
 
+    deselectNode = false
+
     options = new Proxy<SelectToolOptions>({
-        // Different methods for selecting nodes
         mouseClick: true,
+        doubleClick: true,
         multipleClick: true, 
         selectBox: true,
     }, {
@@ -30,11 +32,16 @@ export class SelectTool extends FlowchartTool {
         }
     })
 
+    get selectedNodes() {
+        return this.flowchart.nodes.filter(node => node.state.selected)
+    }
+
     constructor(flowchart: Flowchart, options?: Partial<SelectToolOptions>) {
         super(flowchart)
 
         this.updateOptions(options)
 
+        this.flowchart.events.add("doubleClick", this.doubleClickAction)
         this.flowchart.events.add("mouseDown", this.selectOnMouseDown)
         this.flowchart.events.add("mouseUp", this.deselectOnMouseUp)
         this.flowchart.events.add("mouseMove", this.onMouseMove)
@@ -56,6 +63,13 @@ export class SelectTool extends FlowchartTool {
         return this.flowchart.nodes.find(node => node.shape.containsPoint(this.flowchart.events.mousePos))
     }
 
+    private clearSelection(selectedNode?: FlowchartNode) {
+        this.flowchart.nodes.forEach(node => {
+            if (node === selectedNode) return
+            node.state.selected = false
+        })
+    }
+
     private createSelectionBox = (_fec: FlowchartEventContext) => {
         // Create svg rect element for selection box
         const svg = this.flowchart.chart
@@ -74,14 +88,6 @@ export class SelectTool extends FlowchartTool {
             this.selectionBox = undefined
         }
     }
-    
-    private clearSelection(selectedNode?: FlowchartNode) {
-        this.selectedNodes.length = 0
-        this.flowchart.nodes.forEach(node => {
-            if (node === selectedNode) return
-            node.state.selected = false
-        })
-    }
 
     // ██████ ▄▄ ▄▄ ▄▄▄▄▄ ▄▄  ▄▄ ▄▄▄▄▄▄ ▄▄▄▄ 
     // ██▄▄   ██▄██ ██▄▄  ███▄██   ██  ███▄▄ 
@@ -89,46 +95,49 @@ export class SelectTool extends FlowchartTool {
 
     private onMouseMove = (_fec: FlowchartEventContext) => {
         if (!this.state.active) return
-        if (!this.selectionBox) return
-        if (!this.flowchart.events.mouseStartPos) return
+        this.deselectNode = false
+        
+        // Handle selectBox option
+        // Update selection box
+        if (this.selectionBox && this.options.selectBox && this.flowchart.events.mouseStartPos) {
+            const startX = this.flowchart.events.mouseStartPos.x
+            const startY = this.flowchart.events.mouseStartPos.y
+            const currentX = this.flowchart.events.mousePos.x
+            const currentY = this.flowchart.events.mousePos.y
+            
+            
+            // Check which nodes are within the selection box and select them
+            this.flowchart.nodes.forEach(node => {
+                const nodeX = node.x
+                const nodeY = node.y
+                const nodeWidth = node.shape.width
+                const nodeHeight = node.shape.height
+                
+                const withinX = (nodeX + nodeWidth / 2 >= Math.min(startX, currentX)) && (nodeX - nodeWidth / 2 <= Math.max(startX, currentX))
+                const withinY = (nodeY + nodeHeight / 2 >= Math.min(startY, currentY)) && (nodeY - nodeHeight / 2 <= Math.max(startY, currentY))
 
-        const startX = this.flowchart.events.mouseStartPos.x
-        const startY = this.flowchart.events.mouseStartPos.y
-        const currentX = this.flowchart.events.mousePos.x
-        const currentY = this.flowchart.events.mousePos.y
-
-        const width = Math.abs(currentX - startX)
-        const height = Math.abs(currentY - startY)
-
-        this.selectionBox.setAttribute("width", width.toString())
-        this.selectionBox.setAttribute("height", height.toString())
-
-        this.selectionBox.setAttribute("x", Math.min(this.flowchart.events.mouseStartPos.x, this.flowchart.events.mousePos.x).toString())
-        this.selectionBox.setAttribute("y", Math.min(this.flowchart.events.mouseStartPos.y, this.flowchart.events.mousePos.y).toString())
-
-
-        // Check which nodes are within the selection box and select them
-        this.flowchart.nodes.forEach(node => {
-            const nodeX = node.x
-            const nodeY = node.y
-            const nodeWidth = node.shape.width
-            const nodeHeight = node.shape.height
-
-            const withinX = (nodeX + nodeWidth / 2 >= Math.min(startX, currentX)) && (nodeX - nodeWidth / 2 <= Math.max(startX, currentX))
-            const withinY = (nodeY + nodeHeight / 2 >= Math.min(startY, currentY)) && (nodeY - nodeHeight / 2 <= Math.max(startY, currentY))
-
-            if (withinX && withinY) {
-                if (!node.state.selected) {
-                    node.state.selected = true
-                    this.selectedNodes.push(node)
+                if (withinX && withinY) {
+                    if (!node.state.selected) {
+                        node.state.selected = true
+                    }
+                } else {
+                    if (node.state.selected) {
+                        node.state.selected = false
+                    }
                 }
-            } else {
-                if (node.state.selected) {
-                    node.state.selected = false
-                    this.selectedNodes = this.selectedNodes.filter(n => n !== node)
+
+                if (this.flowchart.events.mouseStartPos) {
+                    const width = Math.abs(currentX - startX)
+                    const height = Math.abs(currentY - startY)
+
+                    this.selectionBox.setAttribute("width", width.toString())
+                    this.selectionBox.setAttribute("height", height.toString())
+                    
+                    this.selectionBox.setAttribute("x", Math.min(this.flowchart.events.mouseStartPos.x, this.flowchart.events.mousePos.x).toString())
+                    this.selectionBox.setAttribute("y", Math.min(this.flowchart.events.mouseStartPos.y, this.flowchart.events.mousePos.y).toString())
                 }
-            }
-        })
+            })
+        }
     }
     
     private selectOnMouseDown = (fec: FlowchartEventContext) => {
@@ -138,33 +147,37 @@ export class SelectTool extends FlowchartTool {
         const clickedNode = this.findNodeAtMouse()
         const isWithinChart = this.flowchart.events.isWithinChart
         if (!isWithinChart) return
+        if (!this.options.mouseClick) return
 
+        // Handle selectBox option
         if (this.options.selectBox && !clickedNode) {
             this.clearSelection()
             this.createSelectionBox(fec)
         }
-        
-        if (this.options.mouseClick) {
-            if (!clickedNode) return
 
-            if (e.shiftKey && this.options.multipleClick) {
-                // Toggle: if already selected, deselect and remove; otherwise select and add
-                if (clickedNode.state.selected) {
-                    clickedNode.state.selected = false
-                    this.selectedNodes = this.selectedNodes.filter(n => n !== clickedNode)
-                } else {
-                    clickedNode.state.selected = true
-                    this.selectedNodes.push(clickedNode)
-                }
-            } else {
-                // If clicking an already-selected node, don't clear yet —
-                // wait for mouseUp to decide (allows dragging multi-selection)
-                if (!clickedNode.state.selected) {
+        if (clickedNode) {
+            if (this.options.multipleClick && this.selectedNodes.length > 0) {
+                if (!e.shiftKey && !clickedNode.state.selected) {
                     this.clearSelection(clickedNode)
-                    clickedNode.state.selected = true
-                    this.selectedNodes.push(clickedNode)
                 }
+                
+                if (e.shiftKey) {
+                    clickedNode.state.selected = !clickedNode.state.selected
+                    return
+                }
+
+                if (clickedNode.state.selected) {
+                    this.deselectNode = true
+                }
+
+                clickedNode.state.selected = true
+                // clickedNode.state.selected = !clickedNode.state.selected
+                return
             }
+
+            clickedNode.state.selected = !clickedNode.state.selected
+        } else {
+            this.clearSelection()
         }
     }
 
@@ -173,43 +186,58 @@ export class SelectTool extends FlowchartTool {
         const e = fec.originalEvent as MouseEvent
         const clickedNode = this.findNodeAtMouse()
         const isWithinChart = this.flowchart.events.isWithinChart
-        
+
+        // Handle selectBox option
         if (this.options.selectBox && this.selectionBox) {
             this.removeSelectionBox()
             return
         }
 
+        // If event happens outside chart, just skip
         if (!isWithinChart) return
 
-        if (this.options.mouseClick) {
-            if (!clickedNode) {
-                if (!e.shiftKey && this.options.multipleClick) {
-                    this.clearSelection()
-                }
-                return
-            }
-            
-            // Shift-click is fully handled in mouseDown, nothing to do here
-            if (e.shiftKey && this.options.multipleClick) return
-            
-            // If mouse moved significantly, assume it was a drag, not a click — don't change selection
-            if (Math.abs(this.flowchart.events.mouseDelta.x) >= 1 || Math.abs(this.flowchart.events.mouseDelta.y) >= 1) return
-            
-            // Plain click on an already-selected node (part of multi-selection):
-            // now narrow selection to just this node
-            this.clearSelection(clickedNode)
-            clickedNode.state.selected = true
-            this.selectedNodes.push(clickedNode)
+        // Mouse has moved since mouseDown, so this is likely a drag, not a click — don't change selection
+        if (this.flowchart.events.mouseDelta.x != 0 || this.flowchart.events.mouseDelta.y !== 0) {
+            return
         }
+        
+        
+        if (this.deselectNode) {
+            clickedNode!.state.selected = false
+        }
+        this.deselectNode = false
+        
+        // Handle multipleClick option
+        if (this.options.multipleClick) {
+            if (!e.shiftKey) {
+                this.clearSelection(clickedNode)
+            } 
+            return
+        }
+        
+        // Default
+        this.clearSelection(clickedNode)
+    }
+
+    private doubleClickAction = (_fec: FlowchartEventContext) => {
+        if (!this.state.active) return
+        if (!this.options.doubleClick) return
+
+        setTimeout(() => {
+            this.flowchart.nodes.forEach(node => {
+                node.state.selected = true
+            })
+
+        }, 90)
     }
 
     private onKeyDown = (fec: FlowchartEventContext) => {
         if (!this.state.active) return
         const e = fec.originalEvent as KeyboardEvent
         if (e.key === "Escape") {
-            if ( this.selectionBox ) {
-                this.removeSelectionBox()
-            }
+            this.flowchart.nodes.forEach(node => {
+                node.state.selected = false
+            })
         }
             
     }

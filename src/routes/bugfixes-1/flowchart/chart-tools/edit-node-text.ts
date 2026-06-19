@@ -79,7 +79,7 @@ export class EditNodeTextTool extends FlowchartTool {
     
     private selectNode(node: FlowchartNode) {
         this.selectedNode = node
-        this.selectedNode.state.selected = true
+        // this.selectedNode.state.selected = true
 
         if (!this.svgGroupBg) {
             this.svgGroupBg = document.createElementNS("http://www.w3.org/2000/svg", "g")
@@ -137,7 +137,7 @@ export class EditNodeTextTool extends FlowchartTool {
         this.startMouseCaretPos = undefined
 
         if (this.selectedNode) {
-            this.selectedNode.state.selected = false
+            // this.selectedNode.state.selected = false
         }
 
         this.selectedNode = undefined
