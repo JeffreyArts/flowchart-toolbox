@@ -638,6 +638,10 @@ export default defineComponent ({
 
 
 <style lang="scss">
+html {
+    // Disable the swipe to go to the previous page
+    overscroll-behavior: none;
+}
 
 .bugfixes-1 { 
     @media all and (min-width: 1440px) {
