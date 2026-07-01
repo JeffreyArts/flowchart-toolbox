@@ -28,6 +28,7 @@ import AddingNodesApi from "./adding-nodes-api/adding-nodes-api.vue"
 import AddingNodesApiV2 from "./adding-nodes-api-v2/adding-nodes-api-v2.vue"
 import AddingNodesApiV3 from "./adding-nodes-api-v3/adding-nodes-api-v3.vue"
 import Bugfixes1 from "./bugfixes-1/bugfixes-1.vue"
+import PreviousPageSwipe from "./previous-page-swipe/previous-page-swipe.vue"
 import TheSymbols from "./the-symbols.vue"
 import JointJS from "./joint-js.vue"
 import Cytoscape from "./cytoscape.vue"
@@ -193,6 +194,11 @@ const routes = [
         path: "/bugfixes-1",
         name: "30) Bugfixes 1",
         component: Bugfixes1
+    },
+    {
+        path: "/previous-page-swipe",
+        name: "31) Previous page swipe",
+        component: PreviousPageSwipe
     },
     {
         path: "/options-overview",
